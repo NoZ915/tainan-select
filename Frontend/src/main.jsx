@@ -5,6 +5,11 @@ import {
   RouterProvider
 } from "react-router-dom";
 
+import {
+  createTheme,
+  ThemeProvider
+} from "@mui/material";
+
 import App from './App.jsx'
 
 const router = createBrowserRouter([
@@ -19,8 +24,21 @@ const router = createBrowserRouter([
   }
 ])
 
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#c92d2d"
+    },
+    secondary: {
+      main: "#f2bbbb"
+    }
+  }
+})
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <ThemeProvider theme={theme}>
+      <RouterProvider router={router} />
+    </ThemeProvider>
   </React.StrictMode>,
 )
