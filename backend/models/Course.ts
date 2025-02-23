@@ -83,4 +83,8 @@ Course.init(
   }
 );
 
+Course.sync().catch((error) => {
+  console.error("Course 模型同步失敗:", error);
+});
+
 export default Course;
