@@ -2,6 +2,7 @@ import "dotenv/config";
 import axios from "axios";
 import * as cheerio from "cheerio";
 import db from "../models";
+import Course from "../models/Course";
 import { googleRequestCURL } from "./googleRequestCURL";
 
 const courses: string[] = [];
@@ -51,18 +52,28 @@ async function runScraper(): Promise<void> {
       }
     );
 
+    // cheerio取得資料
     const $ = cheerio.load(response.data);
     $("table > tbody > tr > td").each(function () {
       courses.push($(this).text().split("\n")[1].replace(/\s*/g, ""));
-      if ($(this).find("a").attr("href")) {
-        courses.push($(this).find("a").attr("href") ?? "");
+      // * 處理特例「整理中」，整理中沒有url，會導致後續course在切資料出錯
+      if ($(this).text().split("\n")[1].replace(/\s*/g, "") === "整理中") {
+        courses.push("no link");
+      }
+      // * 正常來說，課程、教師、檢視，這三個欄位都會有url
+      // * 暫時先這樣，之後也許可以改成不管沒有url都要再多push一個東西，只是底下course切的位置得修正
+      const href = $(this).find("a").attr("href");
+      if (href) {
+        courses.push(href); // 只有當 href 存在時才push
       }
     });
 
+    // cheerio取得學期
     const semester = $("#label_title2")
       .text()
       .replace(/[^0-9]/gi, "");
 
+    // 整理取得的資料
     const formattedData: {
       semester: string;
       academy: string;
@@ -77,7 +88,7 @@ async function runScraper(): Promise<void> {
     for (let i = 0; i < courses.length; i += 11) {
       const course = {
         semester: `${semester.slice(0, 3)}-${semester.slice(3)}`,
-        academy: courses.slice(53)[i] || "", 
+        academy: courses.slice(53)[i] || "",
         department: courses.slice(53)[i + 1] || "未知系所",
         courseName: courses.slice(53)[i + 2]?.split("[")[0] || "未知課程",
         courseURL: `https://ecourse.nutn.edu.tw/public/${courses.slice(53)[i + 3] || ""}`,
@@ -88,15 +99,17 @@ async function runScraper(): Promise<void> {
       formattedData.push(course);
     }
 
+    // 針對每一個course，都進到各自對應的courseURL進行爬蟲
     const promises = formattedData.map(async (course) => {
       try {
         const res = await axios.get(course.courseURL);
         const coursePage$ = cheerio.load(res.data);
 
+        // 抓取課程頁面中的資料
         const courseTime = coursePage$("#Label10").text();
         const courseRoom = coursePage$("#Label11").text();
 
-        const existingCourse = await db.Course.findOne({
+        const existingCourse = await Course.findOne({
           where: {
             department: course.department,
             course_name: course.courseName,
@@ -116,7 +129,7 @@ async function runScraper(): Promise<void> {
             updated_at: new Date(),
           });
         } else {
-          await db.Course.create({
+          await Course.create({
             course_name: course.courseName,
             department: course.department,
             academy: course.academy,
