@@ -5,8 +5,8 @@
   "main": "database.js",
   "type": "module",
   "scripts": {
-    "start": "ts-node server.ts",
-    "scrape": "ts-node scraper/scraper.ts",
+    "start": "tsx server.ts",
+    "scrape": "tsx scraper/scraper.ts",
     "migrate": "sequelize-cli db:migrate"
   },
   "keywords": [],
@@ -29,6 +29,7 @@
     "mysql2": "^3.12.0",
     "passport": "^0.7.0",
     "sequelize": "^6.37.5",
-    "sequelize-cli": "^6.6.2"
+    "sequelize-cli": "^6.6.2",
+    "tsx": "^4.19.3"
   }
 }
