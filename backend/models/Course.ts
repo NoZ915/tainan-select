@@ -6,9 +6,25 @@ import {
 } from "sequelize";
 import db from "./index";
 
-class Course extends Model<
-  InferAttributes<Course>,
-  InferCreationAttributes<Course>
+export interface Course {
+  id: number;
+  course_name: string;
+  department: string;
+  academy?: string;
+  instructor: string;
+  instructor_url?: string;
+  course_room?: string;
+  course_time?: string;
+  course_url?: string;
+  credit_hours: number;
+  semester: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+class CourseModel extends Model<
+  InferAttributes<CourseModel>,
+  InferCreationAttributes<CourseModel>
 > {
   declare id: number;
   declare course_name: string;
@@ -25,7 +41,7 @@ class Course extends Model<
   declare updated_at: Date;
 }
 
-Course.init(
+CourseModel.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -83,8 +99,8 @@ Course.init(
   }
 );
 
-Course.sync().catch((error) => {
+CourseModel.sync().catch((error) => {
   console.error("Course 模型同步失敗:", error);
 });
 
-export default Course;
+export default CourseModel;

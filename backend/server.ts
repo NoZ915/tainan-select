@@ -3,6 +3,8 @@ import cors from "cors";
 import express, { Express, Request, Response, NextFunction } from "express";
 import db from "./models";
 
+import coursesRoutes from "./routes/courses";
+
 const app: Express = express();
 app.use(cors());
 app.use(express.json());
@@ -11,6 +13,9 @@ app.use(express.json());
 app.use((_req: Request, _res: Response, next: NextFunction) => {
   next();
 });
+
+// routes
+app.use("/api/courses", coursesRoutes);
 
 const startServer = async (): Promise<void> => {
   try {
