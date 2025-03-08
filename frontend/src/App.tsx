@@ -1,8 +1,10 @@
-import './App.css'
+import './App.css';
+import CoursesPage from './pages/CoursesPage';
 
 function App() {
   return (
     <>
+      <CoursesPage />
     </>
   )
 }
