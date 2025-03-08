@@ -5,5 +5,6 @@ export const getCourses = async({ page = 1, limit = 10 }): Promise<CourseRespons
     const response = await axiosInstance.get("/api/courses", {
         params: { page, limit }
     });
+    console.log(response.data)
     return response.data;
 }
