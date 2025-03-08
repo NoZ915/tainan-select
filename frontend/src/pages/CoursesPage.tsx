@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useGetCourses } from '../hooks/courses/useGetCourses';
 import { Course } from '../types/courseType';
-import { Grid, Card, Text, Loader, Center, Pagination } from '@mantine/core';
+import { Grid, Card, Text, Loader, Center, Pagination, Badge, Group } from '@mantine/core';
+import style from '../styles/pages/CoursesPage.module.css';
 
 const CoursePage: React.FC = () => {
     const [page, setPage] = useState(1);
     const limit = 15;
 
     const { data, isLoading, error } = useGetCourses(page, limit);
-    console.log(data)
 
     if (isLoading) {
         return (
@@ -28,25 +28,30 @@ const CoursePage: React.FC = () => {
 
     return (
         <div>
-            {/* 課程列表 */}
             <Grid gutter="md">
                 {data?.courses.map((course: Course) => (
                     <Grid.Col key={course.id} span={{ base: 12, sm: 6, md: 4 }}>
-                        <Card shadow="sm" padding="lg" radius="md" withBorder>
+                        <Card padding="lg" className={style.courseCard}>
                             <Text fw={500}>{course.course_name}</Text>
+                            <Text fw={300} c="gray">{course.instructor}</Text>
+                            <Group justify="center" mt="sm">
+                                <Badge color="brick-red.3" radius="sm">{course.academy}</Badge>
+                                <Badge color="brick-red.3" variant="light" radius="sm">{course.department}</Badge>
+                            </Group>
                         </Card>
                     </Grid.Col>
                 ))}
             </Grid>
 
-            {/* 分頁控制 */}
             {data?.pagination && (
-                <Center mt="xl">
+                <Center>
                     <Pagination
+                        classNames={{ control: style.pagination }}
+                        mt="md"
                         total={data.pagination.totalPages}
                         value={page}
                         onChange={setPage}
-                        withEdges
+
                     />
                 </Center>
             )}
