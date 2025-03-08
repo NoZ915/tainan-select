@@ -8,11 +8,11 @@ export const getAllCourses: RequestHandler = async (req, res): Promise<void> => 
     const offset = (page - 1) * limit;
 
     const { courses, total } = await CourseService.getAllCourses({ page, limit, offset });
-    res.status(200).json({ 
+    res.status(200).json({
       courses,
       pagination: {
         countPage: page,
-        totalPage: Math.ceil(total/limit),
+        totalPages: Math.ceil(total / limit),
         totalItems: total,
         itemsPerPage: limit
       }
