@@ -9,6 +9,8 @@ import './styles/App.css';
 
 import App from './App.tsx'
 import CoursePage from './pages/CoursesPage.tsx';
+import DynamicPage from './pages/DynamicPage.tsx';
+import FrequentPage from './pages/FrequentPage.tsx';
 
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
@@ -17,7 +19,8 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { path: "/", element: <CoursePage />, index: true },
-      { path: "/123", element: <CoursePage />, }
+      { path: "/dynamic", element: <DynamicPage /> },
+      { path: "/frequent", element: <FrequentPage /> },
     ]
   }
 ])

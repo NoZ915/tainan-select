@@ -3,6 +3,7 @@ import { useGetCourses } from '../hooks/courses/useGetCourses';
 import { Course } from '../types/courseType';
 import { Grid, Card, Text, Loader, Center, Pagination, Badge, Group } from '@mantine/core';
 import style from '../styles/pages/CoursesPage.module.css';
+import CourseFilter from '../components/CourseFilter';
 
 const CoursePage: React.FC = () => {
     const [page, setPage] = useState(1);
@@ -28,6 +29,8 @@ const CoursePage: React.FC = () => {
 
     return (
         <div>
+            <CourseFilter />
+
             <Grid gutter="md">
                 {data?.courses.map((course: Course) => (
                     <Grid.Col key={course.id} span={{ base: 12, sm: 6, md: 4 }}>
