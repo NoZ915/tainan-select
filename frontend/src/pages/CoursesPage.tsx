@@ -8,9 +8,9 @@ const CoursePage: React.FC = () => {
     const [page, setPage] = useState(1);
     const limit = 15;
 
-    const { data, isLoading, error } = useGetCourses(page, limit);
+    const { data, isLoading, isPending, error } = useGetCourses(page, limit);
 
-    if (isLoading) {
+    if (isLoading || isPending) {
         return (
             <Center>
                 <Loader />
