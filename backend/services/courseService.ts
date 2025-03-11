@@ -1,4 +1,4 @@
-import { Course } from "../models/Course";
+import { Course } from "../types/courseTypes";
 import { PaginationParams } from "../types/courseTypes";
 import CourseRepository from "../repositories/courseRepository";
 

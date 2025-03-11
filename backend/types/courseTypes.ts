@@ -17,5 +17,6 @@ export interface Course {
 export interface PaginationParams {
     page: number,
     limit: number,
-    offset: number
+    offset: number,
+    search?: string,
 }
