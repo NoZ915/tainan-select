@@ -8,15 +8,15 @@ class CourseRepository {
     const whereCondition = search
       ? {
         [Op.or]: [
-          { course_name: { [Op.like]: `%${search}%` } }, // 課程名稱包含搜尋字詞
-          { instructor: { [Op.like]: `%${search}%` } } // 教師名稱包含搜尋字詞
+          { course_name: { [Op.like]: `%${search.toLowerCase()}%` } },
+          { instructor: { [Op.like]: `%${search.toLowerCase()}%` } }
         ],
       }
       : {};
 
     const [courses, total] = await Promise.all([
-      CourseModel.findAll({ limit, offset }),
-      CourseModel.count()
+      CourseModel.findAll({ where: whereCondition, limit, offset }),
+      CourseModel.count({ where: whereCondition })
     ])
     return { courses, total };
   }
