@@ -7,9 +7,10 @@ import CourseFilter from '../components/CourseFilter';
 
 const CoursePage: React.FC = () => {
     const [page, setPage] = useState(1);
+    const [search, setSearch] = useState("");
     const limit = 15;
 
-    const { data, isLoading, isPending, error } = useGetCourses(page, limit);
+    const { data, isLoading, isPending, error } = useGetCourses(page, limit, search);
 
     if (isLoading || isPending) {
         return (
@@ -29,7 +30,7 @@ const CoursePage: React.FC = () => {
 
     return (
         <div>
-            <CourseFilter />
+            <CourseFilter onSearch={setSearch} />
 
             <Grid gutter="md">
                 {data?.courses.map((course: Course) => (

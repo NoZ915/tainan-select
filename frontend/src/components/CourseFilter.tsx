@@ -1,8 +1,16 @@
-import { Container, Input, Tabs } from "@mantine/core";
+import { useState } from "react";
+import { Container, Tabs, Input, Button } from "@mantine/core";
 import { FilterOption } from "../types/courseType";
 import { FaSearch } from "react-icons/fa";
+import style from "../styles/components/CourseFilter.module.css";
 
-const CourseFilter: React.FC = () => {
+type CourseFilterProps = {
+    onSearch: (search: string) => void;
+};
+
+const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch }) => {
+    const [searchText, setSearchText] = useState("");
+
     const filterOptions: FilterOption[] = [
         { label: "全部", value: "all" },
         { label: "通識", value: "general" },
@@ -12,12 +20,12 @@ const CourseFilter: React.FC = () => {
     ];
 
     return (
-        <Container>
-            <Tabs defaultValue="all">
-                <Tabs.List justify="center">
+        <Container className={style.container}>
+            <Tabs defaultValue="all" className={style.tabs} classNames={{ tab: style.tab }}>
+                <Tabs.List justify="center" className={style.tabsList}>
                     {filterOptions.map((option) => {
                         return (
-                            <Tabs.Tab key={option.value} value={option.value}>
+                            <Tabs.Tab key={option.value} value={option.value} fw={500}>
                                 {option.label}
                             </Tabs.Tab>
                         )
@@ -26,9 +34,15 @@ const CourseFilter: React.FC = () => {
             </Tabs>
             <Input
                 leftSection={<FaSearch />}
+                size="md"
                 placeholder="搜尋「課程名」或「教師名」"
-                
+                classNames={{ input: style.searchInput }}
+                className={style.search}
+                onChange={(e) => setSearchText(e.target.value)}
             />
+            <Button className={style.searchButton} onClick={() => onSearch(searchText)}>
+                搜尋
+            </Button>
         </Container>
     )
 }

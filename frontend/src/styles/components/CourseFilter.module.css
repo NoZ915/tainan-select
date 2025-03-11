@@ -1,0 +1,40 @@
+* {
+  /* border: 1px solid black; */
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tab:where([data-active]) {
+  border-bottom: 3px solid var(--mantine-color-brick-red-5);
+}
+
+.tab:hover {
+  background-color: #3333331b;
+}
+
+.tabs {
+  margin-bottom: 20px;
+}
+
+.tabsList::before {
+  border: 0px;
+}
+
+.search {
+  margin-bottom: 20px;
+
+}
+
+.searchInput {
+  border: 2px solid black;
+  max-width: 500px;
+}
+
+.searchButton {
+  margin-bottom: 20px;
+  border: 2px solid black;
+}
