@@ -30,3 +30,13 @@ export interface FilterOption {
   label: string;
   value: string;
 }
+
+
+export interface CourseSearchParams {
+  search: string;
+  category: string;
+  faculty: string;
+  department: string;
+  grade: string;
+  courseType: string;
+}
