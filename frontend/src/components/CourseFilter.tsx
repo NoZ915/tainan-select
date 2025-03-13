@@ -1,15 +1,30 @@
 import { useState } from "react";
-import { Container, Tabs, Input, Button } from "@mantine/core";
+import { Container, Tabs, Input, Button, Select } from "@mantine/core";
 import { FilterOption } from "../types/courseType";
 import { FaSearch } from "react-icons/fa";
 import style from "../styles/components/CourseFilter.module.css";
 
 type CourseFilterProps = {
-    onSearch: (search: string) => void;
+    onSearch: (searchParams: {
+        search: string;
+        category: string;
+        faculty: string;
+        department: string;
+        grade: string;
+        courseType: string;
+    }) => void;
+    onClick: (page: number) => void;
 };
 
-const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch }) => {
+const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
     const [searchText, setSearchText] = useState("");
+    const [activeTab, setActiveTab] = useState("all");
+
+    const [faculty, setFaculty] = useState("");
+    const [department, setDepartment] = useState("");
+    const [grade, setGrade] = useState("");
+    const [courseType, setCourseType] = useState("");
+
 
     const filterOptions: FilterOption[] = [
         { label: "全部", value: "all" },
@@ -19,9 +34,28 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch }) => {
         { label: "師培", value: "teacher" },
     ];
 
+    const handleTabChange = (value: string | null) => {
+        setActiveTab(value ?? "all");
+        setFaculty("");
+        setDepartment("");
+        setGrade("");
+        setCourseType("");
+    }
+    const handleClick = () => {
+        onClick(1);
+        onSearch({
+            search: searchText,
+            category: activeTab,
+            faculty,
+            department,
+            grade,
+            courseType,
+        });
+    }
+
     return (
         <Container className={style.container}>
-            <Tabs defaultValue="all" className={style.tabs} classNames={{ tab: style.tab }}>
+            <Tabs value={activeTab} className={style.tabs} classNames={{ tab: style.tab }} onChange={(value) => handleTabChange(value)}>
                 <Tabs.List justify="center" className={style.tabsList}>
                     {filterOptions.map((option) => {
                         return (
@@ -40,7 +74,42 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch }) => {
                 className={style.search}
                 onChange={(e) => setSearchText(e.target.value)}
             />
-            <Button className={style.searchButton} onClick={() => onSearch(searchText)}>
+
+            {(activeTab === "university" || activeTab === "graduate") && (
+                <>
+                    <Select
+                        placeholder="選擇學院"
+                        data={["文學院", "理學院", "工學院"]}
+                        value={faculty}
+                        onChange={(value) => setFaculty(value!)}
+                    />
+                    <Select
+                        placeholder="選擇系所"
+                        data={["中文系", "電機系", "資工系"]}
+                        value={department}
+                        onChange={(value) => setDepartment(value!)}
+                    />
+                </>
+            )}
+
+            {activeTab === "university" && (
+                <>
+                    <Select
+                        placeholder="選擇年級"
+                        data={["一年級", "二年級", "三年級", "四年級"]}
+                        value={grade}
+                        onChange={(value) => setGrade(value!)}
+                    />
+                    <Select
+                        placeholder="選擇修別"
+                        data={["必修", "選修", "必選修"]}
+                        value={courseType}
+                        onChange={(value) => setCourseType(value!)}
+                    />
+                </>
+            )}
+
+            <Button className={style.searchButton} onClick={() => handleClick()}>
                 搜尋
             </Button>
         </Container>

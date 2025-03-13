@@ -7,7 +7,14 @@ import CourseFilter from '../components/CourseFilter';
 
 const CoursePage: React.FC = () => {
     const [page, setPage] = useState(1);
-    const [search, setSearch] = useState("");
+    const [search, setSearch] = useState({
+        search: "",
+        category: "all",
+        faculty: "",
+        department: "",
+        grade: "",
+        courseType: ""
+    });
     const limit = 15;
 
     const { data, isLoading, isPending, error } = useGetCourses(page, limit, search);
@@ -30,7 +37,7 @@ const CoursePage: React.FC = () => {
 
     return (
         <div>
-            <CourseFilter onSearch={setSearch} />
+            <CourseFilter onSearch={setSearch} onClick={setPage} />
 
             <Grid gutter="md">
                 {data?.courses.map((course: Course) => (
@@ -45,6 +52,12 @@ const CoursePage: React.FC = () => {
                         </Card>
                     </Grid.Col>
                 ))}
+
+                {data?.courses.length === 0 && (
+                    <Grid justify="center" mt="md">
+                        <Text c="gray">找不到符合條件的課程</Text>
+                    </Grid>
+                )}
             </Grid>
 
             {data?.pagination && (
@@ -55,7 +68,6 @@ const CoursePage: React.FC = () => {
                         total={data.pagination.totalPages}
                         value={page}
                         onChange={setPage}
-
                     />
                 </Center>
             )}
