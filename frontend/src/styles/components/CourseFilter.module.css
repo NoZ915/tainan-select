@@ -8,6 +8,14 @@
   align-items: center;
 }
 
+.searchContainer {
+  margin-bottom: 16px;
+  border: 2px solid black;
+  padding: 16px;
+  border-radius: 0.25rem;
+  background-color: white;
+}
+
 .tab:where([data-active]) {
   border-bottom: 3px solid var(--mantine-color-brick-red-5);
 }
@@ -24,17 +32,17 @@
   border: 0px;
 }
 
-.search {
+.search,
+.select {
   margin-bottom: 20px;
-
 }
 
-.searchInput {
+.searchInput,
+.selectInput {
   border: 2px solid black;
   max-width: 500px;
 }
 
 .searchButton {
-  margin-bottom: 20px;
   border: 2px solid black;
 }

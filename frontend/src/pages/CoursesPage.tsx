@@ -4,6 +4,7 @@ import { Course } from '../types/courseType';
 import { Grid, Card, Text, Loader, Center, Pagination, Badge, Group, Container } from '@mantine/core';
 import style from '../styles/pages/CoursesPage.module.css';
 import CourseFilter from '../components/CourseFilter';
+import { Link } from 'react-router-dom';
 
 const CoursePage: React.FC = () => {
     const [page, setPage] = useState(1);
@@ -42,12 +43,14 @@ const CoursePage: React.FC = () => {
                 {data?.courses.map((course: Course) => (
                     <Grid.Col key={course.id} span={{ base: 12, sm: 6, md: 4 }}>
                         <Card padding="lg" className={style.courseCard}>
-                            <Text fw={500}>{course.course_name}</Text>
-                            <Text fw={300} c="gray">{course.instructor}</Text>
-                            <Group justify="center" mt="sm">
-                                <Badge color="brick-red.3" radius="sm">{course.academy}</Badge>
-                                <Badge color="brick-red.3" variant="light" radius="sm">{course.department}</Badge>
-                            </Group>
+                            <Link to={`/courses/${course.id}`} style={{ textDecoration: "none", flexGrow: 1, color: "black" }} >
+                                <Text fw={500}>{course.course_name}</Text>
+                                <Text fw={300} c="gray">{course.instructor}</Text>
+                                <Group justify="center" mt="sm">
+                                    <Badge color="brick-red.3" radius="sm">{course.academy}</Badge>
+                                    <Badge color="brick-red.3" variant="light" radius="sm">{course.department}</Badge>
+                                </Group>
+                            </Link>
                         </Card>
                     </Grid.Col>
                 ))}

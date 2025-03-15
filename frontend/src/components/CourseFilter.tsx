@@ -73,48 +73,59 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
                     })}
                 </Tabs.List>
             </Tabs>
-            <Input
-                value={searchText}
-                leftSection={<FaSearch />}
-                size="md"
-                placeholder="搜尋「課程名」或「教師名」"
-                classNames={{ input: style.searchInput }}
-                className={style.search}
-                onChange={(e) => setSearchText(e.target.value)}
-            />
-
-            {(activeTab === "university" || activeTab === "graduate") && !isLoadingDepartments && !isLoadingAcademies && (
-                <>
-                    <Select
-                        placeholder="選擇學院"
-                        data={academyList?.academies ?? []}
-                        value={academy}
-                        onChange={(value) => setAcademy(value!)}
-                        searchable
-                    />
-                    <Select
-                        placeholder="選擇系所"
-                        data={departmentList?.departments ?? []}
-                        value={department}
-                        onChange={(value) => setDepartment(value!)}
-                        searchable
-                    />
-                </>
-            )}
-
-            {activeTab === "university" && (
-                <Select
-                    placeholder="選擇修別"
-                    data={["必修", "選修", "必選修"]}
-                    value={courseType}
-                    onChange={(value) => setCourseType(value!)}
-                    searchable
+            <Container className={style.searchContainer}>
+                <Input
+                    value={searchText}
+                    leftSection={<FaSearch />}
+                    size="md"
+                    placeholder="搜尋「課程名」或「教師名」"
+                    classNames={{ input: style.searchInput }}
+                    className={style.search}
+                    onChange={(e) => setSearchText(e.target.value)}
                 />
-            )}
 
-            <Button className={style.searchButton} onClick={() => handleClick()}>
-                搜尋
-            </Button>
+                {(activeTab === "university" || activeTab === "graduate") && !isLoadingDepartments && !isLoadingAcademies && (
+                    <>
+                        <Select
+                            placeholder="選擇學院"
+                            data={academyList?.academies ?? []}
+                            value={academy}
+                            size="md"
+                            classNames={{ input: style.selectInput }}
+                            className={style.select}
+                            onChange={(value) => setAcademy(value!)}
+                            searchable
+                        />
+                        <Select
+                            placeholder="選擇系所"
+                            data={departmentList?.departments ?? []}
+                            value={department}
+                            size="md"
+                            classNames={{ input: style.selectInput }}
+                            className={style.select}
+                            onChange={(value) => setDepartment(value!)}
+                            searchable
+                        />
+                    </>
+                )}
+
+                {activeTab === "university" && (
+                    <Select
+                        placeholder="選擇修別"
+                        data={["必修", "選修", "必選修"]}
+                        value={courseType}
+                        size="md"
+                        classNames={{ input: style.selectInput }}
+                        className={style.select}
+                        onChange={(value) => setCourseType(value!)}
+                        searchable
+                    />
+                )}
+
+                <Button className={style.searchButton} onClick={() => handleClick()}>
+                    搜尋
+                </Button>
+            </Container>
         </Container>
     )
 }

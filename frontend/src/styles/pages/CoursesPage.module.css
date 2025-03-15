@@ -1,3 +1,8 @@
 .courseCard {
   border: 2px solid black;
 }
+
+.courseCard:hover {
+  transform: scale(1.01);
+  box-shadow: var(--mantine-shadow-md);
+}
