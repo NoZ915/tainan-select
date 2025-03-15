@@ -3,6 +3,8 @@ import { Container, Tabs, Input, Button, Select } from "@mantine/core";
 import { FilterOption } from "../types/courseType";
 import { FaSearch } from "react-icons/fa";
 import style from "../styles/components/CourseFilter.module.css";
+import { useGetDepartments } from "../hooks/courses/useGetDepartments";
+import { useGetAcademies } from "../hooks/courses/useGetAcademies";
 
 type CourseFilterProps = {
     onSearch: (searchParams: {
@@ -19,7 +21,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
     const [searchText, setSearchText] = useState("");
     const [activeTab, setActiveTab] = useState("all");
 
-    const [academy, setacademy] = useState("");
+    const [academy, setAcademy] = useState("");
     const [department, setDepartment] = useState("");
     const [courseType, setCourseType] = useState("");
 
@@ -30,11 +32,13 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
         { label: "研究所", value: "graduate" },
         { label: "師培", value: "teacher" },
     ];
+    const { data: departmentList, isLoading: isLoadingDepartments } = useGetDepartments();
+    const { data: academyList, isLoading: isLoadingAcademies } = useGetAcademies();
 
     const handleTabChange = (value: string) => {
         setSearchText("");
         setActiveTab(value ?? "all");
-        setacademy("");
+        setAcademy("");
         setDepartment("");
         setCourseType("");
         onSearch({
@@ -57,7 +61,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
     }
 
     return (
-        <Container className={style.container}>
+        <Container key={activeTab} className={style.container}>
             <Tabs value={activeTab} className={style.tabs} classNames={{ tab: style.tab }} onChange={(value: string | null) => handleTabChange(value ?? "all")}>
                 <Tabs.List justify="center" className={style.tabsList}>
                     {filterOptions.map((option) => {
@@ -79,19 +83,21 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
                 onChange={(e) => setSearchText(e.target.value)}
             />
 
-            {(activeTab === "university" || activeTab === "graduate") && (
+            {(activeTab === "university" || activeTab === "graduate") && !isLoadingDepartments && !isLoadingAcademies && (
                 <>
                     <Select
                         placeholder="選擇學院"
-                        data={["人文學院", "理學院", "工學院"]}
+                        data={academyList?.academies ?? []}
                         value={academy}
-                        onChange={(value) => setacademy(value!)}
+                        onChange={(value) => setAcademy(value!)}
+                        searchable
                     />
                     <Select
                         placeholder="選擇系所"
-                        data={["中文系", "電機系", "資工系"]}
+                        data={departmentList?.departments ?? []}
                         value={department}
                         onChange={(value) => setDepartment(value!)}
+                        searchable
                     />
                 </>
             )}
@@ -102,6 +108,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
                     data={["必修", "選修", "必選修"]}
                     value={courseType}
                     onChange={(value) => setCourseType(value!)}
+                    searchable
                 />
             )}
 

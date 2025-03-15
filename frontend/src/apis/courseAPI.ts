@@ -1,17 +1,31 @@
-import { CourseResponse, CourseSearchParams } from '../types/courseType';
-import { axiosInstance } from './axiosInstance';
+import { CourseResponse, CourseSearchParams } from "../types/courseType";
+import { axiosInstance } from "./axiosInstance";
 
-export const getCourses = async ({ page = 1, limit = 9, search }: {
-    page?: number;
-    limit?: number;
-    search: CourseSearchParams;
+export const getCourses = async ({
+  page = 1,
+  limit = 9,
+  search,
+}: {
+  page?: number;
+  limit?: number;
+  search: CourseSearchParams;
 }): Promise<CourseResponse> => {
-    const filteredSearch = Object.fromEntries(
-        Object.entries(search).filter(([, value]) => value !== "")
-    );
+  const filteredSearch = Object.fromEntries(
+    Object.entries(search).filter(([, value]) => value !== "")
+  );
 
-    const response = await axiosInstance.get("/courses", {
-        params: { page, limit, ...filteredSearch }
-    });
-    return response.data;
-}
+  const response = await axiosInstance.get("/courses", {
+    params: { page, limit, ...filteredSearch },
+  });
+  return response.data;
+};
+
+export const getDepartments = async (): Promise<{ departments: string[] }> => {
+  const response = await axiosInstance.get("/courses/getAllDepartments");
+  return response.data;
+};
+
+export const getAcademies = async (): Promise<{ academies: string[] }> => {
+  const response = await axiosInstance.get("/courses/getAllAcademies");
+  return response.data;
+};
