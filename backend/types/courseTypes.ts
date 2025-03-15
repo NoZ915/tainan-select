@@ -19,7 +19,6 @@ export interface CourseSearchParams {
   category: string;
   academy: string;
   department: string;
-  grade: string;
   courseType: string;
 }
 

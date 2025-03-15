@@ -12,7 +12,6 @@ const CoursePage: React.FC = () => {
         category: "all",
         academy: "",
         department: "",
-        grade: "",
         courseType: ""
     });
     const limit = 9;

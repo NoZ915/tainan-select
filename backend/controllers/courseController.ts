@@ -11,7 +11,6 @@ export const getAllCourses: RequestHandler = async (req, res): Promise<void> => 
       category: String(req.query.category || "all"),
       academy: String(req.query.academy || ""),
       department: String(req.query.department || ""),
-      grade: String(req.query.grade || ""),
       courseType: String(req.query.courseType || ""),
     }
 

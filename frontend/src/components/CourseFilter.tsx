@@ -10,7 +10,6 @@ type CourseFilterProps = {
         category: string;
         academy: string;
         department: string;
-        grade: string;
         courseType: string;
     }) => void;
     onClick: (page: number) => void;
@@ -22,7 +21,6 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
 
     const [academy, setacademy] = useState("");
     const [department, setDepartment] = useState("");
-    const [grade, setGrade] = useState("");
     const [courseType, setCourseType] = useState("");
 
     const filterOptions: FilterOption[] = [
@@ -37,14 +35,12 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
         setActiveTab(value ?? "all");
         setacademy("");
         setDepartment("");
-        setGrade("");
         setCourseType("");
         onSearch({
             search: searchText,
             category: value,
             academy,
             department,
-            grade,
             courseType,
         });
     }
@@ -55,7 +51,6 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
             category: activeTab,
             academy,
             department,
-            grade,
             courseType,
         });
     }
@@ -100,20 +95,12 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
             )}
 
             {activeTab === "university" && (
-                <>
-                    <Select
-                        placeholder="選擇年級"
-                        data={["一年級", "二年級", "三年級", "四年級"]}
-                        value={grade}
-                        onChange={(value) => setGrade(value!)}
-                    />
-                    <Select
-                        placeholder="選擇修別"
-                        data={["必修", "選修", "必選修"]}
-                        value={courseType}
-                        onChange={(value) => setCourseType(value!)}
-                    />
-                </>
+                <Select
+                    placeholder="選擇修別"
+                    data={["必修", "選修", "必選修"]}
+                    value={courseType}
+                    onChange={(value) => setCourseType(value!)}
+                />
             )}
 
             <Button className={style.searchButton} onClick={() => handleClick()}>
