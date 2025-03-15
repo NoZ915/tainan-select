@@ -25,7 +25,6 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
     const [grade, setGrade] = useState("");
     const [courseType, setCourseType] = useState("");
 
-
     const filterOptions: FilterOption[] = [
         { label: "全部", value: "all" },
         { label: "通識", value: "general" },
@@ -34,13 +33,20 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
         { label: "師培", value: "teacher" },
     ];
 
-    const handleTabChange = (value: string | null) => {
+    const handleTabChange = (value: string) => {
         setActiveTab(value ?? "all");
         setacademy("");
         setDepartment("");
         setGrade("");
         setCourseType("");
-        console.log(activeTab)
+        onSearch({
+            search: searchText,
+            category: value,
+            academy,
+            department,
+            grade,
+            courseType,
+        });
     }
     const handleClick = () => {
         onClick(1);
@@ -56,7 +62,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
 
     return (
         <Container className={style.container}>
-            <Tabs value={activeTab} className={style.tabs} classNames={{ tab: style.tab }} onChange={(value) => handleTabChange(value)}>
+            <Tabs value={activeTab} className={style.tabs} classNames={{ tab: style.tab }} onChange={(value: string | null) => handleTabChange(value ?? "all")}>
                 <Tabs.List justify="center" className={style.tabsList}>
                     {filterOptions.map((option) => {
                         return (

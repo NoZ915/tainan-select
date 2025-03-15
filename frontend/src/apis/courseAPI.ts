@@ -13,6 +13,5 @@ export const getCourses = async ({ page = 1, limit = 9, search }: {
     const response = await axiosInstance.get("/courses", {
         params: { page, limit, ...filteredSearch }
     });
-    console.log(response.data)
     return response.data;
 }
