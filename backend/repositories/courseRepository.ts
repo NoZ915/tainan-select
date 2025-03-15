@@ -10,7 +10,6 @@ class CourseRepository {
     search,
   }: PaginationParams): Promise<{ courses: Course[]; total: number }> {
     const whereCondition: any = {};
-
     if (search && search.search) {
       whereCondition[Op.or] = [
         { course_name: { [Op.like]: `%${search.search.toLowerCase()}%` } },
@@ -19,20 +18,22 @@ class CourseRepository {
     }
 
     // category(tab選項)filter與department有關
-    const categoryCondition: any = {};
+    const categoryConditions: any[] = [];
     if (search && search.category === "general") {
-      categoryCondition.department = { [Op.like]: "%通識%" };
+      categoryConditions.push({ department: { [Op.like]: "%通識%" } });
     } else if (search && search.category === "university") {
-      categoryCondition.department = { [Op.notLike]: "%碩士%" };
+      categoryConditions.push({ department: { [Op.notLike]: "%碩士%" } });
     } else if (search && search.category === "graduate") {
-      categoryCondition.department = { [Op.like]: "%碩士%" };
+      categoryConditions.push({ department: { [Op.like]: "%碩士%" } });
     } else if (search && search.category === "teacher") {
-      categoryCondition.department = { [Op.like]: "%師%" };
+      categoryConditions.push({ department: { [Op.like]: "%師%" } });
     }
     if (search && search.department) {
-      categoryCondition.department = search.department;
+      categoryConditions.push({ department: search.department });
     }
-    Object.assign(whereCondition, categoryCondition);
+    if (categoryConditions.length > 0) {
+      whereCondition[Op.and] = categoryConditions;
+    }
 
     if (search && search.academy) whereCondition.academy = search.academy;
     if (search && search.courseType) whereCondition.course_type = search.courseType;
