@@ -32,16 +32,17 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
     ];
 
     const handleTabChange = (value: string) => {
+        setSearchText("");
         setActiveTab(value ?? "all");
         setacademy("");
         setDepartment("");
         setCourseType("");
         onSearch({
-            search: searchText,
+            search: "",
             category: value,
-            academy,
-            department,
-            courseType,
+            academy: "",
+            department: "",
+            courseType: "",
         });
     }
     const handleClick = () => {
@@ -69,6 +70,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
                 </Tabs.List>
             </Tabs>
             <Input
+                value={searchText}
                 leftSection={<FaSearch />}
                 size="md"
                 placeholder="搜尋「課程名」或「教師名」"

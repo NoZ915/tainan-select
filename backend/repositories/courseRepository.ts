@@ -35,7 +35,7 @@ class CourseRepository {
     Object.assign(whereCondition, categoryCondition);
 
     if (search && search.academy) whereCondition.academy = search.academy;
-    if (search && search.courseType) whereCondition.courseType = search.courseType;
+    if (search && search.courseType) whereCondition.course_type = search.courseType;
 
     const [courses, total] = await Promise.all([
       CourseModel.findAll({ where: whereCondition, limit, offset }),

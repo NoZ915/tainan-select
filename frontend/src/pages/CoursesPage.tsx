@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useGetCourses } from '../hooks/courses/useGetCourses';
 import { Course } from '../types/courseType';
-import { Grid, Card, Text, Loader, Center, Pagination, Badge, Group } from '@mantine/core';
+import { Grid, Card, Text, Loader, Center, Pagination, Badge, Group, Container } from '@mantine/core';
 import style from '../styles/pages/CoursesPage.module.css';
 import CourseFilter from '../components/CourseFilter';
 
@@ -53,9 +53,9 @@ const CoursePage: React.FC = () => {
                 ))}
 
                 {data?.courses.length === 0 && (
-                    <Grid justify="center" mt="md">
+                    <Container mt="md">
                         <Text c="gray">找不到符合條件的課程</Text>
-                    </Grid>
+                    </Container>
                 )}
             </Grid>
 
