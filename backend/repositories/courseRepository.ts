@@ -46,7 +46,7 @@ class CourseRepository {
 
   async getAllDepartments(): Promise<string[]>{
     const departments = await CourseModel.findAll({
-      attributes: [[Sequelize.fn("DISTINCT", Sequelize.col("department")), "deaprtment"]],
+      attributes: [[Sequelize.fn("DISTINCT", Sequelize.col("department")), "department"]],
       raw: true
     });
     const departmentList = departments.map((item: {department: string}) => {
