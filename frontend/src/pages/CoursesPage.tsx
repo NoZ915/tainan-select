@@ -15,7 +15,7 @@ const CoursePage: React.FC = () => {
         grade: "",
         courseType: ""
     });
-    const limit = 15;
+    const limit = 9;
 
     const { data, isLoading, isPending, error } = useGetCourses(page, limit, search);
 

@@ -1,7 +1,7 @@
 import { CourseResponse, CourseSearchParams } from '../types/courseType';
 import { axiosInstance } from './axiosInstance';
 
-export const getCourses = async ({ page = 1, limit = 10, search }: {
+export const getCourses = async ({ page = 1, limit = 9, search }: {
     page?: number;
     limit?: number;
     search: CourseSearchParams;
