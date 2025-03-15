@@ -1,4 +1,4 @@
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import CourseModel from "../models/Course";
 import { Course } from "../types/courseTypes";
 import { PaginationParams } from "../types/courseTypes";
@@ -42,6 +42,28 @@ class CourseRepository {
       CourseModel.count({ where: whereCondition }),
     ]);
     return { courses, total };
+  }
+
+  async getAllDepartments(): Promise<string[]>{
+    const departments = await CourseModel.findAll({
+      attributes: [[Sequelize.fn("DISTINCT", Sequelize.col("department")), "deaprtment"]],
+      raw: true
+    });
+    const departmentList = departments.map((item: {department: string}) => {
+      return item.department
+    })
+    return departmentList;
+  }
+
+  async getAllAcademies(): Promise<string[]>{
+    const academies = await CourseModel.findAll({
+      attributes: [[Sequelize.fn("DISTINCT", Sequelize.col("academy")), "academy"]],
+      raw: true
+    });
+    const academyList = academies
+      .map((item: { academy?: string }) => item.academy) 
+      .filter((academy): academy is string => academy != null && academy.trim() !== ''); 
+    return academyList;
   }
 }
 

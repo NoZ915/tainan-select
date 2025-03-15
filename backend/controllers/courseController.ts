@@ -28,3 +28,21 @@ export const getAllCourses: RequestHandler = async (req, res): Promise<void> => 
     res.status(500).json({ message: err });
   }
 }
+
+export const getAllDepartments: RequestHandler = async (req, res): Promise<void> => {
+  try {
+    const departments = CourseService.getAllDepartments();
+    res.status(200).json({departments});
+  } catch (err) {
+    res.status(500).json({ message: err });
+  }
+}
+
+export const getAllAcademies: RequestHandler = async (req, res): Promise<void> => {
+  try {
+    const academies = CourseService.getAllAcademies();
+    res.status(200).json({academies});
+  } catch (err) {
+    res.status(500).json({ message: err });
+  }
+}
