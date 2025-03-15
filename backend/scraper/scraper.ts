@@ -108,6 +108,7 @@ async function runScraper(): Promise<void> {
         // 抓取課程頁面中的資料
         const courseTime = coursePage$("#Label10").text();
         const courseRoom = coursePage$("#Label11").text();
+        const courseType = coursePage$("#Label16").text();
 
         const existingCourse = await Course.findOne({
           where: {
@@ -143,6 +144,7 @@ async function runScraper(): Promise<void> {
             id: undefined as any, // 明確設為 undefined，讓資料庫生成
             created_at: new Date(), // 提供當前時間
             updated_at: new Date(), // 提供當前時間
+            course_type: courseType
           });
         }
       } catch (error) {

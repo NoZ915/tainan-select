@@ -23,6 +23,7 @@ class CourseModel extends Model<
   declare semester: string;
   declare created_at: Date;
   declare updated_at: Date;
+  declare course_type: string;
 }
 
 CourseModel.init(
@@ -75,6 +76,10 @@ CourseModel.init(
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
+    course_type: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    }
   },
   {
     sequelize: db.sequelize,
