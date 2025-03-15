@@ -10,7 +10,7 @@ const CoursePage: React.FC = () => {
     const [search, setSearch] = useState({
         search: "",
         category: "all",
-        faculty: "",
+        academy: "",
         department: "",
         grade: "",
         courseType: ""

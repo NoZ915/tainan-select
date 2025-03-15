@@ -35,7 +35,7 @@ export interface FilterOption {
 export interface CourseSearchParams {
   search: string;
   category: string;
-  faculty: string;
+  academy: string;
   department: string;
   grade: string;
   courseType: string;

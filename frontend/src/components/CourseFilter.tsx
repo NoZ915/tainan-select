@@ -8,7 +8,7 @@ type CourseFilterProps = {
     onSearch: (searchParams: {
         search: string;
         category: string;
-        faculty: string;
+        academy: string;
         department: string;
         grade: string;
         courseType: string;
@@ -20,7 +20,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
     const [searchText, setSearchText] = useState("");
     const [activeTab, setActiveTab] = useState("all");
 
-    const [faculty, setFaculty] = useState("");
+    const [academy, setacademy] = useState("");
     const [department, setDepartment] = useState("");
     const [grade, setGrade] = useState("");
     const [courseType, setCourseType] = useState("");
@@ -36,17 +36,18 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
 
     const handleTabChange = (value: string | null) => {
         setActiveTab(value ?? "all");
-        setFaculty("");
+        setacademy("");
         setDepartment("");
         setGrade("");
         setCourseType("");
+        console.log(activeTab)
     }
     const handleClick = () => {
         onClick(1);
         onSearch({
             search: searchText,
             category: activeTab,
-            faculty,
+            academy,
             department,
             grade,
             courseType,
@@ -79,9 +80,9 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
                 <>
                     <Select
                         placeholder="選擇學院"
-                        data={["文學院", "理學院", "工學院"]}
-                        value={faculty}
-                        onChange={(value) => setFaculty(value!)}
+                        data={["人文學院", "理學院", "工學院"]}
+                        value={academy}
+                        onChange={(value) => setacademy(value!)}
                     />
                     <Select
                         placeholder="選擇系所"
