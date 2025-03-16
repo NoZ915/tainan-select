@@ -24,6 +24,8 @@ class CourseModel extends Model<
   declare created_at: Date;
   declare updated_at: Date;
   declare course_type: string;
+  declare request_count: number;
+  declare view_count: number;
 }
 
 CourseModel.init(
@@ -79,6 +81,16 @@ CourseModel.init(
     course_type: {
       type: DataTypes.STRING(50),
       allowNull: true,
+    },
+    request_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    },
+    view_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
     }
   },
   {

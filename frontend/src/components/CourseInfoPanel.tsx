@@ -10,9 +10,16 @@ const CourseInfoPanel: React.FC<CourseInfoPanelProps> = ({ course, isLoading }) 
   if(isLoading){
     return <>Is Loading...</>
   }
+
+  if (!course) {
+    return <>Course information is not available.</>;
+  }
   
   return (
-    <>{course?.course_name}</>
+    <>
+    <h2>{course.course_name}</h2>
+    <p>{course.academy}</p>
+  </>
   )
 }
 

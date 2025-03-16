@@ -3,9 +3,9 @@ import { getAllAcademies, getAllCourses, getAllDepartments, getCourse } from '..
 
 const router: Router = express.Router();
 
-router.get("/", getAllCourses);
-router.get("/:course_id", getCourse);
 router.get("/getAllDepartments", getAllDepartments);
 router.get("/getAllAcademies", getAllAcademies);
+router.get("/:course_id", getCourse);
+router.get("/", getAllCourses);
 
 export default router;

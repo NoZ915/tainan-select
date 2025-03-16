@@ -46,6 +46,9 @@ class CourseRepository {
   }
   
   async getCourse(course_id: number): Promise<Course | null>{
+    if (isNaN(course_id)) {
+      throw new Error("Invalid course ID");
+    }
     return await CourseModel.findByPk(course_id);
   }
 
