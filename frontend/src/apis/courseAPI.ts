@@ -1,4 +1,4 @@
-import { CourseResponse, CourseSearchParams } from "../types/courseType";
+import { Course, CourseResponse, CourseSearchParams } from "../types/courseType";
 import { axiosInstance } from "./axiosInstance";
 
 export const getCourses = async ({
@@ -19,6 +19,11 @@ export const getCourses = async ({
   });
   return response.data;
 };
+
+export const getCourse = async (course_id: string): Promise<Course | null> => {
+  const response = await axiosInstance.get(`/course/${course_id}`);
+  return response.data;
+}
 
 export const getDepartments = async (): Promise<{ departments: string[] }> => {
   const response = await axiosInstance.get("/courses/getAllDepartments");
