@@ -44,6 +44,10 @@ class CourseRepository {
     ]);
     return { courses, total };
   }
+  
+  async getCourse(course_id: number): Promise<Course | null>{
+    return await CourseModel.findByPk(course_id);
+  }
 
   async getAllDepartments(): Promise<string[]>{
     const departments = await CourseModel.findAll({

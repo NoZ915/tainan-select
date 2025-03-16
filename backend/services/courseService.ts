@@ -7,6 +7,10 @@ class CourseService {
     return await CourseRepository.getAllCourses(params);
   }
 
+  async getCourse(course_id: number): Promise<Course | null>{
+    return await CourseRepository.getCourse(course_id);
+  }
+
   async getAllDepartments(): Promise<string[]>{
     return await CourseRepository.getAllDepartments();
   }
