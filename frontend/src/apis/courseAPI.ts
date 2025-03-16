@@ -21,7 +21,7 @@ export const getCourses = async ({
 };
 
 export const getCourse = async (course_id: string): Promise<Course | null> => {
-  const response = await axiosInstance.get(`/course/${course_id}`);
+  const response = await axiosInstance.get(`/courses/${course_id}`);
   return response.data;
 }
 
