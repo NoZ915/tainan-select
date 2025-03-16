@@ -12,6 +12,9 @@ export interface Course {
   semester: string;
   created_at: Date;
   updated_at: Date;
+  course_type: string;
+  request_count: number;
+  view_count: number;
 }
 
 export interface Pagination {
