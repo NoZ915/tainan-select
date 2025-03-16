@@ -78,7 +78,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
                     value={searchText}
                     leftSection={<FaSearch />}
                     size="md"
-                    placeholder="搜尋「課程名」或「教師名」"
+                    placeholder="「課程名」或「教師名」"
                     classNames={{ input: style.searchInput }}
                     className={style.search}
                     onChange={(e) => setSearchText(e.target.value)}

@@ -6,7 +6,7 @@ import style from '../styles/pages/CoursesPage.module.css';
 import CourseFilter from '../components/CourseFilter';
 import { Link } from 'react-router-dom';
 
-const CoursePage: React.FC = () => {
+const CoursesPage: React.FC = () => {
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState({
         search: "",
@@ -43,7 +43,7 @@ const CoursePage: React.FC = () => {
                 {data?.courses.map((course: Course) => (
                     <Grid.Col key={course.id} span={{ base: 12, sm: 6, md: 4 }}>
                         <Card padding="lg" className={style.courseCard}>
-                            <Link to={`/courses/${course.id}`} style={{ textDecoration: "none", flexGrow: 1, color: "black" }} >
+                            <Link to={`/course/${course.id}`} style={{ textDecoration: "none", flexGrow: 1, color: "black" }} >
                                 <Text fw={500}>{course.course_name}</Text>
                                 <Text fw={300} c="gray">{course.instructor}</Text>
                                 <Group justify="center" mt="sm">
@@ -77,4 +77,4 @@ const CoursePage: React.FC = () => {
     );
 };
 
-export default CoursePage;
+export default CoursesPage;

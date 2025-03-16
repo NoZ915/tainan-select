@@ -8,7 +8,8 @@ import { theme } from './styles/theme.ts';
 import './styles/App.css';
 
 import App from './App.tsx'
-import CoursePage from './pages/CoursesPage.tsx';
+import CoursesPage from './pages/CoursesPage.tsx';
+import CourseDetailPage from './pages/CourseDetailPage.tsx';
 import DynamicPage from './pages/DynamicPage.tsx';
 import FrequentPage from './pages/FrequentPage.tsx';
 
@@ -18,7 +19,8 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />,
     children: [
-      { path: "/", element: <CoursePage />, index: true },
+      { path: "/", element: <CoursesPage />, index: true },
+      { path: "/course/:id", element: <CourseDetailPage /> },
       { path: "/dynamic", element: <DynamicPage /> },
       { path: "/frequent", element: <FrequentPage /> },
     ]
