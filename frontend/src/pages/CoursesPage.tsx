@@ -1,23 +1,47 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGetCourses } from '../hooks/courses/useGetCourses';
 import { Course } from '../types/courseType';
 import { Grid, Card, Text, Loader, Center, Pagination, Badge, Group, Container } from '@mantine/core';
 import style from '../styles/pages/CoursesPage.module.css';
 import CourseFilter from '../components/CourseFilter';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 
 const CoursesPage: React.FC = () => {
-    const [page, setPage] = useState(1);
-    const [search, setSearch] = useState({
-        search: "",
-        category: "all",
-        academy: "",
-        department: "",
-        courseType: ""
-    });
+    const { search } = useLocation();
+    const { page: pageParam } = useParams();
+    const queryParams = new URLSearchParams(search);
+    const initialSearch = queryParams.get("search") || "";
+    const initialCategory = queryParams.get("category") || "all";
+    const initialAcademy = queryParams.get("academy") || "";
+    const initialDepartment = queryParams.get("department") || "";
+    const initialCourseType = queryParams.get("courseType") || "";
+    const currentPage = parseInt(pageParam || "1");
     const limit = 9;
 
-    const { data, isLoading, isPending, error } = useGetCourses(page, limit, search);
+    const [page, setPage] = useState(currentPage);
+    const [searchParams, setSearchParams] = useState({
+        page: currentPage,
+        limit: limit,
+        search: initialSearch,
+        category: initialCategory,
+        academy: initialAcademy,
+        department: initialDepartment,
+        courseType: initialCourseType
+    });
+
+    useEffect(() => {
+        setSearchParams({
+            page: page,
+            limit: 9,
+            search: initialSearch,
+            category: initialCategory,
+            academy: initialAcademy,
+            department: initialDepartment,
+            courseType: initialCourseType
+        });
+    }, [search, initialSearch, initialCategory, initialAcademy, initialDepartment, initialCourseType, page]);
+
+    const { data, isLoading, isPending, error } = useGetCourses(page, limit, searchParams);
 
     if (isLoading || isPending) {
         return (
@@ -37,7 +61,7 @@ const CoursesPage: React.FC = () => {
 
     return (
         <div>
-            <CourseFilter onSearch={setSearch} onClick={setPage} />
+            <CourseFilter onSearch={setSearchParams} onClick={setPage} />
 
             <Grid gutter="md">
                 {data?.courses.map((course: Course) => (

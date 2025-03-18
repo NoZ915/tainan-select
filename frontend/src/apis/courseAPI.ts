@@ -14,13 +14,17 @@ export const getCourses = async ({
     Object.entries(search).filter(([, value]) => value !== "")
   );
 
-  const response = await axiosInstance.get("/courses", {
-    params: { page, limit, ...filteredSearch },
-  });
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    ...filteredSearch,
+  }).toString();
+
+  const response = await axiosInstance.get(`/courses?${queryParams}`);
   return response.data;
 };
 
-export const getCourse = async (course_id: string): Promise<{course: Course} | null> => {
+export const getCourse = async (course_id: string): Promise<{ course: Course } | null> => {
   const response = await axiosInstance.get(`/courses/${course_id}`);
   return response.data;
 }

@@ -5,9 +5,12 @@ import { FaSearch } from "react-icons/fa";
 import style from "../styles/components/CourseFilter.module.css";
 import { useGetDepartments } from "../hooks/courses/useGetDepartments";
 import { useGetAcademies } from "../hooks/courses/useGetAcademies";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 type CourseFilterProps = {
     onSearch: (searchParams: {
+        page: number;
+        limit: number;
         search: string;
         category: string;
         academy: string;
@@ -18,12 +21,24 @@ type CourseFilterProps = {
 };
 
 const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
-    const [searchText, setSearchText] = useState("");
-    const [activeTab, setActiveTab] = useState("all");
+    const { search } = useLocation();
+    const { page: pageParam } = useParams();
+    const navigate = useNavigate();
 
-    const [academy, setAcademy] = useState("");
-    const [department, setDepartment] = useState("");
-    const [courseType, setCourseType] = useState("");
+    // 讀取 URL 查詢參數
+    const queryParams = new URLSearchParams(search);
+    const initialSearchText = queryParams.get("search") || "";
+    const initialCategory = queryParams.get("category") || "all";
+    const initialAcademy = queryParams.get("academy") || "";
+    const initialDepartment = queryParams.get("department") || "";
+    const initialCourseType = queryParams.get("courseType") || "";
+    const currentPage = parseInt(pageParam || "1");
+
+    const [searchText, setSearchText] = useState(initialSearchText);
+    const [activeTab, setActiveTab] = useState(initialCategory);
+    const [academy, setAcademy] = useState(initialAcademy);
+    const [department, setDepartment] = useState(initialDepartment);
+    const [courseType, setCourseType] = useState(initialCourseType);
 
     const filterOptions: FilterOption[] = [
         { label: "全部", value: "all" },
@@ -42,22 +57,38 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
         setDepartment("");
         setCourseType("");
         onSearch({
+            page: currentPage,
+            limit: 9,
             search: "",
             category: value,
             academy: "",
             department: "",
             courseType: "",
         });
+        updateURL(value, "", "", "", "");
     }
     const handleClick = () => {
         onClick(1);
         onSearch({
+            page: currentPage,
+            limit: 9,
             search: searchText,
             category: activeTab,
             academy,
             department,
             courseType,
         });
+        updateURL(activeTab, searchText, academy, department, courseType);
+    }
+    const updateURL = (category: string, search: string, academy: string, department: string, courseType: string) => {
+        const newQueryParams = new URLSearchParams({
+            search,
+            category,
+            academy,
+            department,
+            courseType
+        });
+        navigate(`?${newQueryParams.toString()}`);
     }
 
     return (

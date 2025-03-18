@@ -22,7 +22,12 @@ class CourseRepository {
     if (search && search.category === "general") {
       categoryConditions.push({ department: { [Op.like]: "%通識%" } });
     } else if (search && search.category === "university") {
-      categoryConditions.push({ department: { [Op.notLike]: "%碩士%" } });
+      categoryConditions.push({
+        [Op.and]: [
+          { department: { [Op.notLike]: "%碩士%" } },
+          { department: { [Op.notLike]: "%通識%" } },
+        ]
+      });
     } else if (search && search.category === "graduate") {
       categoryConditions.push({ department: { [Op.like]: "%碩士%" } });
     } else if (search && search.category === "teacher") {
@@ -44,33 +49,33 @@ class CourseRepository {
     ]);
     return { courses, total };
   }
-  
-  async getCourse(course_id: number): Promise<Course | null>{
+
+  async getCourse(course_id: number): Promise<Course | null> {
     if (isNaN(course_id)) {
       throw new Error("Invalid course ID");
     }
     return await CourseModel.findByPk(course_id);
   }
 
-  async getAllDepartments(): Promise<string[]>{
+  async getAllDepartments(): Promise<string[]> {
     const departments = await CourseModel.findAll({
       attributes: [[Sequelize.fn("DISTINCT", Sequelize.col("department")), "department"]],
       raw: true
     });
-    const departmentList = departments.map((item: {department: string}) => {
+    const departmentList = departments.map((item: { department: string }) => {
       return item.department
     })
     return departmentList;
   }
 
-  async getAllAcademies(): Promise<string[]>{
+  async getAllAcademies(): Promise<string[]> {
     const academies = await CourseModel.findAll({
       attributes: [[Sequelize.fn("DISTINCT", Sequelize.col("academy")), "academy"]],
       raw: true
     });
     const academyList = academies
-      .map((item: { academy?: string }) => item.academy) 
-      .filter((academy): academy is string => academy != null && academy.trim() !== ''); 
+      .map((item: { academy?: string }) => item.academy)
+      .filter((academy): academy is string => academy != null && academy.trim() !== '');
     return academyList;
   }
 }
