@@ -6,7 +6,6 @@ import { useParams } from "react-router-dom";
 
 const CourseDetailPage: React.FC = () => {
   const { course_id } = useParams<{ course_id: string }>();
-  console.log(course_id)
   const { data: course, isLoading: isInfoLoading } = useGetCourse(course_id || '');
 
   return (
