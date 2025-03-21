@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useGetCourses } from '../hooks/courses/useGetCourses';
-import { Course } from '../types/courseType';
+import { CombinedSearchParams, Course } from '../types/courseType';
 import { Grid, Card, Text, Loader, Center, Pagination, Badge, Group, Container } from '@mantine/core';
 import style from '../styles/pages/CoursesPage.module.css';
 import CourseFilter from '../components/CourseFilter';
@@ -50,18 +50,8 @@ const CoursesPage: React.FC = () => {
         updateURL({ ...searchParams, page });
     }
 
-    interface SearchParams {
-        page: number;
-        limit: number;
-        search: string;
-        category: string;
-        academy: string;
-        department: string;
-        courseType: string;
-    }
-
     // 還要研究這部分
-    const updateURL = (params: SearchParams) => {
+    const updateURL = (params: CombinedSearchParams) => {
         const newQueryParams = new URLSearchParams();
         if (params.page > 1) newQueryParams.set("page", params.page.toString());
         if (params.search) newQueryParams.set("search", params.search);

@@ -42,3 +42,8 @@ export interface CourseSearchParams {
   department: string;
   courseType: string;
 }
+export interface PaginationParams {
+  page: number;
+  limit: number;
+}
+export type CombinedSearchParams = CourseSearchParams & PaginationParams;
