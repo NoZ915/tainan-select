@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useGetCourses } from '../hooks/courses/useGetCourses';
-import { CombinedSearchParams, Course } from '../types/courseType';
+import { SearchParams, Course } from '../types/courseType';
 import { Grid, Card, Text, Loader, Center, Pagination, Badge, Group, Container } from '@mantine/core';
 import style from '../styles/pages/CoursesPage.module.css';
 import CourseFilter from '../components/CourseFilter';
@@ -32,7 +32,7 @@ const CoursesPage: React.FC = () => {
     });
 
     useEffect(() => {
-        const updatedParams = {
+        const updatedCombinedSearchParams = {
             page: parseInt(queryParams.get("page") || "1", 10),
             limit: 9,
             search: queryParams.get("search") || "",
@@ -41,8 +41,8 @@ const CoursesPage: React.FC = () => {
             department: queryParams.get("department") || "",
             courseType: queryParams.get("courseType") || "",
         };
-        setPage(updatedParams.page);
-        setSearchParams(updatedParams);
+        setPage(updatedCombinedSearchParams.page);
+        setSearchParams(updatedCombinedSearchParams);
     }, [queryParams]);
 
     const handleClickPage = (page: number) => {
@@ -51,7 +51,7 @@ const CoursesPage: React.FC = () => {
     }
 
     // 還要研究這部分
-    const updateURL = (params: CombinedSearchParams) => {
+    const updateURL = (params: SearchParams) => {
         const newQueryParams = new URLSearchParams();
         if (params.page > 1) newQueryParams.set("page", params.page.toString());
         if (params.search) newQueryParams.set("search", params.search);
@@ -63,7 +63,7 @@ const CoursesPage: React.FC = () => {
         navigate(`?${newQueryParams.toString()}`);
     };
 
-    const { data, isLoading, isPending, error } = useGetCourses(page, limit, searchParams);
+    const { data, isLoading, isPending, error } = useGetCourses(searchParams);
 
     if (isLoading || isPending) {
         return (

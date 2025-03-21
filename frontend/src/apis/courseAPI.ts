@@ -1,25 +1,11 @@
-import { Course, CourseResponse, CourseSearchParams } from "../types/courseType";
+import { Course, CourseResponse, SearchParams } from "../types/courseType";
 import { axiosInstance } from "./axiosInstance";
 
-export const getCourses = async ({
-  page = 1,
-  limit = 9,
-  search,
-}: {
-  page?: number;
-  limit?: number;
-  search: CourseSearchParams;
-}): Promise<CourseResponse> => {
-  const filteredSearch = Object.fromEntries(
-    Object.entries(search).filter(([, value]) => value !== "")
+export const getCourses = async (searchParams: SearchParams): Promise<CourseResponse> => {
+  const filteredSearchParams = Object.fromEntries(
+    Object.entries(searchParams).filter(([, value]) => value !== "")
   );
-
-  const queryParams = new URLSearchParams({
-    page: page.toString(),
-    limit: limit.toString(),
-    ...filteredSearch,
-  }).toString();
-
+  const queryParams = new URLSearchParams({ ...filteredSearchParams }).toString();
   const response = await axiosInstance.get(`/courses?${queryParams}`);
   return response.data;
 };

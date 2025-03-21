@@ -35,15 +35,12 @@ export interface FilterOption {
 }
 
 
-export interface CourseSearchParams {
+export interface SearchParams {
+  page: number;
+  limit: number;
   search: string;
   category: string;
   academy: string;
   department: string;
   courseType: string;
 }
-export interface PaginationParams {
-  page: number;
-  limit: number;
-}
-export type CombinedSearchParams = CourseSearchParams & PaginationParams;

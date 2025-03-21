@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { Container, Tabs, Input, Button, Select } from "@mantine/core";
-import { CombinedSearchParams, FilterOption } from "../types/courseType";
+import { SearchParams, FilterOption } from "../types/courseType";
 import { FaSearch } from "react-icons/fa";
 import style from "../styles/components/CourseFilter.module.css";
 import { useGetDepartments } from "../hooks/courses/useGetDepartments";
 import { useGetAcademies } from "../hooks/courses/useGetAcademies";
 
 interface CourseFilterProps {
-    searchParams: CombinedSearchParams;
-    onSearch: (searchParams: CombinedSearchParams) => void;
+    searchParams: SearchParams;
+    onSearch: (searchParams: SearchParams) => void;
     onClick: (page: number) => void;
 };
 
