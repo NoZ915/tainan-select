@@ -1,13 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Container, Tabs, Input, Button, Select } from "@mantine/core";
 import { FilterOption } from "../types/courseType";
 import { FaSearch } from "react-icons/fa";
 import style from "../styles/components/CourseFilter.module.css";
 import { useGetDepartments } from "../hooks/courses/useGetDepartments";
 import { useGetAcademies } from "../hooks/courses/useGetAcademies";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 type CourseFilterProps = {
+    searchParams: {
+        page: number;
+        limit: number;
+        search: string;
+        category: string;
+        academy: string;
+        department: string;
+        courseType: string;
+    };
     onSearch: (searchParams: {
         page: number;
         limit: number;
@@ -20,25 +28,20 @@ type CourseFilterProps = {
     onClick: (page: number) => void;
 };
 
-const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
-    const { search } = useLocation();
-    const { page: pageParam } = useParams();
-    const navigate = useNavigate();
+const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onClick }) => {
+    const [searchText, setSearchText] = useState(searchParams.search);
+    const [activeTab, setActiveTab] = useState(searchParams.category);
+    const [academy, setAcademy] = useState(searchParams.academy);
+    const [department, setDepartment] = useState(searchParams.department);
+    const [courseType, setCourseType] = useState(searchParams.courseType);
 
-    // 讀取 URL 查詢參數
-    const queryParams = new URLSearchParams(search);
-    const initialSearchText = queryParams.get("search") || "";
-    const initialCategory = queryParams.get("category") || "all";
-    const initialAcademy = queryParams.get("academy") || "";
-    const initialDepartment = queryParams.get("department") || "";
-    const initialCourseType = queryParams.get("courseType") || "";
-    const currentPage = parseInt(pageParam || "1");
-
-    const [searchText, setSearchText] = useState(initialSearchText);
-    const [activeTab, setActiveTab] = useState(initialCategory);
-    const [academy, setAcademy] = useState(initialAcademy);
-    const [department, setDepartment] = useState(initialDepartment);
-    const [courseType, setCourseType] = useState(initialCourseType);
+    useEffect(() => {
+        setSearchText(searchParams.search);
+        setActiveTab(searchParams.category);
+        setAcademy(searchParams.academy);
+        setDepartment(searchParams.department);
+        setCourseType(searchParams.courseType);
+    }, [searchParams]);
 
     const filterOptions: FilterOption[] = [
         { label: "全部", value: "all" },
@@ -57,7 +60,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
         setDepartment("");
         setCourseType("");
         onSearch({
-            page: currentPage,
+            page: 1,
             limit: 9,
             search: "",
             category: value,
@@ -65,12 +68,11 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
             department: "",
             courseType: "",
         });
-        updateURL(value, "", "", "", "");
     }
     const handleClick = () => {
         onClick(1);
         onSearch({
-            page: currentPage,
+            page: 1,
             limit: 9,
             search: searchText,
             category: activeTab,
@@ -78,18 +80,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
             department,
             courseType,
         });
-        updateURL(activeTab, searchText, academy, department, courseType);
-    }
-    const updateURL = (category: string, search: string, academy: string, department: string, courseType: string) => {
-        const newQueryParams = new URLSearchParams({
-            search,
-            category,
-            academy,
-            department,
-            courseType
-        });
-        navigate(`?${newQueryParams.toString()}`);
-    }
+    };
 
     return (
         <Container key={activeTab} className={style.container}>
@@ -120,7 +111,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
                         <Select
                             placeholder="選擇學院"
                             data={academyList?.academies ?? []}
-                            value={academy}
+                            value={academy || null}
                             size="md"
                             classNames={{ input: style.selectInput }}
                             className={style.select}
@@ -130,7 +121,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
                         <Select
                             placeholder="選擇系所"
                             data={departmentList?.departments ?? []}
-                            value={department}
+                            value={department || null}
                             size="md"
                             classNames={{ input: style.selectInput }}
                             className={style.select}
@@ -144,7 +135,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ onSearch, onClick }) => {
                     <Select
                         placeholder="選擇修別"
                         data={["必修", "選修", "必選修"]}
-                        value={courseType}
+                        value={courseType || null}
                         size="md"
                         classNames={{ input: style.selectInput }}
                         className={style.select}

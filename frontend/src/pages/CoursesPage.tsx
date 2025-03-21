@@ -1,15 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useGetCourses } from '../hooks/courses/useGetCourses';
 import { Course } from '../types/courseType';
 import { Grid, Card, Text, Loader, Center, Pagination, Badge, Group, Container } from '@mantine/core';
 import style from '../styles/pages/CoursesPage.module.css';
 import CourseFilter from '../components/CourseFilter';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 const CoursesPage: React.FC = () => {
     const { search } = useLocation();
     const { page: pageParam } = useParams();
-    const queryParams = new URLSearchParams(search);
+    const navigate = useNavigate();
+
+    const queryParams = useMemo(() => new URLSearchParams(search), [search]);
     const initialSearch = queryParams.get("search") || "";
     const initialCategory = queryParams.get("category") || "all";
     const initialAcademy = queryParams.get("academy") || "";
@@ -20,7 +22,7 @@ const CoursesPage: React.FC = () => {
 
     const [page, setPage] = useState(currentPage);
     const [searchParams, setSearchParams] = useState({
-        page: currentPage,
+        page: page,
         limit: limit,
         search: initialSearch,
         category: initialCategory,
@@ -30,16 +32,46 @@ const CoursesPage: React.FC = () => {
     });
 
     useEffect(() => {
-        setSearchParams({
-            page: page,
+        const updatedParams = {
+            page: parseInt(queryParams.get("page") || "1", 10),
             limit: 9,
-            search: initialSearch,
-            category: initialCategory,
-            academy: initialAcademy,
-            department: initialDepartment,
-            courseType: initialCourseType
-        });
-    }, [search, initialSearch, initialCategory, initialAcademy, initialDepartment, initialCourseType, page]);
+            search: queryParams.get("search") || "",
+            category: queryParams.get("category") || "all",
+            academy: queryParams.get("academy") || "",
+            department: queryParams.get("department") || "",
+            courseType: queryParams.get("courseType") || "",
+        };
+        setPage(updatedParams.page);
+        setSearchParams(updatedParams);
+    }, [queryParams]);
+
+    const handleClickPage = (page: number) => {
+        setPage(page);
+        updateURL({ ...searchParams, page });
+    }
+
+    interface SearchParams {
+        page: number;
+        limit: number;
+        search: string;
+        category: string;
+        academy: string;
+        department: string;
+        courseType: string;
+    }
+
+    // 還要研究這部分
+    const updateURL = (params: SearchParams) => {
+        const newQueryParams = new URLSearchParams();
+        if (params.page > 1) newQueryParams.set("page", params.page.toString());
+        if (params.search) newQueryParams.set("search", params.search);
+        if (params.category !== "all") newQueryParams.set("category", params.category);
+        if (params.academy) newQueryParams.set("academy", params.academy);
+        if (params.department) newQueryParams.set("department", params.department);
+        if (params.courseType) newQueryParams.set("courseType", params.courseType);
+
+        navigate(`?${newQueryParams.toString()}`);
+    };
 
     const { data, isLoading, isPending, error } = useGetCourses(page, limit, searchParams);
 
@@ -61,7 +93,13 @@ const CoursesPage: React.FC = () => {
 
     return (
         <div>
-            <CourseFilter onSearch={setSearchParams} onClick={setPage} />
+            <CourseFilter
+                searchParams={searchParams}
+                onSearch={(params) => {
+                    updateURL(params);
+                }}
+                onClick={setPage}
+            />
 
             <Grid gutter="md">
                 {data?.courses.map((course: Course) => (
@@ -93,7 +131,7 @@ const CoursesPage: React.FC = () => {
                         mt="md"
                         total={data.pagination.totalPages}
                         value={page}
-                        onChange={setPage}
+                        onChange={(page) => handleClickPage(page)}
                     />
                 </Center>
             )}
