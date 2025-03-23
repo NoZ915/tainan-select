@@ -1,9 +1,11 @@
-import { DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
+import { DataTypes, InferAttributes, InferCreationAttributes, Model, Optional } from "sequelize";
 import db from "./index";
+
+interface UserCreationAttributes extends Optional<InferCreationAttributes<UserModel>, 'id' | 'uuid' | 'created_at' | 'updated_at'> {}
 
 class UserModel extends Model<
   InferAttributes<UserModel>,
-  InferCreationAttributes<UserModel>
+  UserCreationAttributes
 > {
   declare id: number;
   declare uuid: string;
