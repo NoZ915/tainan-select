@@ -6,24 +6,25 @@ passport.use(
   new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    callbackURL: `${process.env.FRONTEND_BASE_URL}/auth/google/callback`,
-  }, 
-  async (accessToken: string, refreshToken: string, profile: any, done: any) => {
-    try {
-      const { sub, email } = profile;
+    callbackURL: `http://localhost:8080/api/auth/google/callback`,
+  },
+    async (accessToken: string, refreshToken: string, profile: any, done: any) => {
+      try {
+        const sub = profile._json.sub;
+        const email = profile._json.email;
 
-      if (!email?.endsWith('@gm2.nutn.edu.tw')) {
-        return done(null, false, { message: 'Email domain not allowed' });
+        if (!email?.endsWith('@gm2.nutn.edu.tw')) {
+          return done(null, false, { message: 'Email domain not allowed' });
+        }
+
+        let user = await userService.getUserByGoogleSub(sub);
+        if (!user) {
+          user = await userService.createUser(sub);
+        }
+
+        done(null, user);
+      } catch (err) {
+        done(err, false);
       }
-
-      let user = await userService.getUserByGoogleSub(sub);
-      if(!user){
-        user = await userService.createUser(sub);
-      }
-
-      done(null, user);
-    } catch (err) {
-      done(err, false);
-    }
-  })
+    })
 )

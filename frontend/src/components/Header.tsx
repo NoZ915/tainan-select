@@ -1,9 +1,12 @@
-import { Group, Text, Box, Container, Image } from '@mantine/core';
+import { Group, Text, Box, Container, Image, Button } from '@mantine/core';
 import { Link, useLocation } from 'react-router-dom';
 import styles from '../styles/components/Header.module.css';
+import { useState } from 'react';
+import LoginModal from './LoginModal';
 
 const Header: React.FC = () => {
   const location = useLocation(); // 用於獲取當前路徑
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   // 定義導航項目
   const navItems = [
@@ -32,10 +35,14 @@ const Header: React.FC = () => {
             ))}
           </Group>
         </Box>
-        <Text component={Link} to="/login" className={styles.loginButton}>
+        <Button
+          onClick={() => setIsLoginModalOpen(true)}
+          className={styles.loginButton}
+        >
           登入 / 註冊
-        </Text>
+        </Button>
       </Container>
+      <LoginModal opened={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
     </header>
   );
 };

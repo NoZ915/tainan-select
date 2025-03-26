@@ -12,6 +12,7 @@ import CoursesPage from './pages/CoursesPage.tsx';
 import CourseDetailPage from './pages/CourseDetailPage.tsx';
 import DynamicPage from './pages/DynamicPage.tsx';
 import FrequentPage from './pages/FrequentPage.tsx';
+import OAuthCallbackPage from './pages/OAuthCallbackPage.tsx';
 
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
@@ -20,6 +21,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { path: "/", element: <CoursesPage />, index: true },
+      { path: "/auth/google/callback", element: <OAuthCallbackPage /> },
       { path: "/course/:course_id", element: <CourseDetailPage /> },
       { path: "/dynamic", element: <DynamicPage /> },
       { path: "/frequent", element: <FrequentPage /> },
