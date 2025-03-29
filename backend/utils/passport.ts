@@ -13,7 +13,7 @@ passport.use(
         const sub = profile._json.sub;
         const email = profile._json.email;
 
-        if (!email?.endsWith('@gm2.nutn.edu.tw')) {
+        if (!email?.endsWith(process.env.ALLOWED_EMAIL_DOMAIN)) {
           return done(null, false, { message: 'Email domain not allowed' });
         }
 

@@ -1,19 +1,22 @@
 import express, { Router } from "express";
 import passport from "passport";
 import { generateJwtToken } from "../utils/jwt";
+import { logoutController, statusController } from "../controllers/authController";
 
 const router: Router = express.Router();
 
+// google oAuth + passport
 router.get(
   "/google",
   passport.authenticate("google", { scope: ["email", "profile"] })
 );
-
 router.get("/google/callback", (req, res, next) => {
   passport.authenticate("google", { session: false }, (err, user, info) => {
     if (err || !user) {
       // 若發生錯誤或無使用者，導向錯誤頁
-      return res.redirect(`${process.env.FRONTEND_BASE_URL}/auth/google/callback?error=invalid_email`);
+      return res.redirect(
+        `${process.env.FRONTEND_BASE_URL}/auth/google/callback?error=invalid_email`
+      );
     }
 
     // 產生 JWT 並存入 Cookie
@@ -27,5 +30,11 @@ router.get("/google/callback", (req, res, next) => {
     res.redirect(`${process.env.FRONTEND_BASE_URL}/`);
   })(req, res, next);
 });
+
+// 驗證登入狀態
+router.get("/status", statusController);
+
+// 登出
+router.post("/logout", logoutController);
 
 export default router;
