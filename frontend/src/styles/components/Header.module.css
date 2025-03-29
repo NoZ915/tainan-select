@@ -28,7 +28,7 @@ header * {
   font-weight: 700;
 }
 
-.navItem.active::after{
+.navItem.active::after {
   content: "";
   position: absolute;
   bottom: 0;
@@ -38,7 +38,7 @@ header * {
   background: black;
 }
 
-.navItem.active{
+.navItem.active {
   color: black;
 }
 
@@ -50,7 +50,46 @@ header * {
   max-height: 40px;
 }
 
-.loginButton{
+.authButton {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.authButton p {
+  padding: 10px;
+  font-weight: 700;
+}
+
+/* 手機端 */
+.mobileNav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+}
+
+.mobileLink {
+  border-bottom: 1px solid #eee;
+  padding: 10px 10px;
+
+  text-decoration: none;
+  color: #333;
   font-size: 18px;
+  font-weight: bold;
+}
+
+.mobileLink:hover {
+  background-color: #3333331b;
+}
+
+.mobileAuthButton {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.mobileAuthButton p {
+  padding: 10px;
   font-weight: 700;
 }
