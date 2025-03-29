@@ -1,4 +1,5 @@
 import userRepository from "../repositories/userRepository";
+import { generateTainanCharacterName } from "../utils/tainanDiceMaster";
 
 class UserService{
     async getUserByGoogleSub(google_sub: string){
@@ -6,7 +7,8 @@ class UserService{
     }
 
     async createUser(google_sub: string){
-        return userRepository.createUser(google_sub);
+        const name = generateTainanCharacterName();
+        return userRepository.createUser(google_sub, name);
     }
 }
 
