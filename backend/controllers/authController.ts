@@ -36,6 +36,11 @@ export const statusController: RequestHandler = async (
 };
 
 export const logoutController: RequestHandler = (req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "strict",
+    path: "/", 
+  });
   res.json({ message: "已登出" });
 };
