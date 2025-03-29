@@ -27,7 +27,7 @@ router.get("/google/callback", (req, res, next) => {
       sameSite: "strict",
     });
 
-    res.redirect(`${process.env.FRONTEND_BASE_URL}/`);
+    res.redirect(`${process.env.FRONTEND_BASE_URL}/auth/google/callback`);
   })(req, res, next);
 });
 

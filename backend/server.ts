@@ -10,11 +10,15 @@ import coursesRoutes from "./routes/courses";
 import authRoutes from "./routes/auth"
 
 const app: Express = express();
+const corsOptions = {
+  origin: process.env.FRONTEND_BASE_URL, // 設置允許的來源
+  credentials: true, // 允許帶有憑證的請求
+};
 
 // middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors(corsOptions));
 app.use(cookieParser());
+app.use(express.json());
 app.use(passport.initialize());
 
 // routes

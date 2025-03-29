@@ -9,12 +9,27 @@ export const statusController: RequestHandler = async (
   const token = req.cookies.token;
   if (!token) {
     res.status(401).json({ message: "未登入" });
+    return;
   }
 
   try {
     const userDetail = verifyJwtToken(token);
     const user = await userService.getUserByGoogleSub(userDetail.sub);
-    res.status(200).json({ authenticated: true, user });
+    if (!user) {
+      res.status(404).json({ authenticated: false, message: "用戶未找到" });
+      return;
+    }
+    const { name, detail, avatar, created_at, updated_at } = user;
+    res.status(200).json({
+      authenticated: true,
+      user: {
+        name,
+        detail,
+        avatar,
+        created_at,
+        updated_at,
+      },
+    });
   } catch (err) {
     res.status(401).json({ authenticated: false, message: "驗證失敗" });
   }
