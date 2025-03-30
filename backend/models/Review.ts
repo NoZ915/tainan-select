@@ -1,5 +1,6 @@
 import { DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
 import db from ".";
+import UserModel from "./Users";
 
 class ReviewModel extends Model<
   InferAttributes<ReviewModel>,
@@ -67,6 +68,9 @@ ReviewModel.init(
     tableName: "Reviews",
   }
 )
+
+ReviewModel.belongsTo(UserModel, { foreignKey: "user_id" });
+UserModel.hasMany(ReviewModel, { foreignKey: "user_id" });
 
 ReviewModel.sync().catch((error) => {
   console.error("Review 模型同步失敗", error);

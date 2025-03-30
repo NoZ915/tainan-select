@@ -1,8 +1,8 @@
 import express, { Router } from 'express';
-import { getAllCourses } from '../controllers/courseController';
+import { getAllReviewsByCourseId } from '../controllers/reviewController';
 
 const router: Router = express.Router();
 
-router.get("/:course_id", getAllCourses);
+router.get("/:course_id", getAllReviewsByCourseId);
 
 export default router;
