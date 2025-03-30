@@ -4,5 +4,7 @@ export const QUERY_KEYS = {
     ACADEMIES: "academies",
     DEPARTMENTS: "departments",
 
-    AUTH_STATUS: "authStatus"
+    AUTH_STATUS: "authStatus",
+
+    REVIEWS: "reviews"
 };
