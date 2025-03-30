@@ -2,10 +2,19 @@
     /* border: 1px solid black; */
 }
 
-.flex {
+.container {
+    padding-inline: 0;
     text-align: left;
     /* border: 2px solid black;
     padding: 1rem;
     border-radius: 0.25rem;
     background-color: #f9f9f9; */
+}
+
+.card{
+    padding: 1.5rem 1.5rem;
+}
+
+.cardSection{
+    padding: 0.5rem 1.5rem;
 }
