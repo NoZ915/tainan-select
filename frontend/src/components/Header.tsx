@@ -34,6 +34,7 @@ const Header: React.FC = () => {
             {navItems.map((item) => (
               <Link
                 to={item.path}
+                key={item.path}
                 onClick={() => setOpened(false)}
                 className={styles.mobileLink}
               >
@@ -48,33 +49,30 @@ const Header: React.FC = () => {
     )
   }
 
-  else {
-    return (
-      <header className={styles.header}>
-        <Container size="lg" className={styles.container}>
-          <Box className={styles.navBox}>
-            <Group gap="sm">
-              <Link to="/">
-                <Image src="/images/logo.png" className={styles.logo} alt="Logo" />
-              </Link>
-              {navItems.map((item) => (
-                <Text
-                  key={item.path}
-                  component={Link}
-                  to={item.path}
-                  className={`${styles.navItem} ${location.pathname === item.path ? styles.active : ""}`}
-                >
-                  {item.label}
-                </Text>
-              ))}
-            </Group>
-          </Box>
-          <AuthButton className={styles.authButton} />
-        </Container>
-      </header>
-    );
-  }
-
+  return (
+    <header className={styles.header}>
+      <Container size="lg" className={styles.container}>
+        <Box className={styles.navBox}>
+          <Group gap="sm">
+            <Link to="/">
+              <Image src="/images/logo.png" className={styles.logo} alt="Logo" />
+            </Link>
+            {navItems.map((item) => (
+              <Text
+                key={item.path}
+                component={Link}
+                to={item.path}
+                className={`${styles.navItem} ${location.pathname === item.path ? styles.active : ""}`}
+              >
+                {item.label}
+              </Text>
+            ))}
+          </Group>
+        </Box>
+        <AuthButton className={styles.authButton} />
+      </Container>
+    </header>
+  );
 };
 
 export default Header;
