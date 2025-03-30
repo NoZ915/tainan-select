@@ -6,8 +6,9 @@ import passport from 'passport';
 import "./utils/passport";
 import db from "./models";
 
-import coursesRoutes from "./routes/courses";
 import authRoutes from "./routes/auth"
+import coursesRoutes from "./routes/courses";
+import reviewsRoutes from "./routes/reviews";
 
 const app: Express = express();
 const corsOptions = {
@@ -24,6 +25,7 @@ app.use(passport.initialize());
 // routes
 app.use("/api/auth", authRoutes)
 app.use("/api/courses", coursesRoutes);
+app.use("/api/reviews", reviewsRoutes);
 
 const startServer = async (): Promise<void> => {
   try {
