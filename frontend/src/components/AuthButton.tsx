@@ -4,6 +4,7 @@ import { Button, Text } from "@mantine/core";
 import { useLogoutUser } from "../hooks/auth/useLogoutUser";
 import styles from "../styles/components/AuthButton.module.css";
 import LoginModal from "./LoginModal";
+import { Link } from "react-router-dom";
 
 interface AuthButtonProps {
   className?: string;
@@ -31,7 +32,7 @@ const AuthButton: React.FC<AuthButtonProps> = ({ className }) => {
     <div className={className}>
       {isAuthenticated ? (
         <>
-          <Text>{user?.name}</Text>
+          <Text component={Link} to="/profile">{user?.name}</Text>
           <Button onClick={handleLogout} variant="outline" color="brick-red.6">
             {isLoggingOut ? '登出中...' : `登出`}
           </Button>

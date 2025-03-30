@@ -14,6 +14,7 @@ import DynamicPage from './pages/DynamicPage.tsx';
 import FrequentPage from './pages/FrequentPage.tsx';
 import OAuthCallbackPage from './pages/OAuthCallbackPage.tsx';
 import MailErrorPage from './pages/MailErrorPage.tsx';
+import ProfilePage from './pages/ProfilePage.tsx';
 
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
@@ -27,6 +28,7 @@ const router = createBrowserRouter([
       { path: "/course/:course_id", element: <CourseDetailPage /> },
       { path: "/dynamic", element: <DynamicPage /> },
       { path: "/frequent", element: <FrequentPage /> },
+      { path: "/profile", element: <ProfilePage /> }
     ]
   }
 ])
