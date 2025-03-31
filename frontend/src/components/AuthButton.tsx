@@ -47,7 +47,7 @@ const AuthButton: React.FC<AuthButtonProps> = ({ className }) => {
         </Button>
       )}
 
-      <LoginModal opened={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+      <LoginModal opened={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} title="登入 / 註冊" />
     </div>
   );
 }
