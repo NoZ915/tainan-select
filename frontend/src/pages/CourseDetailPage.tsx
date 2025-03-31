@@ -6,6 +6,7 @@ import { useParams } from "react-router-dom";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { useGetAllReviewsByCourseId } from "../hooks/reviews/useGetAllReviewsByCourseId";
 import { FaPlus } from "react-icons/fa";
+import styles from "../styles/pages/CourseDetailPage.module.css";
 
 const CourseDetailPage: React.FC = () => {
   const isMobile = useIsMobile();
@@ -25,14 +26,7 @@ const CourseDetailPage: React.FC = () => {
         <ActionIcon
           size="xl"
           radius="xl"
-          style={{
-            position: 'fixed',
-            bottom: 20,
-            right: 20,
-            backgroundColor: '#ff4081',
-            color: 'white',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.2)',
-          }}
+          className={styles.actionIcon}
         >
           <FaPlus size={24} />
         </ActionIcon>
@@ -51,14 +45,7 @@ const CourseDetailPage: React.FC = () => {
       <ActionIcon
         size="xl"
         radius="xl"
-        style={{
-          position: 'fixed',
-          bottom: 20,
-          right: 20,
-          backgroundColor: '#ff4081',
-          color: 'white',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.2)',
-        }}
+        className={styles.actionIcon}
       >
         <FaPlus size={24} />
       </ActionIcon>

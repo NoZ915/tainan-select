@@ -1,0 +1,10 @@
+.actionIcon {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  background-color: var(--mantine-color-brick-red-5);
+}
