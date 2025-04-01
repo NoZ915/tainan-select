@@ -15,7 +15,10 @@ export const useAuthStore = create(
       isAuthenticated: false,
       user: null,
       login: (user) => set({ isAuthenticated: true, user }),
-      logout: () => set({ isAuthenticated: false, user: null }),
+      logout: () => {
+        set({ isAuthenticated: false, user: null });
+        localStorage.removeItem("auth-storage");
+      }
     }),
     {
       name: "auth-storage", // key for localStorage/sessionStorage
