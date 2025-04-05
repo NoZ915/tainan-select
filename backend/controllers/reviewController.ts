@@ -20,7 +20,7 @@ export const createReview: RequestHandler = async (req, res): Promise<void> => {
       res.status(401).json({ message: "Unauthorized" });
       return;
     }
-    const user_id = req.user.user_id;
+    const user_id = req.user.id;
     const { course_id, gain, sweetness, coolness, comment } = req.body;
     await RreviewService.createReview({
       user_id,
