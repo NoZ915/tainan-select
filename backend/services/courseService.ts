@@ -1,5 +1,5 @@
-import { Course } from "../types/courseTypes";
-import { PaginationParams } from "../types/courseTypes";
+import { Course } from "../types/course";
+import { PaginationParams } from "../types/course";
 import CourseRepository from "../repositories/courseRepository";
 
 class CourseService {

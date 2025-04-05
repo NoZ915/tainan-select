@@ -1,7 +1,7 @@
 import { Op, Sequelize } from "sequelize";
 import CourseModel from "../models/Course";
-import { Course } from "../types/courseTypes";
-import { PaginationParams } from "../types/courseTypes";
+import { Course } from "../types/course";
+import { PaginationParams } from "../types/course";
 
 class CourseRepository {
   async getAllCourses({

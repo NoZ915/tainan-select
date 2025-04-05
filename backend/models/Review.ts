@@ -1,21 +1,22 @@
-import { DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
+import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
 import db from ".";
 import UserModel from "./Users";
 
+// models/User.ts那裡是用"Optional"用法，這邊試著用"CreationOptional"看看
 class ReviewModel extends Model<
   InferAttributes<ReviewModel>,
   InferCreationAttributes<ReviewModel>
 > {
-  declare id: number;
+  declare id: CreationOptional<number>;
   declare user_id: number;
   declare course_id: number;
   declare gain: number;
   declare sweetness: number;
   declare coolness: number;
   declare comment?: string;
-  declare favorites: number;
-  declare created_at: Date;
-  declare updated_at: Date;
+  declare favorites: CreationOptional<number>;
+  declare created_at: CreationOptional<Date>;
+  declare updated_at: CreationOptional<Date>;
 }
 
 ReviewModel.init(
