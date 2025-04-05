@@ -14,3 +14,11 @@ export interface Review {
     avatar: string;
   }
 }
+
+export interface CreateReviewInput {
+  course_id: number;
+  gain: number;
+  sweetness: number;
+  coolness: number;
+  comment: string;
+}

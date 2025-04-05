@@ -11,6 +11,7 @@ export const useGetAuthStatus = () => {
         queryKey: [QUERY_KEYS.AUTH_STATUS],
         queryFn: async() => {
             const { authenticated, user } = await getAuthStatus();
+            console.log(authenticated)
             if(authenticated){
                 login(user);
             }else{
