@@ -26,3 +26,30 @@ export const authenticateJWT: RequestHandler = (req, res, next): void => {
     res.status(403).json({ error: "Invalid token" });
   }
 };
+
+// 單純用來確認是否存在token這個cookie
+export const getCookie: RequestHandler = (req, res, next): void => {
+  const authHeader = req.headers.authorization;
+  let token = "";
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    // 先從 Authorization header找token
+    token = authHeader.split(" ")[1];
+  } else if (req.cookies && req.cookies.token) {
+    // 如果沒有Authrization header，再從cookie去找token
+    token = req.cookies.token;
+  }
+
+  try {
+    if(token !== ""){
+      const decoded = verifyJwtToken(token);
+      req.user = decoded; // 將解碼的 payload 添加到 req.user
+    }else{
+      req.user = undefined;
+    }
+    
+    next();
+  } catch (err) {
+    res.json({ error: err });
+  }
+};
