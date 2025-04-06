@@ -9,7 +9,7 @@ import styles from "../styles/components/CourseReviewsPanel.module.css";
 import { ReviewsResponse } from "../types/reviewType";
 import { Course } from "../types/courseType";
 
-import AddReviewModal from "./AddReviewModal";
+import AddOrEditReviewModal from "./AddOrEditReviewModal";
 
 
 interface CourseReviewsPanelProps {
@@ -19,11 +19,11 @@ interface CourseReviewsPanelProps {
 }
 
 const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews, isLoading }) => {
-  const [addReviewModalOpened, setAddReviewModalOpened] = useState(false);
+  const [AddOrEditReviewModalOpened, setAddOrEditReviewModalOpened] = useState(false);
   const [selectedReview, setSelectedReview] = useState<ReviewsResponse | null>(null);
 
   const handleEdit = (review: ReviewsResponse) => {
-    setAddReviewModalOpened(true);
+    setAddOrEditReviewModalOpened(true);
     setSelectedReview(review);
   }
 
@@ -77,7 +77,7 @@ const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews
                 )}
               </Group>
               {course &&
-                <AddReviewModal opened={addReviewModalOpened} onClose={() => setAddReviewModalOpened(false)} course={course} review={selectedReview} />
+                <AddOrEditReviewModal opened={AddOrEditReviewModalOpened} onClose={() => setAddOrEditReviewModalOpened(false)} course={course} review={selectedReview} />
               }
             </Card.Section>
 

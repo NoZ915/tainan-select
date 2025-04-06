@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
 
 import { Button, Group, Modal, Rating, Text, Textarea } from "@mantine/core";
-import styles from "../styles/components/AddReviewModal.module.css";
+import styles from "../styles/components/AddOrEditReviewModal.module.css";
 
 import { Course } from "../types/courseType";
 import { ReviewsResponse } from "../types/reviewType";
 
 import { useUpsertReview } from "../hooks/reviews/useUpsertRview";
 
-interface AddReviewModalProps {
+interface AddOrEditReviewModalProps {
   opened: boolean;
   onClose: () => void;
   course: { course: Course };
   review: ReviewsResponse | null
 }
 
-const AddReviewModal: React.FC<AddReviewModalProps> = ({ opened, onClose, course, review }) => {
+const AddOrEditReviewModal: React.FC<AddOrEditReviewModalProps> = ({ opened, onClose, course, review }) => {
   const [gain, setGain] = useState(review?.gain ?? 0);
   const [sweetness, setSweetness] = useState(review?.sweetness ?? 0);
   const [coolness, setCoolness] = useState(review?.coolness ?? 0);
@@ -83,4 +83,4 @@ const AddReviewModal: React.FC<AddReviewModalProps> = ({ opened, onClose, course
   )
 }
 
-export default AddReviewModal;
+export default AddOrEditReviewModal;

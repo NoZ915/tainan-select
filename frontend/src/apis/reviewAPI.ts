@@ -10,3 +10,8 @@ export const upsertReview = async(input: UpsertReviewInput): Promise<void> => {
     const response = await axiosInstance.post(`/reviews/upsertReview`, input);
     return response.data;
 }
+
+export const deleteReview = async(review_id: string): Promise<void> => {
+    const response = await axiosInstance.delete(`/reviews/${review_id}`);
+    return response.data;
+}

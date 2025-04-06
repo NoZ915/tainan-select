@@ -9,7 +9,7 @@ import { FaPlus } from "react-icons/fa";
 import styles from "../styles/pages/CourseDetailPage.module.css";
 import LoginModal from "../components/LoginModal";
 import { useState } from "react";
-import AddReviewModal from "../components/AddReviewModal";
+import AddOrEditReviewModal from "../components/AddOrEditReviewModal";
 import { useAuthStore } from "../stores/authStore";
 
 const CourseDetailPage: React.FC = () => {
@@ -17,7 +17,7 @@ const CourseDetailPage: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
 
   const [loginModalOpened, setLoginModalOpened] = useState(false);
-  const [addReviewModalOpened, setAddReviewModalOpened] = useState(false);
+  const [AddOrEditReviewModalOpened, setAddOrEditReviewModalOpened] = useState(false);
 
   const { course_id } = useParams<{ course_id: string }>();
   const { data: course, isLoading: isInfoLoading } = useGetCourse(course_id || '');
@@ -25,7 +25,7 @@ const CourseDetailPage: React.FC = () => {
 
   const handleActionClick = () => {
     if (isAuthenticated) {
-      setAddReviewModalOpened(true);
+      setAddOrEditReviewModalOpened(true);
     } else {
       setLoginModalOpened(true);
     }
@@ -54,7 +54,7 @@ const CourseDetailPage: React.FC = () => {
 
         <LoginModal opened={loginModalOpened} onClose={() => setLoginModalOpened(false)} title="請先登入或註冊" />
         {course &&
-          <AddReviewModal opened={addReviewModalOpened} onClose={() => setAddReviewModalOpened(false)} course={course} review={null} />
+          <AddOrEditReviewModal opened={AddOrEditReviewModalOpened} onClose={() => setAddOrEditReviewModalOpened(false)} course={course} review={null} />
         }
       </>
     )
@@ -87,7 +87,7 @@ const CourseDetailPage: React.FC = () => {
 
       <LoginModal opened={loginModalOpened} onClose={() => setLoginModalOpened(false)} title="請先登入或註冊" />
       {course &&
-        <AddReviewModal opened={addReviewModalOpened} onClose={() => setAddReviewModalOpened(false)} course={course} review={null} />
+        <AddOrEditReviewModal opened={AddOrEditReviewModalOpened} onClose={() => setAddOrEditReviewModalOpened(false)} course={course} review={null} />
       }
     </>
   )
