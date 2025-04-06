@@ -1,4 +1,5 @@
 import { Button, Group, Modal, Text } from "@mantine/core";
+import { useLocation } from "react-router-dom";
 
 interface LoginModalProps {
   opened: boolean;
@@ -7,8 +8,11 @@ interface LoginModalProps {
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ opened, onClose, title }) => {
+  const location = useLocation();
+  const path = location .pathname;
   const handleLogin = () => {
     onClose();
+    localStorage.setItem('redirect_path', path);
     window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google`;
   }
 
