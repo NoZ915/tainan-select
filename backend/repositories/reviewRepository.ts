@@ -1,3 +1,4 @@
+import { deleteReview } from "../controllers/reviewController";
 import ReviewModel from "../models/Review";
 import UserModel from "../models/Users";
 import { CreateReviewInput, ReviewsResponse } from "../types/review";
@@ -44,6 +45,16 @@ class ReviewRepository {
     } else {
       await ReviewModel.create(input);
     }
+  }
+
+  async deleteReview(review_id: number, user_id: number): Promise<void>{
+    const review = await ReviewModel.findOne({
+      where: {
+        id: review_id,
+        user_id
+      }
+    });
+    if(review) await review?.destroy();
   }
 }
 

@@ -1,5 +1,5 @@
 import { RequestHandler } from "express";
-import RreviewService from "../services/reviewService";
+import ReviewService from "../services/reviewService";
 
 export const getAllReviewsByCourseId: RequestHandler = async (
   req,
@@ -8,7 +8,7 @@ export const getAllReviewsByCourseId: RequestHandler = async (
   try {
     const user_id = req.user?.id;
     const course_id = parseInt(req.params.course_id);
-    const reviews = await RreviewService.getAllReviewsByCourseId(course_id, user_id);
+    const reviews = await ReviewService.getAllReviewsByCourseId(course_id, user_id);
     res.status(200).json(reviews);
   } catch (err) {
     res.status(500).json({ message: err });
@@ -23,7 +23,7 @@ export const upsertReview: RequestHandler = async (req, res): Promise<void> => {
     }
     const user_id = req.user.id;
     const { course_id, gain, sweetness, coolness, comment } = req.body;
-    await RreviewService.upsertReview({
+    await ReviewService.upsertReview({
       user_id,
       course_id,
       gain,
@@ -36,3 +36,20 @@ export const upsertReview: RequestHandler = async (req, res): Promise<void> => {
     res.status(500).json({ message: err });
   }
 };
+
+export const deleteReview: RequestHandler = async (req, res): Promise<void> => {
+  try{
+    if (!req.user) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+
+    const review_id  = parseInt(req.params.review_id);
+    const user_id = req.user.id;
+
+    await ReviewService.deleteReview(review_id, user_id);
+    res.status(200).json({ message: "Delete review successful" })
+  }catch(err){
+    res.status(500).json({ message: err });
+  }
+}

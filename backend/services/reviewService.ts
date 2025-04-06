@@ -10,6 +10,10 @@ class CourseService{
     async upsertReview(input: CreateReviewInput): Promise<void>{
         await ReviewRepository.upsertReview(input);
     }
+
+    async deleteReview(review_id: number, user_id: number): Promise<void>{
+        await ReviewRepository.deleteReview(review_id, user_id);
+    }
 }
 
 export default new CourseService();
