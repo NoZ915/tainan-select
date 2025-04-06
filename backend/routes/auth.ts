@@ -1,7 +1,7 @@
 import express, { Router } from "express";
 import passport from "passport";
 import { generateJwtToken } from "../utils/jwt";
-import { logoutController, statusController } from "../controllers/authController";
+import { checkAuthStatus, logoutController, statusController } from "../controllers/authController";
 
 const router: Router = express.Router();
 
@@ -33,6 +33,7 @@ router.get("/google/callback", (req, res, next) => {
 
 // 驗證登入狀態
 router.get("/status", statusController);
+router.get("/checkStatus", checkAuthStatus);
 
 // 登出
 router.post("/logout", logoutController);

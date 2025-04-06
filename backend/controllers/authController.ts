@@ -35,6 +35,28 @@ export const statusController: RequestHandler = async (
   }
 };
 
+// 單純用來確認cookie還在不在的
+export const checkAuthStatus: RequestHandler = async (req, res) => {
+  const token = req.cookies.token;
+  if (!token) {
+    res.json({ authenticated: false });
+    return;
+  }
+
+  try {
+    const userDetail = verifyJwtToken(token);
+    const user = await userService.getUserByGoogleSub(userDetail.sub);
+    if (!user) {
+      res.json({ authenticated: false });
+      return;
+    }
+
+    res.json({ authenticated: true, user: { name: user.name, avatar: user.avatar } });
+  } catch (err) {
+    res.json({ authenticated: false });
+  }
+};
+
 export const logoutController: RequestHandler = (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
