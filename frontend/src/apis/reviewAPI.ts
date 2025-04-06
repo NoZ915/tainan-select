@@ -1,7 +1,7 @@
-import { CreateReviewInput, Review } from "../types/reviewType";
+import { CreateReviewInput, ReviewsResponse } from "../types/reviewType";
 import { axiosInstance } from "./axiosInstance";
 
-export const getAllReviewsByCourseId = async(course_id: string): Promise<Review[]> => {
+export const getAllReviewsByCourseId = async(course_id: string): Promise<ReviewsResponse[]> => {
     const response = await axiosInstance.get(`/reviews/${course_id}`);
     return response.data;
 }

@@ -10,7 +10,6 @@ function App() {
 
   useEffect(() => {
     if (data && !data.authenticated) {
-      console.log(data)
       localStorage.removeItem('auth-storage');
       logout(); 
     }

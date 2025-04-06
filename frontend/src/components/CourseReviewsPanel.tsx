@@ -3,12 +3,12 @@ import { BsThreeDots } from "react-icons/bs";
 import { FaEdit } from "react-icons/fa";
 import { RiDeleteBin6Fill } from "react-icons/ri";
 import styles from "../styles/components/CourseReviewsPanel.module.css";
-import { Review } from "../types/reviewType";
+import { ReviewsResponse } from "../types/reviewType";
 import { Course } from "../types/courseType";
 
 interface CourseReviewsPanelProps {
   course: { course: Course } | null | undefined;
-  reviews: Review[] | undefined;
+  reviews: ReviewsResponse[] | undefined;
   isLoading: boolean;
 }
 
@@ -35,30 +35,31 @@ const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews
                     <Text>{new Date(review.updated_at).toLocaleString()}</Text>
                   </Box>
                 </Group>
+                {review.is_owner && (
+                  <Menu>
+                    <Menu.Target>
+                      <ActionIcon variant="fullfill" size="lg" radius="xs">
+                        <BsThreeDots size={16} />
+                      </ActionIcon>
+                    </Menu.Target>
 
-                <Menu>
-                  <Menu.Target>
-                    <ActionIcon variant="fullfill" size="lg" radius="xs">
-                      <BsThreeDots size={16} />
-                    </ActionIcon>
-                  </Menu.Target>
-
-                  <Menu.Dropdown className={styles.dropdown}>
-                    <Menu.Item
-                      leftSection={<FaEdit size={16} />}
-                      classNames={{ itemLabel: styles.itemLabel }}
-                    >
-                      編輯
-                    </Menu.Item>
-                    <Menu.Item
-                      leftSection={<RiDeleteBin6Fill size={16} />}
-                      classNames={{ itemLabel: styles.itemLabel }} 
-                      color="red" 
-                    >
-                      刪除
-                    </Menu.Item>
-                  </Menu.Dropdown>
-                </Menu>
+                    <Menu.Dropdown className={styles.dropdown}>
+                      <Menu.Item
+                        leftSection={<FaEdit size={16} />}
+                        classNames={{ itemLabel: styles.itemLabel }}
+                      >
+                        編輯
+                      </Menu.Item>
+                      <Menu.Item
+                        leftSection={<RiDeleteBin6Fill size={16} />}
+                        classNames={{ itemLabel: styles.itemLabel }}
+                        color="red"
+                      >
+                        刪除
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                )}
               </Group>
 
             </Card.Section>

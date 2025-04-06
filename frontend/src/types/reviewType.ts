@@ -1,4 +1,4 @@
-export interface Review {
+export interface ReviewsResponse {
   id: number,
   user_id: number,
   course_id: number;
@@ -12,7 +12,8 @@ export interface Review {
   UserModel: {
     name: string;
     avatar: string;
-  }
+  },
+  is_owner: boolean
 }
 
 export interface CreateReviewInput {
