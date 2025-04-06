@@ -5,6 +5,7 @@ export const QUERY_KEYS = {
     DEPARTMENTS: "departments",
 
     AUTH_STATUS: "authStatus",
+    CHECK_AUTH_STATUS: "checkAuthStatus",
 
     REVIEWS: "reviews"
 };

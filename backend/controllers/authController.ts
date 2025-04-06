@@ -51,7 +51,7 @@ export const checkAuthStatus: RequestHandler = async (req, res) => {
       return;
     }
 
-    res.json({ authenticated: true, user: { name: user.name, avatar: user.avatar } });
+    res.json({ authenticated: true });
   } catch (err) {
     res.json({ authenticated: false });
   }
