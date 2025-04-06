@@ -1,4 +1,5 @@
-import { Avatar, Box, Card, Container, Group, Rating, Text } from "@mantine/core";
+import { ActionIcon, Avatar, Box, Card, Container, Group, Menu, Rating, Text } from "@mantine/core";
+import { BsThreeDotsVertical } from "react-icons/bs";
 import styles from "../styles/components/CourseReviewsPanel.module.css";
 import { Review } from "../types/reviewType";
 import { Course } from "../types/courseType";
@@ -24,13 +25,28 @@ const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews
 				return (
 					<Card key={review.id} className={styles.card}>
 						<Card.Section className={styles.cardSection}>
-							<Group>
-								<Avatar variant="light" size="lg" color="brick-red.6" src="" />
-								<Box>
-									<Text>{review.UserModel.name}</Text>
-									<Text>{new Date(review.updated_at).toLocaleString()}</Text>
-								</Box>
+							<Group justify="space-between">
+								<Group>
+									<Avatar variant="light" size="lg" color="brick-red.6" src="" />
+									<Box>
+										<Text>{review.UserModel.name}</Text>
+										<Text>{new Date(review.updated_at).toLocaleString()}</Text>
+									</Box>
+								</Group>
+
+								<Menu>
+									<Menu.Target>
+										<ActionIcon variant="outline" size="lg" radius="xs">
+											<BsThreeDotsVertical size={16}/>
+										</ActionIcon>
+									</Menu.Target>
+
+									<Menu.Dropdown>
+										<Menu.Item>編輯</Menu.Item>
+									</Menu.Dropdown>
+								</Menu>
 							</Group>
+
 						</Card.Section>
 
 						<Card.Section className={styles.cardSection}>
