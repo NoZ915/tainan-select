@@ -54,7 +54,7 @@ const CourseDetailPage: React.FC = () => {
 
         <LoginModal opened={loginModalOpened} onClose={() => setLoginModalOpened(false)} title="請先登入或註冊" />
         {course &&
-          <AddReviewModal opened={addReviewModalOpened} onClose={() => setAddReviewModalOpened(false)} course={course} />
+          <AddReviewModal opened={addReviewModalOpened} onClose={() => setAddReviewModalOpened(false)} course={course} review={null} />
         }
       </>
     )
@@ -87,7 +87,7 @@ const CourseDetailPage: React.FC = () => {
 
       <LoginModal opened={loginModalOpened} onClose={() => setLoginModalOpened(false)} title="請先登入或註冊" />
       {course &&
-        <AddReviewModal opened={addReviewModalOpened} onClose={() => setAddReviewModalOpened(false)} course={course} />
+        <AddReviewModal opened={addReviewModalOpened} onClose={() => setAddReviewModalOpened(false)} course={course} review={null} />
       }
     </>
   )

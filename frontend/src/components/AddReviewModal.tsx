@@ -1,24 +1,38 @@
+import { useEffect, useState } from "react";
+
 import { Button, Group, Modal, Rating, Text, Textarea } from "@mantine/core";
 import styles from "../styles/components/AddReviewModal.module.css";
+
 import { Course } from "../types/courseType";
-import { useCreateReview } from "../hooks/reviews/useCreateRview";
-import { useState } from "react";
+import { ReviewsResponse } from "../types/reviewType";
+
+import { useUpsertReview } from "../hooks/reviews/useUpsertRview";
 
 interface AddReviewModalProps {
   opened: boolean;
   onClose: () => void;
   course: { course: Course };
+  review: ReviewsResponse | null
 }
 
-const AddReviewModal: React.FC<AddReviewModalProps> = ({ opened, onClose, course }) => {
-  const [gain, setGain] = useState(0);
-  const [sweetness, setSweetness] = useState(0);
-  const [coolness, setCoolness] = useState(0);
-  const [comment, setComment] = useState("");
+const AddReviewModal: React.FC<AddReviewModalProps> = ({ opened, onClose, course, review }) => {
+  const [gain, setGain] = useState(review?.gain ?? 0);
+  const [sweetness, setSweetness] = useState(review?.sweetness ?? 0);
+  const [coolness, setCoolness] = useState(review?.coolness ?? 0);
+  const [comment, setComment] = useState(review?.comment ?? "");
+  
+  const { mutate } = useUpsertReview();
 
-  const { mutate } = useCreateReview();
+  useEffect(() => {
+    if (review) {
+      setGain(review.gain ?? 0);
+      setSweetness(review.sweetness ?? 0);
+      setCoolness(review.coolness ?? 0);
+      setComment(review.comment ?? "");
+    }
+  }, [review]); 
 
-  const handleCreateReview = (course_id: number) => {
+  const handleUpsertReview = (course_id: number) => {
     mutate({
       course_id,
       gain,
@@ -58,7 +72,13 @@ const AddReviewModal: React.FC<AddReviewModalProps> = ({ opened, onClose, course
         value={comment}
         onChange={(c) => setComment(c.currentTarget.value)}
       />
-      <Button fullWidth mt="md" onClick={() => handleCreateReview(course.course.id)}>新增評價</Button>
+
+      {review ? (
+        <Button fullWidth mt="md" onClick={() => handleUpsertReview(course.course.id)}>編輯評價</Button>
+      ): (
+        <Button fullWidth mt="md" onClick={() => handleUpsertReview(course.course.id)}>新增評價</Button>
+      )}
+      
     </Modal>
   )
 }

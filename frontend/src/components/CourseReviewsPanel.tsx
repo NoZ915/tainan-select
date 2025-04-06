@@ -1,10 +1,16 @@
+import { useState } from "react";
+
 import { ActionIcon, Avatar, Box, Card, Container, Group, Menu, Rating, Text } from "@mantine/core";
 import { BsThreeDots } from "react-icons/bs";
 import { FaEdit } from "react-icons/fa";
 import { RiDeleteBin6Fill } from "react-icons/ri";
 import styles from "../styles/components/CourseReviewsPanel.module.css";
+
 import { ReviewsResponse } from "../types/reviewType";
 import { Course } from "../types/courseType";
+
+import AddReviewModal from "./AddReviewModal";
+
 
 interface CourseReviewsPanelProps {
   course: { course: Course } | null | undefined;
@@ -13,6 +19,14 @@ interface CourseReviewsPanelProps {
 }
 
 const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews, isLoading }) => {
+  const [addReviewModalOpened, setAddReviewModalOpened] = useState(false);
+  const [selectedReview, setSelectedReview] = useState<ReviewsResponse | null>(null);
+
+  const handleEdit = (review: ReviewsResponse) => {
+    setAddReviewModalOpened(true);
+    setSelectedReview(review);
+  }
+
   if (isLoading) {
     return <>Is Loading...</>
   }
@@ -47,6 +61,7 @@ const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews
                       <Menu.Item
                         leftSection={<FaEdit size={16} />}
                         classNames={{ itemLabel: styles.itemLabel }}
+                        onClick={ () => handleEdit(review) }
                       >
                         編輯
                       </Menu.Item>
@@ -61,7 +76,9 @@ const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews
                   </Menu>
                 )}
               </Group>
-
+              {course &&
+                <AddReviewModal opened={addReviewModalOpened} onClose={() => setAddReviewModalOpened(false)} course={course} review={selectedReview} />
+              }
             </Card.Section>
 
             <Card.Section className={styles.cardSection}>
@@ -73,13 +90,13 @@ const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews
             <Card.Section className={styles.cardSection}>
               <Group>
                 <Text>收穫</Text>
-                <Rating defaultValue={review.gain} color="brick-red.6" size="md" fractions={2} readOnly></Rating>
+                <Rating value={review.gain} color="brick-red.6" size="md" fractions={2} readOnly></Rating>
 
                 <Text>甜度</Text>
-                <Rating defaultValue={review.sweetness} color="brick-red.6" size="md" fractions={2} readOnly></Rating>
+                <Rating value={review.sweetness} color="brick-red.6" size="md" fractions={2} readOnly></Rating>
 
                 <Text>涼度</Text>
-                <Rating defaultValue={review.coolness} color="brick-red.6" size="md" fractions={2} readOnly></Rating>
+                <Rating value={review.coolness} color="brick-red.6" size="md" fractions={2} readOnly></Rating>
               </Group>
             </Card.Section>
 

@@ -95,8 +95,10 @@ CourseModel.init(
   },
   {
     sequelize: db.sequelize,
-    timestamps: false,
     tableName: "Courses",
+    timestamps: true,
+    createdAt: 'created_at',  // 映射到資料表中的 created_at
+    updatedAt: 'updated_at',  // 映射到資料表中的 updated_at
   }
 );
 

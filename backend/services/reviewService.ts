@@ -7,8 +7,8 @@ class CourseService{
         return await ReviewRepository.getAllReviewsByCourseId(course_id, user_id);
     }
 
-    async createReview(input: CreateReviewInput): Promise<void>{
-        await ReviewRepository.createReview(input);
+    async upsertReview(input: CreateReviewInput): Promise<void>{
+        await ReviewRepository.upsertReview(input);
     }
 }
 

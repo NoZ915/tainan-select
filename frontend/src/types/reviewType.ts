@@ -16,7 +16,7 @@ export interface ReviewsResponse {
   is_owner: boolean
 }
 
-export interface CreateReviewInput {
+export interface UpsertReviewInput {
   course_id: number;
   gain: number;
   sweetness: number;

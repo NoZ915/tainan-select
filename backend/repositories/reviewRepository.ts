@@ -34,8 +34,16 @@ class ReviewRepository {
     return reviewsWithOwnerFlag as ReviewsResponse[];
   }
 
-  async createReview(input: CreateReviewInput): Promise<void> {
-    await ReviewModel.create(input);
+  async upsertReview(input: CreateReviewInput): Promise<void> {
+    const existingReview = await ReviewModel.findOne({
+      where: { user_id: input.user_id, course_id: input.course_id },
+    });
+
+    if (existingReview) {
+      await existingReview.update(input);
+    } else {
+      await ReviewModel.create(input);
+    }
   }
 }
 

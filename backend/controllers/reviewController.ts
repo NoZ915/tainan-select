@@ -15,7 +15,7 @@ export const getAllReviewsByCourseId: RequestHandler = async (
   }
 };
 
-export const createReview: RequestHandler = async (req, res): Promise<void> => {
+export const upsertReview: RequestHandler = async (req, res): Promise<void> => {
   try {
     if (!req.user) {
       res.status(401).json({ message: "Unauthorized" });
@@ -23,7 +23,7 @@ export const createReview: RequestHandler = async (req, res): Promise<void> => {
     }
     const user_id = req.user.id;
     const { course_id, gain, sweetness, coolness, comment } = req.body;
-    await RreviewService.createReview({
+    await RreviewService.upsertReview({
       user_id,
       course_id,
       gain,
@@ -31,7 +31,7 @@ export const createReview: RequestHandler = async (req, res): Promise<void> => {
       coolness,
       comment
     });
-    res.status(200).json({ message: "Create review successful" });
+    res.status(200).json({ message: "Upsert review successful" });
   } catch (err) {
     res.status(500).json({ message: err });
   }
