@@ -7,8 +7,13 @@ class CourseService {
     return await CourseRepository.getAllCourses(params);
   }
 
-  async getCourse(course_id: number): Promise<Course | null>{
-    return await CourseRepository.getCourse(course_id);
+  async getCourse(course_id: number, user_id: number | undefined): Promise<{course: Course | null, hasUserReviewedCourse: boolean} | null>{
+    let hasUserReviewedCourse = false;
+    const course = await CourseRepository.getCourse(course_id);
+    if(user_id !== undefined){
+      hasUserReviewedCourse = await CourseRepository.hasUserReviewedCourse(course_id, user_id);
+    }
+    return {course, hasUserReviewedCourse}
   }
 
   async getAllDepartments(): Promise<string[]>{

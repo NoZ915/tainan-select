@@ -1,4 +1,4 @@
-import { ActionIcon, Container } from "@mantine/core";
+import { ActionIcon, Container, Tooltip } from "@mantine/core";
 import CourseInfoPanel from "../components/CourseInfoPanel";
 import CourseReviewsPanel from "../components/CourseReviewsPanel";
 import { useGetCourse } from "../hooks/courses/useGetCourse";
@@ -46,6 +46,7 @@ const CourseDetailPage: React.FC = () => {
             radius="xl"
             className={styles.actionIcon}
             onClick={handleActionClick}
+            disabled={course && course.hasUserReviewedCourse}
           >
             <FaPlus size={24} />
           </ActionIcon>
@@ -68,14 +69,20 @@ const CourseDetailPage: React.FC = () => {
         <div style={{ flex: '2' }}>
           <CourseReviewsPanel course={course} reviews={reviews} isLoading={isReviewsLoading} />
         </div>
-        <ActionIcon
-          size="xl"
-          radius="xl"
-          className={styles.actionIcon}
-          onClick={handleActionClick}
+        <Tooltip
+          label={course && course.hasUserReviewedCourse ? "已經對這門課程發表過評價，請直接編輯評價" : "新增評價"}
+          position="top"
         >
-          <FaPlus size={24} />
-        </ActionIcon>
+          <ActionIcon
+            size="xl"
+            radius="xl"
+            className={styles.actionIcon}
+            onClick={handleActionClick}
+            disabled={course && course.hasUserReviewedCourse}  // 根據 hasUserReviewedCourse 禁用
+          >
+            <FaPlus size={24} />
+          </ActionIcon>
+        </Tooltip>
       </Container>
 
       <LoginModal opened={loginModalOpened} onClose={() => setLoginModalOpened(false)} title="請先登入或註冊" />

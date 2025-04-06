@@ -12,6 +12,7 @@ export const useLogoutUser = () => {
         onSuccess: () => {
             logout();
             queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.REVIEWS] });
+            queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.COURSE] });
             queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUTH_STATUS] });
         },
         onError: () => console.error("登出失敗")
