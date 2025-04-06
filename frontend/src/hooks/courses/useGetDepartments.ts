@@ -5,6 +5,8 @@ import { getDepartments } from "../../apis/courseAPI"
 export const useGetDepartments = () => {
     return useQuery({
         queryKey: [QUERY_KEYS.DEPARTMENTS],
-        queryFn: () => getDepartments()
+        queryFn: () => getDepartments(),
+        staleTime: 1000 * 60 * 60,
+        gcTime: 1000 * 60 * 60,
     })
 }
