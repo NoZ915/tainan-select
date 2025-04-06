@@ -20,7 +20,7 @@ const AddOrEditReviewModal: React.FC<AddOrEditReviewModalProps> = ({ opened, onC
   const [sweetness, setSweetness] = useState(review?.sweetness ?? 0);
   const [coolness, setCoolness] = useState(review?.coolness ?? 0);
   const [comment, setComment] = useState(review?.comment ?? "");
-  
+
   const { mutate } = useUpsertReview();
 
   useEffect(() => {
@@ -30,7 +30,7 @@ const AddOrEditReviewModal: React.FC<AddOrEditReviewModalProps> = ({ opened, onC
       setCoolness(review.coolness ?? 0);
       setComment(review.comment ?? "");
     }
-  }, [review]); 
+  }, [review]);
 
   const handleUpsertReview = (course_id: number) => {
     mutate({
@@ -40,6 +40,10 @@ const AddOrEditReviewModal: React.FC<AddOrEditReviewModalProps> = ({ opened, onC
       coolness,
       comment
     });
+    setGain(0);
+    setSweetness(0);
+    setCoolness(0);
+    setComment("");
     onClose();
   }
 
@@ -75,10 +79,10 @@ const AddOrEditReviewModal: React.FC<AddOrEditReviewModalProps> = ({ opened, onC
 
       {review ? (
         <Button fullWidth mt="md" onClick={() => handleUpsertReview(course.course.id)}>編輯評價</Button>
-      ): (
+      ) : (
         <Button fullWidth mt="md" onClick={() => handleUpsertReview(course.course.id)}>新增評價</Button>
       )}
-      
+
     </Modal>
   )
 }

@@ -10,6 +10,7 @@ import { ReviewsResponse } from "../types/reviewType";
 import { Course } from "../types/courseType";
 
 import AddOrEditReviewModal from "./AddOrEditReviewModal";
+import DeleteReviewModal from "./DeleteReviewModal";
 
 
 interface CourseReviewsPanelProps {
@@ -20,12 +21,19 @@ interface CourseReviewsPanelProps {
 
 const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews, isLoading }) => {
   const [AddOrEditReviewModalOpened, setAddOrEditReviewModalOpened] = useState(false);
+  const [DeleteReviewModalOpened, setDeleteReviewModalOpened] = useState(false);
   const [selectedReview, setSelectedReview] = useState<ReviewsResponse | null>(null);
 
   const handleEdit = (review: ReviewsResponse) => {
     setAddOrEditReviewModalOpened(true);
     setSelectedReview(review);
   }
+
+  const handleDelete = (review: ReviewsResponse) => {
+    setDeleteReviewModalOpened(true);
+    setSelectedReview(review);
+  }
+
 
   if (isLoading) {
     return <>Is Loading...</>
@@ -61,7 +69,7 @@ const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews
                       <Menu.Item
                         leftSection={<FaEdit size={16} />}
                         classNames={{ itemLabel: styles.itemLabel }}
-                        onClick={ () => handleEdit(review) }
+                        onClick={() => handleEdit(review)}
                       >
                         編輯
                       </Menu.Item>
@@ -69,6 +77,7 @@ const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews
                         leftSection={<RiDeleteBin6Fill size={16} />}
                         classNames={{ itemLabel: styles.itemLabel }}
                         color="red"
+                        onClick={() => handleDelete(review)}
                       >
                         刪除
                       </Menu.Item>
@@ -78,6 +87,9 @@ const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews
               </Group>
               {course &&
                 <AddOrEditReviewModal opened={AddOrEditReviewModalOpened} onClose={() => setAddOrEditReviewModalOpened(false)} course={course} review={selectedReview} />
+              }
+              {course &&
+                <DeleteReviewModal opened={DeleteReviewModalOpened} onClose={() => setDeleteReviewModalOpened(false)} review={selectedReview} />
               }
             </Card.Section>
 

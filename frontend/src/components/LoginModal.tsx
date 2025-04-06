@@ -9,7 +9,7 @@ interface LoginModalProps {
 
 const LoginModal: React.FC<LoginModalProps> = ({ opened, onClose, title }) => {
   const location = useLocation();
-  const path = location .pathname;
+  const path = location.pathname;
   const handleLogin = () => {
     onClose();
     localStorage.setItem('redirect_path', path);
@@ -20,8 +20,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ opened, onClose, title }) => {
     <Modal centered opened={opened} onClose={onClose} title={title}>
       <Text>僅開放 <strong>@gm2.nutn.edu.tw</strong> 的 Google 帳號登入或註冊，未註冊用戶將自動註冊</Text>
       <Group justify="flex-end">
-        <Button color="gray" onClick={onClose}>取消</Button>
-        <Button color="blue" onClick={() => handleLogin()}>確定</Button>
+        <Button variant="light" onClick={onClose}>取消</Button>
+        <Button variant="filled" onClick={() => handleLogin()}>確定</Button>
       </Group>
     </Modal>
   )
