@@ -17,7 +17,8 @@ class ReviewRepository{
         const reviewsWithOwnerFlag = reviews.map((review) => {
             const is_owner = review.user_id === user_id;
             const reviewJson = review.toJSON();
-            return { ...reviewJson, is_owner };
+            const { user_id: userId, ...reviewWithoutUserId } = reviewJson; // 把user_id移除，不要回傳道前端
+            return { ...reviewWithoutUserId, is_owner };
         })
 
         return reviewsWithOwnerFlag as ReviewsResponse[];
