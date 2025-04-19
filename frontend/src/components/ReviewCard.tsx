@@ -19,18 +19,18 @@ interface ReviewCardProp {
 
 const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 	const [AddOrEditReviewModalOpened, setAddOrEditReviewModalOpened] = useState(false);
-  const [DeleteReviewModalOpened, setDeleteReviewModalOpened] = useState(false);
-  const [selectedReview, setSelectedReview] = useState<ReviewsResponse | null>(null);
+	const [DeleteReviewModalOpened, setDeleteReviewModalOpened] = useState(false);
+	const [selectedReview, setSelectedReview] = useState<ReviewsResponse | null>(null);
 
-  const handleEdit = (review: ReviewsResponse) => {
-    setAddOrEditReviewModalOpened(true);
-    setSelectedReview(review);
-  }
+	const handleEdit = (review: ReviewsResponse) => {
+		setAddOrEditReviewModalOpened(true);
+		setSelectedReview(review);
+	}
 
-  const handleDelete = (review: ReviewsResponse) => {
-    setDeleteReviewModalOpened(true);
-    setSelectedReview(review);
-  }
+	const handleDelete = (review: ReviewsResponse) => {
+		setDeleteReviewModalOpened(true);
+		setSelectedReview(review);
+	}
 
 	return (
 		<Card key={review.id} className={style.card}>

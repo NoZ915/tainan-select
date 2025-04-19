@@ -1,3 +1,5 @@
+import { Course } from "./courseType";
+
 export interface ReviewsResponse {
   id: number,
   user_id: number,
@@ -14,6 +16,10 @@ export interface ReviewsResponse {
     avatar: string;
   },
   is_owner: boolean
+}
+
+export type LatestReviewsResponse = ReviewsResponse & {
+  course: Course
 }
 
 export interface UpsertReviewInput {

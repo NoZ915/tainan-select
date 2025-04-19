@@ -7,5 +7,6 @@ export const QUERY_KEYS = {
     AUTH_STATUS: "authStatus",
     CHECK_AUTH_STATUS: "checkAuthStatus",
 
-    REVIEWS: "reviews"
+    REVIEWS: "reviews",
+    LATEST_REVIEWS: "latest_reviews"
 };
