@@ -15,3 +15,8 @@ export const deleteReview = async (review_id: number): Promise<void> => {
     const response = await axiosInstance.delete(`/reviews/${review_id}`);
     return response.data;
 }
+
+export const getLatestReviews = async (): Promise<ReviewsResponse[]> => {
+    const response = await axiosInstance.get(`/reviews/getLatestReviews`);
+    return response.data;
+}

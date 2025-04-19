@@ -4,9 +4,10 @@ import { authenticateJWT, getCookie } from '../middlewares/authMiddleware';
 
 const router: Router = express.Router();
 
+router.get("/getLatestReviews", getCookie, getLatestReviews);
 router.get("/:course_id", getCookie, getAllReviewsByCourseId);
 router.post("/upsertReview", authenticateJWT, upsertReview);
 router.delete("/:review_id", authenticateJWT, deleteReview);
-router.get("/getLatestReviews", getCookie, getLatestReviews);
+
 
 export default router;
