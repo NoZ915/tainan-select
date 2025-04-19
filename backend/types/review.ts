@@ -1,3 +1,4 @@
+import CourseModel from "../models/Course";
 import ReviewModel from "../models/Review";
 
 export interface CreateReviewInput {
@@ -24,4 +25,8 @@ export interface ReviewsResponse {
     avatar: string;
   },
   is_owner: boolean
+}
+
+export type LatestReviewsResponse = ReviewsResponse & {
+  course: CourseModel
 }

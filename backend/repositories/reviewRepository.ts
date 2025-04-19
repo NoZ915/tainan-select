@@ -1,7 +1,7 @@
-import { deleteReview } from "../controllers/reviewController";
+import CourseModel from "../models/Course";
 import ReviewModel from "../models/Review";
 import UserModel from "../models/Users";
-import { CreateReviewInput, ReviewsResponse } from "../types/review";
+import { CreateReviewInput, LatestReviewsResponse, ReviewsResponse } from "../types/review";
 
 class ReviewRepository {
   async getAllReviewsByCourseId(
@@ -57,7 +57,7 @@ class ReviewRepository {
     if(review) await review?.destroy();
   }
 
-  async getLatestReviews(user_id: number | undefined): Promise<ReviewsResponse[]>{
+  async getLatestReviews(user_id: number | undefined): Promise<LatestReviewsResponse[]>{
     const reviews = await ReviewModel.findAll({
       limit: 10,
       order: [['created_at', 'DESC']],
@@ -65,6 +65,11 @@ class ReviewRepository {
         {
           model: UserModel,
           attributes: ["name", "avatar"],
+        },
+        {
+          model: CourseModel,
+          as: 'course',
+          attributes: ["id", "course_name", "department", "academy", "instructor", "instructor_url", "course_room", "course_time", "course_url", "credit_hours", "semester", "created_at", "updated_at", "course_type", "interests_count", "view_count"],
         },
       ],
     });
@@ -76,7 +81,7 @@ class ReviewRepository {
       return { ...reviewWithoutUserId, is_owner };
     });
 
-    return reviewsWithOwnerFlag as ReviewsResponse[];
+    return reviewsWithOwnerFlag as LatestReviewsResponse[];
   }
 }
 

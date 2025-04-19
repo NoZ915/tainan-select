@@ -1,5 +1,6 @@
 import { DataTypes, InferAttributes, InferCreationAttributes, Model, Optional } from "sequelize";
 import db from "./index";
+import ReviewModel from "./Review";
 
 interface UserCreationAttributes extends Optional<InferCreationAttributes<UserModel>, 'id' | 'uuid' | 'created_at' | 'updated_at'> {}
 
@@ -61,6 +62,8 @@ UserModel.init(
     updatedAt: 'updated_at',  // 映射到資料表中的 updated_at
   }
 );
+
+
 
 UserModel.sync().catch((error) => {
   console.log("User 模型同步失敗:", error)

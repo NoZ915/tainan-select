@@ -1,22 +1,24 @@
-import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
-import db from ".";
+import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes, Model, Optional } from "sequelize";
+import db from "./index";
 import UserModel from "./Users";
+import CourseModel from "./Course";
 
-// models/User.ts那裡是用"Optional"用法，這邊試著用"CreationOptional"看看
+interface UserCreationAttributes extends Optional<InferCreationAttributes<ReviewModel>, 'id' | 'favorites' | 'created_at' | 'updated_at'> {}
+
 class ReviewModel extends Model<
   InferAttributes<ReviewModel>,
-  InferCreationAttributes<ReviewModel>
+  UserCreationAttributes
 > {
-  declare id: CreationOptional<number>;
+  declare id: number;
   declare user_id: number;
   declare course_id: number;
   declare gain: number;
   declare sweetness: number;
   declare coolness: number;
   declare comment?: string;
-  declare favorites: CreationOptional<number>;
-  declare created_at: CreationOptional<Date>;
-  declare updated_at: CreationOptional<Date>;
+  declare favorites: number;
+  declare created_at: Date;
+  declare updated_at: Date;
 }
 
 ReviewModel.init(
@@ -74,6 +76,9 @@ ReviewModel.init(
 
 ReviewModel.belongsTo(UserModel, { foreignKey: "user_id" });
 UserModel.hasMany(ReviewModel, { foreignKey: "user_id" });
+
+ReviewModel.belongsTo(CourseModel, { foreignKey: "course_id", as: "course" });
+CourseModel.hasMany(ReviewModel, { foreignKey: "course_id" });
 
 ReviewModel.sync().catch((error) => {
   console.error("Review 模型同步失敗", error);
