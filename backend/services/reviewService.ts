@@ -14,6 +14,10 @@ class CourseService{
     async deleteReview(review_id: number, user_id: number): Promise<void>{
         await ReviewRepository.deleteReview(review_id, user_id);
     }
+
+    async getLatestReviews(user_id: number | undefined): Promise<ReviewsResponse[]>{
+        return await ReviewRepository.getLatestReviews(user_id);
+    }
 }
 
 export default new CourseService();

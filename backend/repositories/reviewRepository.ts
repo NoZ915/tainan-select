@@ -56,6 +56,28 @@ class ReviewRepository {
     });
     if(review) await review?.destroy();
   }
+
+  async getLatestReviews(user_id: number | undefined): Promise<ReviewsResponse[]>{
+    const reviews = await ReviewModel.findAll({
+      limit: 10,
+      order: [['createdAt', 'DESC']],
+      include: [
+        {
+          model: UserModel,
+          attributes: ["name", "avatar"],
+        },
+      ],
+    });
+
+    const reviewsWithOwnerFlag = reviews.map((review) => {
+      const is_owner = review.user_id === user_id;
+      const reviewJson = review.toJSON();
+      const { user_id: userId, ...reviewWithoutUserId } = reviewJson; // 把user_id移除，不要回傳到前端
+      return { ...reviewWithoutUserId, is_owner };
+    });
+
+    return reviewsWithOwnerFlag as ReviewsResponse[];
+  }
 }
 
 export default new ReviewRepository();
