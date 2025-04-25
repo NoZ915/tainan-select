@@ -60,7 +60,7 @@ class ReviewRepository {
   async getLatestReviews(user_id: number | undefined): Promise<LatestReviewsResponse[]>{
     const reviews = await ReviewModel.findAll({
       limit: 10,
-      order: [['created_at', 'DESC']],
+      order: [['updated_at', 'DESC']],
       include: [
         {
           model: UserModel,
