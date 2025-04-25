@@ -24,3 +24,8 @@ export const getAcademies = async (): Promise<{ academies: string[] }> => {
   const response = await axiosInstance.get("/courses/getAllAcademies");
   return response.data;
 };
+
+export const getMostPopularCourses = async (): Promise<Course[]> => {
+  const response = await axiosInstance.get("/courses/getMostPopularCourses");
+  return response.data;
+}

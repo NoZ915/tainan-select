@@ -1,6 +1,7 @@
 export const QUERY_KEYS = {
     COURSES: "courses",
     COURSE: "course",
+    POPULAR_COURSES: "popular_courses",
     ACADEMIES: "academies",
     DEPARTMENTS: "departments",
 
