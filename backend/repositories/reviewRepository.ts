@@ -1,6 +1,7 @@
 import CourseModel from "../models/Course";
 import ReviewModel from "../models/Review";
 import UserModel from "../models/Users";
+import CourseRepository from "./courseRepository";
 import { CreateReviewInput, LatestReviewsResponse, ReviewsResponse } from "../types/review";
 
 class ReviewRepository {
@@ -44,6 +45,7 @@ class ReviewRepository {
       await existingReview.update(input);
     } else {
       await ReviewModel.create(input);
+      await CourseRepository.IncrementCount(input.course_id, "review_count");
     }
   }
 
@@ -54,7 +56,10 @@ class ReviewRepository {
         user_id
       }
     });
-    if(review) await review?.destroy();
+    if(review){
+      await review?.destroy();
+      await CourseRepository.decrementCount(review.course_id, "review_count");
+    } 
   }
 
   async getLatestReviews(user_id: number | undefined): Promise<LatestReviewsResponse[]>{

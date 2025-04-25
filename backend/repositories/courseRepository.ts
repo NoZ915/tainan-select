@@ -94,6 +94,26 @@ class CourseRepository {
     })
     return courses;
   }
+
+  async decrementCount(
+    course_id: number, 
+    field: "interests_count" | "view_count" | "review_count"
+  ): Promise<void>{
+    await CourseModel.update(
+      {[field]: Sequelize.literal(`GRETEST(${field} - 1, 0)`)},
+      {where: {id: course_id}}
+    );
+  }
+
+  async IncrementCount(
+    course_id: number, 
+    field: "interests_count" | "view_count" | "review_count"
+  ): Promise<void>{
+    await CourseModel.update(
+      {[field]: Sequelize.literal(`GRETEST(${field} + 1, 0)`)},
+      {where: {id: course_id}}
+    );
+  }
 }
 
 export default new CourseRepository();
