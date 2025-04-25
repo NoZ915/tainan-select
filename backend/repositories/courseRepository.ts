@@ -80,14 +80,14 @@ class CourseRepository {
     return academyList;
   }
 
-  async hasUserReviewedCourse(course_id: number, user_id: number | undefined): Promise<boolean>{
+  async hasUserReviewedCourse(course_id: number, user_id: number | undefined): Promise<boolean> {
     const review = await ReviewModel.findOne({
       where: { course_id, user_id }
     })
     return review !== null;
   }
 
-  async getMostPopularCourses(): Promise<Course[]>{
+  async getMostPopularCourses(): Promise<Course[]> {
     const courses = await CourseModel.findAll({
       limit: 5,
       order: [['interests_count', 'desc']]
@@ -96,22 +96,22 @@ class CourseRepository {
   }
 
   async decrementCount(
-    course_id: number, 
+    course_id: number,
     field: "interests_count" | "view_count" | "review_count"
-  ): Promise<void>{
+  ): Promise<void> {
     await CourseModel.update(
-      {[field]: Sequelize.literal(`GRETEST(${field} - 1, 0)`)},
-      {where: {id: course_id}}
+      { [field]: Sequelize.literal(`GREATEST(${field} - 1, 0)`) },
+      { where: { id: course_id } }
     );
   }
 
   async IncrementCount(
-    course_id: number, 
+    course_id: number,
     field: "interests_count" | "view_count" | "review_count"
-  ): Promise<void>{
+  ): Promise<void> {
     await CourseModel.update(
-      {[field]: Sequelize.literal(`GRETEST(${field} + 1, 0)`)},
-      {where: {id: course_id}}
+      { [field]: Sequelize.literal(`GREATEST(${field} + 1, 0)`) },
+      { where: { id: course_id } }
     );
   }
 }

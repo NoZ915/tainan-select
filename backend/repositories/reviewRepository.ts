@@ -1,7 +1,7 @@
+import e from "cors";
 import CourseModel from "../models/Course";
 import ReviewModel from "../models/Review";
 import UserModel from "../models/Users";
-import CourseRepository from "./courseRepository";
 import { CreateReviewInput, LatestReviewsResponse, ReviewsResponse } from "../types/review";
 
 class ReviewRepository {
@@ -36,6 +36,17 @@ class ReviewRepository {
     return reviewsWithOwnerFlag as ReviewsResponse[];
   }
 
+  async getReviewById(review_id: number, user_id: number): Promise<ReviewModel> {
+    const review = await ReviewModel.findOne({
+      where: {
+        id: review_id,
+        user_id
+      }
+    });
+    if (!review) throw new Error("Review not found");
+    else return review;
+  }
+
   async upsertReview(input: CreateReviewInput): Promise<void> {
     const existingReview = await ReviewModel.findOne({
       where: { user_id: input.user_id, course_id: input.course_id },
@@ -45,24 +56,17 @@ class ReviewRepository {
       await existingReview.update(input);
     } else {
       await ReviewModel.create(input);
-      await CourseRepository.IncrementCount(input.course_id, "review_count");
     }
   }
 
-  async deleteReview(review_id: number, user_id: number): Promise<void>{
-    const review = await ReviewModel.findOne({
-      where: {
-        id: review_id,
-        user_id
-      }
-    });
-    if(review){
+  async deleteReview(review_id: number, user_id: number): Promise<void> {
+    const review = await this.getReviewById(review_id, user_id);
+    if (review) {
       await review?.destroy();
-      await CourseRepository.decrementCount(review.course_id, "review_count");
-    } 
+    }
   }
 
-  async getLatestReviews(user_id: number | undefined): Promise<LatestReviewsResponse[]>{
+  async getLatestReviews(user_id: number | undefined): Promise<LatestReviewsResponse[]> {
     const reviews = await ReviewModel.findAll({
       limit: 10,
       order: [['updated_at', 'DESC']],
