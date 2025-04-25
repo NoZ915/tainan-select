@@ -11,6 +11,7 @@ import { Course } from "../types/courseType";
 
 import AddOrEditReviewModal from "./AddOrEditReviewModal";
 import DeleteReviewModal from "./DeleteReviewModal";
+import { Link } from "react-router-dom";
 
 interface ReviewCardProp {
 	review: ReviewsResponse,
@@ -33,7 +34,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 	}
 
 	return (
-		<Card key={review.id} className={style.card}>
+		<Card className={style.card}>
 			<Card.Section className={style.cardSection}>
 				<Group justify="space-between">
 					<Group>
@@ -81,7 +82,9 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 
 			<Card.Section className={style.cardSection}>
 				<Text size="md" fw={900} className={style.courseName}>
-					{course?.course.course_name} / {course?.course.instructor}
+					<Link to={`/course/${course?.course.id}`} className={style.link}>
+						{course?.course.course_name} / {course?.course.instructor}
+					</Link>
 				</Text>
 			</Card.Section>
 

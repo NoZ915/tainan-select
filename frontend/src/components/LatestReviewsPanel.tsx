@@ -16,7 +16,11 @@ const LatestReviewsPanel: React.FC = () => {
 			{latestReivews?.map((review) => {
 				const formatCourse = { course: review.course }
 				return (
-					<ReviewCard review={review} course={formatCourse} />
+					<ReviewCard 
+						key={review.id} 
+						review={review} 
+						course={formatCourse}
+					/>
 				)
 			})}
 		</Container>

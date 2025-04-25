@@ -24,3 +24,8 @@
 .itemLabel{
     font-size: 16px;
 }
+
+.link{
+    color: black;
+    text-decoration: none;
+}
