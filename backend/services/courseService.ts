@@ -23,6 +23,10 @@ class CourseService {
   async getAllAcademies(): Promise<string[]>{
     return await CourseRepository.getAllAcademies();
   }
+
+  async getMostPopularCourses(): Promise<Course[]>{
+    return await CourseRepository.getMostPopularCourses();
+  }
 }
 
 export default new CourseService();

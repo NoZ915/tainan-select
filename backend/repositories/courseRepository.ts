@@ -86,6 +86,14 @@ class CourseRepository {
     })
     return review !== null;
   }
+
+  async getMostPopularCourses(): Promise<Course[]>{
+    const courses = await CourseModel.findAll({
+      limit: 5,
+      order: [['interests_count', 'desc']]
+    })
+    return courses;
+  }
 }
 
 export default new CourseRepository();
