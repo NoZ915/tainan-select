@@ -1,9 +1,10 @@
 import { Badge, Card, Group, Text } from "@mantine/core";
 import style from "../styles/components/CourseCard.module.css";
+import { FaCommentAlt, FaHeart, FaEye } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { Course } from "../types/courseType";
 
-interface CourseCardProp{
+interface CourseCardProp {
 	course: Course
 }
 
@@ -16,6 +17,21 @@ const CourseCard: React.FC<CourseCardProp> = ({ course }) => {
 				<Group justify="center" mt="sm">
 					<Badge color="brick-red.3" radius="sm">{course.academy}</Badge>
 					<Badge color="brick-red.3" variant="light" radius="sm">{course.department}</Badge>
+				</Group>
+
+				<Group justify="center" mt="md" className={style.courseCardStats}>
+					<Group gap="xs">
+						<FaCommentAlt size={16} />
+						<Text size="sm">3</Text>
+					</Group>
+					<Group gap="xs">
+						<FaHeart size={16} />
+						<Text size="sm">4</Text>
+					</Group>
+					<Group gap="xs">
+						<FaEye size={16} />
+						<Text size="sm">20</Text>
+					</Group>
 				</Group>
 			</Link>
 		</Card>

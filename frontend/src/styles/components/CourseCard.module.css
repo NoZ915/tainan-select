@@ -6,3 +6,7 @@
 	transform: scale(1.01);
 	box-shadow: var(--mantine-shadow-md);
 }
+
+.courseCardStats {
+	color: var(--mantine-color-brick-red-3);
+}
