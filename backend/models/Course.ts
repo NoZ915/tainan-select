@@ -27,6 +27,7 @@ class CourseModel extends Model<
   declare course_type: string;
   declare interests_count: number;
   declare view_count: number;
+  declare review_count: number;
 }
 
 CourseModel.init(
@@ -89,6 +90,11 @@ CourseModel.init(
       defaultValue: 0
     },
     view_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    },
+    review_count: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0
