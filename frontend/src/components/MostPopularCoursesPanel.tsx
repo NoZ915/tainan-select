@@ -5,12 +5,10 @@ import styles from "../styles/components/MostPopularCoursesPanel.module.css"
 
 const MostPopularCoursesPanel: React.FC = () => {
   const { data: popularCourses, isLoading } = useGetMostPopularCourses();
-  console.log(popularCourses)
 
   if (isLoading) {
     return <Loader />
   }
-
 
   return (
     <Container className={styles.container}>
