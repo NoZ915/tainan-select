@@ -1,8 +1,9 @@
-import { Badge, Flex, Group, Text } from "@mantine/core";
+import { Badge, Button, Flex, Group, Text } from "@mantine/core";
 import { Course } from "../types/courseType";
 import style from "../styles/components/CourseInfoPanel.module.css"
 import { Link } from "react-router-dom";
 import { useIsMobile } from "../hooks/useIsMobile";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
 
 interface CourseInfoPanelProps {
   course: { course: Course } | null | undefined;
@@ -11,6 +12,19 @@ interface CourseInfoPanelProps {
 
 const CourseInfoPanel: React.FC<CourseInfoPanelProps> = ({ course, isLoading }) => {
   const isMobile = useIsMobile();
+
+  const InterestButton = (
+    <Button
+      // onClick={handleLike}
+      leftSection={<FaRegHeart size={20} />}
+      variant="outline"
+      // color={liked ? "red" : "gray"}
+      size="lg"
+      className={style.favoriteIcon}
+    >
+      <Text>加入收藏</Text>
+    </Button>
+  );
 
   if (isLoading) {
     return <>Is Loading...</>
@@ -26,6 +40,7 @@ const CourseInfoPanel: React.FC<CourseInfoPanelProps> = ({ course, isLoading }) 
         <Group>
           <Text size="md" fw={900} className={style.courseName}>{course.course.course_name}</Text>
           <Badge radius="sm">{course.course.semester}</Badge>
+          {InterestButton}
         </Group>
 
         <div>
@@ -52,6 +67,7 @@ const CourseInfoPanel: React.FC<CourseInfoPanelProps> = ({ course, isLoading }) 
       <Group>
         <Text size="md" fw={900} className={style.courseName}>{course.course.course_name}</Text>
         <Badge radius="sm">{course.course.semester}</Badge>
+        {InterestButton}
       </Group>
 
       <div>
