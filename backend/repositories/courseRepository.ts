@@ -106,7 +106,7 @@ class CourseRepository {
   async decrementCount(
     course_id: number,
     field: "interests_count" | "view_count" | "review_count",
-    transaction: Transaction
+    transaction?: Transaction
   ): Promise<void> {
     await CourseModel.update(
       { [field]: db.Sequelize.literal(`GREATEST(${field} - 1, 0)`) },
@@ -117,7 +117,7 @@ class CourseRepository {
   async IncrementCount(
     course_id: number,
     field: "interests_count" | "view_count" | "review_count",
-    transaction: Transaction
+    transaction?: Transaction
   ): Promise<void> {
     await CourseModel.update(
       { [field]: db.Sequelize.literal(`GREATEST(${field} + 1, 0)`) },

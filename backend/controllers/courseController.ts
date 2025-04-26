@@ -62,21 +62,33 @@ export const getAllAcademies: RequestHandler = async (
 };
 
 export const getCourse: RequestHandler = async (req, res): Promise<void> => {
-  try{
+  try {
     const user_id = req.user?.id;
     const course_id = parseInt(req.params.course_id);
     const course = await CourseService.getCourse(course_id, user_id);
-    res.status(200).json( course );
-  }catch(err){
-    res.status(500).json({ message: err })
+    res.status(200).json(course);
+  } catch (err) {
+    res.status(500).json({ message: err });
   }
 };
 
-export const getMostCuriousButUnreviewedCourses: RequestHandler = async (req, res):Promise<void> => {
-  try{
+export const getMostCuriousButUnreviewedCourses: RequestHandler = async (
+  req,
+  res
+): Promise<void> => {
+  try {
     const courses = await CourseService.getMostCuriousButUnreviewedCourses();
     res.status(200).json(courses);
-  }catch(err){
+  } catch (err) {
     res.status(500).json({ message: err });
   }
-}
+};
+
+export const AddViewCount: RequestHandler = async (req, res): Promise<void> => {
+  try {
+    const { course_id } = req.body;
+    await CourseService.addViewCount(course_id);
+  } catch (err) {
+    res.status(500).json({ message: err });
+  }
+};

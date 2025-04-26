@@ -27,6 +27,10 @@ class CourseService {
   async getMostCuriousButUnreviewedCourses(): Promise<Course[]>{
     return await CourseRepository.getMostCuriousButUnreviewedCourses();
   }
+
+  async addViewCount(course_id: number): Promise<void>{
+    await CourseRepository.IncrementCount(course_id, "view_count");
+  }
 }
 
 export default new CourseService();

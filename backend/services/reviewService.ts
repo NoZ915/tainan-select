@@ -40,7 +40,6 @@ class CourseService {
       await transaction.rollback();
       throw err;
     }
-
   }
 
   async getLatestReviews(
