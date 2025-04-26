@@ -1,16 +1,20 @@
+import { useState } from "react";
+import { useParams } from "react-router-dom";
+import { useAuthStore } from "../stores/authStore";
+import { useGetCourse } from "../hooks/courses/useGetCourse";
+import { useIsMobile } from "../hooks/useIsMobile";
+import { useGetAllReviewsByCourseId } from "../hooks/reviews/useGetAllReviewsByCourseId";
+
 import { ActionIcon, Container, Tooltip } from "@mantine/core";
 import CourseInfoPanel from "../components/CourseInfoPanel";
 import CourseReviewsPanel from "../components/CourseReviewsPanel";
-import { useGetCourse } from "../hooks/courses/useGetCourse";
-import { useParams } from "react-router-dom";
-import { useIsMobile } from "../hooks/useIsMobile";
-import { useGetAllReviewsByCourseId } from "../hooks/reviews/useGetAllReviewsByCourseId";
+import AddOrEditReviewModal from "../components/AddOrEditReviewModal";
+import LoginModal from "../components/LoginModal";
+
 import { FaPlus } from "react-icons/fa";
 import styles from "../styles/pages/CourseDetailPage.module.css";
-import LoginModal from "../components/LoginModal";
-import { useState } from "react";
-import AddOrEditReviewModal from "../components/AddOrEditReviewModal";
-import { useAuthStore } from "../stores/authStore";
+
+
 
 const CourseDetailPage: React.FC = () => {
   const isMobile = useIsMobile();
