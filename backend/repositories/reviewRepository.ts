@@ -3,6 +3,7 @@ import CourseModel from "../models/Course";
 import ReviewModel from "../models/Review";
 import UserModel from "../models/Users";
 import { CreateReviewInput, LatestReviewsResponse, ReviewsResponse } from "../types/review";
+import { Transaction } from "sequelize";
 
 class ReviewRepository {
   async getAllReviewsByCourseId(
@@ -36,31 +37,33 @@ class ReviewRepository {
     return reviewsWithOwnerFlag as ReviewsResponse[];
   }
 
-  async getReviewById(review_id: number, user_id: number): Promise<ReviewModel> {
+  async getReviewById(review_id: number, user_id: number, transaction: Transaction): Promise<ReviewModel> {
     const review = await ReviewModel.findOne({
       where: {
         id: review_id,
         user_id
-      }
+      },
+      transaction
     });
     if (!review) throw new Error("Review not found");
     else return review;
   }
 
-  async upsertReview(input: CreateReviewInput): Promise<void> {
+  async upsertReview(input: CreateReviewInput, transaction: Transaction): Promise<void> {
     const existingReview = await ReviewModel.findOne({
       where: { user_id: input.user_id, course_id: input.course_id },
+      transaction
     });
 
     if (existingReview) {
-      await existingReview.update(input);
+      await existingReview.update(input, { transaction });
     } else {
-      await ReviewModel.create(input);
+      await ReviewModel.create(input, { transaction });
     }
   }
 
-  async deleteReview(review_id: number, user_id: number): Promise<void> {
-    const review = await this.getReviewById(review_id, user_id);
+  async deleteReview(review_id: number, user_id: number, transaction: Transaction): Promise<void> {
+    const review = await this.getReviewById(review_id, user_id, transaction);
     if (review) {
       await review?.destroy();
     }

@@ -1,8 +1,9 @@
-import { Op, Sequelize } from "sequelize";
+import { Op, Transaction } from "sequelize";
 import CourseModel from "../models/Course";
 import { Course } from "../types/course";
 import { PaginationParams } from "../types/course";
 import ReviewModel from "../models/Review";
+import db from "../models";
 
 class CourseRepository {
   async getAllCourses({
@@ -60,7 +61,7 @@ class CourseRepository {
 
   async getAllDepartments(): Promise<string[]> {
     const departments = await CourseModel.findAll({
-      attributes: [[Sequelize.fn("DISTINCT", Sequelize.col("department")), "department"]],
+      attributes: [[db.Sequelize.fn("DISTINCT", db.Sequelize.col("department")), "department"]],
       raw: true
     });
     const departmentList = departments.map((item: { department: string }) => {
@@ -71,7 +72,7 @@ class CourseRepository {
 
   async getAllAcademies(): Promise<string[]> {
     const academies = await CourseModel.findAll({
-      attributes: [[Sequelize.fn("DISTINCT", Sequelize.col("academy")), "academy"]],
+      attributes: [[db.Sequelize.fn("DISTINCT", db.Sequelize.col("academy")), "academy"]],
       raw: true
     });
     const academyList = academies
@@ -92,7 +93,7 @@ class CourseRepository {
     const courses = await CourseModel.findAll({
       attributes:{
         include:[[
-          Sequelize.literal(`(interests_count * 0.6 + view_count * 0.4) / (review_count + 1)`),
+          db.Sequelize.literal(`(interests_count * 0.6 + view_count * 0.4) / (review_count + 1)`),
           "curiosity_score"
         ]]
       },
@@ -104,21 +105,23 @@ class CourseRepository {
 
   async decrementCount(
     course_id: number,
-    field: "interests_count" | "view_count" | "review_count"
+    field: "interests_count" | "view_count" | "review_count",
+    transaction: Transaction
   ): Promise<void> {
     await CourseModel.update(
-      { [field]: Sequelize.literal(`GREATEST(${field} - 1, 0)`) },
-      { where: { id: course_id } }
+      { [field]: db.Sequelize.literal(`GREATEST(${field} - 1, 0)`) },
+      { where: { id: course_id }, transaction }
     );
   }
 
   async IncrementCount(
     course_id: number,
-    field: "interests_count" | "view_count" | "review_count"
+    field: "interests_count" | "view_count" | "review_count",
+    transaction: Transaction
   ): Promise<void> {
     await CourseModel.update(
-      { [field]: Sequelize.literal(`GREATEST(${field} + 1, 0)`) },
-      { where: { id: course_id } }
+      { [field]: db.Sequelize.literal(`GREATEST(${field} + 1, 0)`) },
+      { where: { id: course_id }, transaction }
     );
   }
 }
