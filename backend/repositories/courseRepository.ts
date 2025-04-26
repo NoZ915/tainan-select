@@ -83,9 +83,9 @@ class CourseRepository {
   async getMostCuriousButUnreviewedCourses(): Promise<Course[]> {
     // 想了解程度 ÷ 評論數 = 被大量收藏或瀏覽、但評論數很少的課程
     const courses = await CourseModel.findAll({
-      attributes:{
-        include:[[
-          db.Sequelize.literal(`(interests_count * 0.6 + view_count * 0.4) / (review_count + 1)`),
+      attributes: {
+        include: [[
+          db.Sequelize.literal(`(interests_count * 0.9 + view_count * 0.1) / (review_count + 1)`),
           "curiosity_score"
         ]]
       },
