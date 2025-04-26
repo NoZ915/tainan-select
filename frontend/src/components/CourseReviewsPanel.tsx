@@ -8,7 +8,7 @@ import ReviewCard from "./ReviewCard";
 
 interface CourseReviewsPanelProps {
   course: { course: Course } | null | undefined;
-  reviews: ReviewsResponse[] | undefined;
+  reviews: { reviews: ReviewsResponse[], hasUserReviewedCourse: boolean } | undefined;
   isLoading: boolean;
 }
 
@@ -23,7 +23,7 @@ const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews
 
   return (
     <Container className={styles.container}>
-      {reviews.map((review) => {
+      {reviews.reviews.map((review) => {
         return (
           <ReviewCard key={review.id} review={review} course={course} />
         )

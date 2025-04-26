@@ -7,8 +7,19 @@ class CourseService {
   async getAllReviewsByCourseId(
     course_id: number,
     user_id: number | undefined
-  ): Promise<ReviewsResponse[]> {
-    return await ReviewRepository.getAllReviewsByCourseId(course_id, user_id);
+  ): Promise<{ reviews: ReviewsResponse[]; hasUserReviewedCourse: boolean }> {
+    let hasUserReviewedCourse = false;
+    if (user_id !== undefined) {
+      hasUserReviewedCourse = await ReviewRepository.hasUserReviewedCourse(
+        course_id,
+        user_id
+      );
+    }
+    const reviews = await ReviewRepository.getAllReviewsByCourseId(
+      course_id,
+      user_id
+    );
+    return { reviews, hasUserReviewedCourse };
   }
 
   // 一次動兩DB，所以加個transaction
@@ -17,7 +28,11 @@ class CourseService {
 
     try {
       await ReviewRepository.upsertReview(input, transaction);
-      await CourseRepository.IncrementCount(input.course_id, "review_count", transaction);
+      await CourseRepository.IncrementCount(
+        input.course_id,
+        "review_count",
+        transaction
+      );
 
       await transaction.commit();
     } catch (err) {
@@ -30,13 +45,21 @@ class CourseService {
   async deleteReview(review_id: number, user_id: number): Promise<void> {
     const transaction = await db.sequelize.transaction();
 
-    try{
-      const review = await ReviewRepository.getReviewById(review_id, user_id, transaction);
+    try {
+      const review = await ReviewRepository.getReviewById(
+        review_id,
+        user_id,
+        transaction
+      );
       await ReviewRepository.deleteReview(review_id, user_id, transaction);
-      await CourseRepository.decrementCount(review.course_id, "review_count", transaction);
+      await CourseRepository.decrementCount(
+        review.course_id,
+        "review_count",
+        transaction
+      );
 
       await transaction.commit();
-    }catch(err){
+    } catch (err) {
       await transaction.rollback();
       throw err;
     }

@@ -95,6 +95,13 @@ class ReviewRepository {
 
     return reviewsWithOwnerFlag as LatestReviewsResponse[];
   }
+
+  async hasUserReviewedCourse(course_id: number, user_id: number | undefined): Promise<boolean> {
+    const review = await ReviewModel.findOne({
+      where: { course_id, user_id }
+    })
+    return review !== null;
+  }
 }
 
 export default new ReviewRepository();

@@ -56,7 +56,7 @@ const CourseDetailPage: React.FC = () => {
             radius="xl"
             className={styles.actionIcon}
             onClick={handleActionClick}
-            disabled={course && course.hasUserReviewedCourse}
+            disabled={course && reviews?.hasUserReviewedCourse}
           >
             <FaPlus size={24} />
           </ActionIcon>
@@ -80,7 +80,7 @@ const CourseDetailPage: React.FC = () => {
           <CourseReviewsPanel course={course} reviews={reviews} isLoading={isReviewsLoading} />
         </div>
         <Tooltip
-          label={course && course.hasUserReviewedCourse ? "已經對這門課程發表過評價，請直接編輯評價" : "新增評價"}
+          label={course && reviews?.hasUserReviewedCourse ? "已經對這門課程發表過評價，請直接編輯評價" : "新增評價"}
           position="top"
         >
           <ActionIcon
@@ -88,7 +88,7 @@ const CourseDetailPage: React.FC = () => {
             radius="xl"
             className={styles.actionIcon}
             onClick={handleActionClick}
-            disabled={course && course.hasUserReviewedCourse}  // 根據 hasUserReviewedCourse 禁用
+            disabled={course && reviews?.hasUserReviewedCourse}  // 根據 hasUserReviewedCourse 禁用
           >
             <FaPlus size={24} />
           </ActionIcon>

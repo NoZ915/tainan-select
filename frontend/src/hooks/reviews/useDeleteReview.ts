@@ -9,7 +9,6 @@ export const useDeleteReview = () => {
         mutationFn: (review_id: number) => deleteReview(review_id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.REVIEWS] });
-            queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.COURSE] });
         },
         onError: (err) => console.log(err)
     })

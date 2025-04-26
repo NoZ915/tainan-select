@@ -2,7 +2,6 @@ import { Op, Transaction } from "sequelize";
 import CourseModel from "../models/Course";
 import { Course } from "../types/course";
 import { PaginationParams } from "../types/course";
-import ReviewModel from "../models/Review";
 import db from "../models";
 
 class CourseRepository {
@@ -79,13 +78,6 @@ class CourseRepository {
       .map((item: { academy?: string }) => item.academy)
       .filter((academy): academy is string => academy != null && academy.trim() !== '');
     return academyList;
-  }
-
-  async hasUserReviewedCourse(course_id: number, user_id: number | undefined): Promise<boolean> {
-    const review = await ReviewModel.findOne({
-      where: { course_id, user_id }
-    })
-    return review !== null;
   }
 
   async getMostCuriousButUnreviewedCourses(): Promise<Course[]> {

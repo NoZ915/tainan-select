@@ -10,7 +10,6 @@ export const useUpsertReview = () => {
         mutationFn: (input: UpsertReviewInput) => upsertReview(input),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.REVIEWS] });
-            queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.COURSE] });
             queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LATEST_REVIEWS] });
         },
         onError: (err) => console.log(err)
