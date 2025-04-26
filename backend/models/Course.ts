@@ -5,7 +5,6 @@ import {
   InferCreationAttributes,
 } from "sequelize";
 import db from "./index";
-import ReviewModel from "./Review";
 
 class CourseModel extends Model<
   InferAttributes<CourseModel>,
