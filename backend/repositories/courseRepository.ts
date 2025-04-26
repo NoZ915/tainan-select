@@ -87,10 +87,17 @@ class CourseRepository {
     return review !== null;
   }
 
-  async getMostPopularCourses(): Promise<Course[]> {
+  async getMostCuriousButUnreviewedCourses(): Promise<Course[]> {
+    // 想了解程度 ÷ 評論數 = 被大量收藏或瀏覽、但評論數很少的課程
     const courses = await CourseModel.findAll({
+      attributes:{
+        include:[[
+          Sequelize.literal(`(interests_count * 0.6 + view_count * 0.4) / (review_count + 1)`),
+          "curiosity_score"
+        ]]
+      },
       limit: 5,
-      order: [['interests_count', 'desc']]
+      order: [['curiosity_score', 'desc']]
     })
     return courses;
   }

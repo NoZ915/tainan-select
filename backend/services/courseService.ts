@@ -24,8 +24,8 @@ class CourseService {
     return await CourseRepository.getAllAcademies();
   }
 
-  async getMostPopularCourses(): Promise<Course[]>{
-    return await CourseRepository.getMostPopularCourses();
+  async getMostCuriousButUnreviewedCourses(): Promise<Course[]>{
+    return await CourseRepository.getMostCuriousButUnreviewedCourses();
   }
 }
 

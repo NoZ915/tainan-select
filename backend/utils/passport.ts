@@ -13,9 +13,9 @@ passport.use(
         const sub = profile._json.sub;
         const email = profile._json.email;
 
-        if (!email?.endsWith(process.env.ALLOWED_EMAIL_DOMAIN)) {
-          return done(null, false, { message: 'Email domain not allowed' });
-        }
+        // if (!email?.endsWith(process.env.ALLOWED_EMAIL_DOMAIN)) {
+        //   return done(null, false, { message: 'Email domain not allowed' });
+        // }
 
         let user = await userService.getUserByGoogleSub(sub);
         if (!user) {

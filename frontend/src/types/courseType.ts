@@ -13,6 +13,7 @@ export interface Course {
   created_at: Date;
   updated_at: Date;
   course_type: string;
+  review_count: number;
   interests_count: number;
   view_count: number;
 }

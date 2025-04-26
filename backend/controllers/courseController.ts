@@ -72,9 +72,9 @@ export const getCourse: RequestHandler = async (req, res): Promise<void> => {
   }
 };
 
-export const getMostPopularCourses: RequestHandler = async (req, res):Promise<void> => {
+export const getMostCuriousButUnreviewedCourses: RequestHandler = async (req, res):Promise<void> => {
   try{
-    const courses = await CourseService.getMostPopularCourses();
+    const courses = await CourseService.getMostCuriousButUnreviewedCourses();
     res.status(200).json(courses);
   }catch(err){
     res.status(500).json({ message: err });

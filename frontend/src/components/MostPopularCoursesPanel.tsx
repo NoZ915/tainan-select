@@ -1,10 +1,10 @@
 import { Container, Grid, Loader, Text } from "@mantine/core";
-import { useGetMostPopularCourses } from "../hooks/courses/useGetMostPopularCourses";
+import { useGetMostCuriousButUnreviewedCourses } from "../hooks/courses/useGetMostCuriousButUnreviewedCourses";
 import CourseCard from "./CourseCard";
 import styles from "../styles/components/MostPopularCoursesPanel.module.css"
 
 const MostPopularCoursesPanel: React.FC = () => {
-  const { data: popularCourses, isLoading } = useGetMostPopularCourses();
+  const { data: popularCourses, isLoading } = useGetMostCuriousButUnreviewedCourses();
 
   if (isLoading) {
     return <Loader />

@@ -22,15 +22,15 @@ const CourseCard: React.FC<CourseCardProp> = ({ course }) => {
 				<Group justify="center" mt="md" className={style.courseCardStats}>
 					<Group gap="xs">
 						<FaCommentAlt size={16} />
-						<Text size="sm">3</Text>
+						<Text size="sm">{course.review_count}</Text>
 					</Group>
 					<Group gap="xs">
 						<FaHeart size={16} />
-						<Text size="sm">4</Text>
+						<Text size="sm">{course.interests_count}</Text>
 					</Group>
 					<Group gap="xs">
 						<FaEye size={16} />
-						<Text size="sm">20</Text>
+						<Text size="sm">{course.view_count}</Text>
 					</Group>
 				</Group>
 			</Link>
