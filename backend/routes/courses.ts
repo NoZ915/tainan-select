@@ -4,7 +4,7 @@ import { getCookie } from '../middlewares/authMiddleware';
 
 const router: Router = express.Router();
 
-router.post("/addViewCount", AddViewCount);
+router.patch("/addViewCount", AddViewCount);
 router.get("/getAllDepartments", getAllDepartments);
 router.get("/getAllAcademies", getAllAcademies);
 router.get("/getMostCuriousButUnreviewedCourses", getMostCuriousButUnreviewedCourses);

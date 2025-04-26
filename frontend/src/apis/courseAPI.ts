@@ -29,3 +29,7 @@ export const getMostCuriousButUnreviewedCourses = async (): Promise<Course[]> =>
   const response = await axiosInstance.get("/courses/getMostCuriousButUnreviewedCourses");
   return response.data;
 }
+
+export const addViewCount = async (course_id: string): Promise<void> => {
+  await axiosInstance.patch("/courses/addViewCount", { course_id });
+}

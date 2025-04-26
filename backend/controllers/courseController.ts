@@ -88,6 +88,7 @@ export const AddViewCount: RequestHandler = async (req, res): Promise<void> => {
   try {
     const { course_id } = req.body;
     await CourseService.addViewCount(course_id);
+    res.status(200).json("Add view count success")
   } catch (err) {
     res.status(500).json({ message: err });
   }

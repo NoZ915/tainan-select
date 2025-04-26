@@ -25,7 +25,7 @@ const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews
     <Container className={styles.container}>
       {reviews.map((review) => {
         return (
-          <ReviewCard review={review} course={course} />
+          <ReviewCard key={review.id} review={review} course={course} />
         )
       })}
     </Container>
