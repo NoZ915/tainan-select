@@ -15,3 +15,17 @@ export const toggleInterest: RequestHandler = async(req, res): Promise<void> => 
         res.status(500).json({ message: err });
     }
 }
+
+export const getAllInterests: RequestHandler = async(req, res): Promise<void> => {
+    try{
+        const user_id = req.user?.id;
+        if(!user_id){
+            res.status(401).json({ message: "未授權的使用者" });
+            return;
+        }
+        const interests = await InterestService.getAllInterests(user_id);
+        res.status(200).json(interests);
+    }catch(err){
+        res.status(500).json({ message: err });
+    }
+}

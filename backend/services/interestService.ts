@@ -1,8 +1,9 @@
 import db from "../models";
 import CourseRepository from "../repositories/courseRepository";
 import InterestRepository from "../repositories/interestRepository";
+import { Interest } from "../types/interest";
 
-interface ToggleInterestResult{
+interface ToggleInterestResult {
 	isInterest: boolean,
 	message: string
 }
@@ -37,6 +38,10 @@ class InterestService {
 			await transaction.rollback();
 			throw err;
 		}
+	}
+
+	async getAllInterests(user_id: number): Promise<Interest[]>{
+		return await InterestRepository.getAllInterests(user_id);
 	}
 }
 

@@ -18,7 +18,13 @@ class InterestRepository {
       where: { user_id, course_id },
       transaction
     });
-  } 
+  }
+  
+  async getAllInterests(user_id: number): Promise<Interest[]>{
+    return await InterestModel.findAll({
+      where: { user_id }
+    })
+  }
 }
 
 export default new InterestRepository();

@@ -1,9 +1,10 @@
 import express, { Router } from 'express';
-import { toggleInterest } from '../controllers/interestController';
-import { getCookie } from '../middlewares/authMiddleware';
+import { getAllInterests, toggleInterest } from '../controllers/interestController';
+import { authenticateJWT, getCookie } from '../middlewares/authMiddleware';
 
 const router: Router = express.Router();
 
 router.post("/toggleInterest",getCookie,  toggleInterest);
+router.post("/getAllInterests", authenticateJWT, getAllInterests);
 
 export default router;
