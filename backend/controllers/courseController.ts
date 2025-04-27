@@ -63,8 +63,9 @@ export const getAllAcademies: RequestHandler = async (
 
 export const getCourse: RequestHandler = async (req, res): Promise<void> => {
   try {
+    const user_id = req.user?.id;
     const course_id = parseInt(req.params.course_id);
-    const course = await CourseService.getCourse(course_id);
+    const course = await CourseService.getCourse(user_id, course_id);
     res.status(200).json(course);
   } catch (err) {
     res.status(500).json({ message: err });
