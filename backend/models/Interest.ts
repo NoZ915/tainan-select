@@ -6,6 +6,7 @@ import {
   Optional,
 } from "sequelize";
 import db from ".";
+import CourseModel from "./Course";
 
 interface InterestCreationAttributes extends Optional<InferCreationAttributes<InterestModel>, 'id' | 'created_at'> {}
 
@@ -49,6 +50,9 @@ InterestModel.init(
     updatedAt: false,  // 禁用 `updatedAt
   }
 );
+
+InterestModel.belongsTo(CourseModel, { foreignKey: 'course_id', as: 'course' });
+CourseModel.hasMany(InterestModel, { foreignKey: "course_id" });
 
 InterestModel.sync().catch((error) => {
   console.error("Interest 模型同步失敗:", error);
