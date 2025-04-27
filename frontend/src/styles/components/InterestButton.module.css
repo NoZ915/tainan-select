@@ -1,0 +1,7 @@
+.button {
+	&:disabled,
+	&[data-disabled] {
+		border: 2px solid rgb(155, 155, 155);
+		background-color: rgba(228, 228, 228, 0.16);
+	}
+}

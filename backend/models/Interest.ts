@@ -37,14 +37,16 @@ InterestModel.init(
     },
     created_at: {
       type: DataTypes.DATE,
+      allowNull: false,
       defaultValue: DataTypes.NOW,
     }
   },
   {
     sequelize: db.sequelize,
     tableName: "Interests",
-    timestamps: true,
-    createdAt: "created_at"
+    timestamps: false,  // 禁用 `createdAt` 和 `updatedAt`
+    createdAt: 'created_at',  // 將 Sequelize 的 `createdAt` 對應為 `created_at`
+    updatedAt: false,  // 禁用 `updatedAt
   }
 );
 
