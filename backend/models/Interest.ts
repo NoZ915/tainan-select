@@ -3,12 +3,15 @@ import {
   DataTypes,
   InferAttributes,
   InferCreationAttributes,
+  Optional,
 } from "sequelize";
 import db from ".";
 
+interface InterestCreationAttributes extends Optional<InferCreationAttributes<InterestModel>, 'id' | 'created_at'> {}
+
 class InterestModel extends Model<
   InferAttributes<InterestModel>,
-  InferCreationAttributes<InterestModel>
+  InterestCreationAttributes
 > {
   declare id: number
   declare user_id: number

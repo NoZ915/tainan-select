@@ -3,11 +3,11 @@ import db from "./index";
 import UserModel from "./Users";
 import CourseModel from "./Course";
 
-interface UserCreationAttributes extends Optional<InferCreationAttributes<ReviewModel>, 'id' | 'favorites' | 'created_at' | 'updated_at'> {}
+interface ReviewCreationAttributes extends Optional<InferCreationAttributes<ReviewModel>, 'id' | 'favorites' | 'created_at' | 'updated_at'> {}
 
 class ReviewModel extends Model<
   InferAttributes<ReviewModel>,
-  UserCreationAttributes
+  ReviewCreationAttributes
 > {
   declare id: number;
   declare user_id: number;
