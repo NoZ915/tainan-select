@@ -5,6 +5,6 @@ import { authenticateJWT, getCookie } from '../middlewares/authMiddleware';
 const router: Router = express.Router();
 
 router.post("/toggleInterest",getCookie,  toggleInterest);
-router.post("/getAllInterests", authenticateJWT, getAllInterests);
+router.get("/getAllInterests", authenticateJWT, getAllInterests);
 
 export default router;
