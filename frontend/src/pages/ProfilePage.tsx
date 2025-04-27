@@ -52,17 +52,17 @@ const ProfilePage: React.FC = () => {
 
 			<Container mt="md">
 				<Text className={styles.title}>個人收藏</Text>
-				<Container className={styles.interests}>
+				<div className={styles.interests}>
 					<Grid gutter="md" className={styles.grid}>
 						{allInterests?.map((interest) => {
 							return (
-								<Grid.Col key={interest.id} span={{ base: 12, sm: 6 }}>
+								<Grid.Col key={interest.id} span={{ base: 12 }}>
 									<CourseCard course={interest.course} />
 								</Grid.Col>
 							)
 						})}
 					</Grid>
-				</Container>
+				</div>
 
 			</Container>
 		</Container>
