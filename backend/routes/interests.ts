@@ -1,8 +1,8 @@
 import express, { Router } from 'express';
-import { addInterest } from '../controllers/interestController';
+import { toggleInterest } from '../controllers/interestController';
 
 const router: Router = express.Router();
 
-router.post("/addInterest", addInterest);
+router.post("/toggleInterest", toggleInterest);
 
 export default router;

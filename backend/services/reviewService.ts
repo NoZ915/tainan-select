@@ -28,7 +28,7 @@ class CourseService {
 
     try {
       await ReviewRepository.upsertReview(input, transaction);
-      await CourseRepository.IncrementCount(
+      await CourseRepository.incrementCount(
         input.course_id,
         "review_count",
         transaction

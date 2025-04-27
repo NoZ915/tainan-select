@@ -106,7 +106,7 @@ class CourseRepository {
     );
   }
 
-  async IncrementCount(
+  async incrementCount(
     course_id: number,
     field: "interests_count" | "view_count" | "review_count",
     transaction?: Transaction
