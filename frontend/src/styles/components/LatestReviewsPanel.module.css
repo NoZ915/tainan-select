@@ -1,9 +1,8 @@
-.container{  
+.container {
     margin: 0 auto;
     max-width: 800px;
     padding-inline: 0;
-
-    text-align: left;
+    margin-bottom: 20px;
 }
 
 .text {
@@ -11,4 +10,9 @@
     font-size: 2rem;
     font-weight: bold;
     color: #000000;
+    text-align: left;
+}
+
+.gridCol {
+    text-align: left;
 }
