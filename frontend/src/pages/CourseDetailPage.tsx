@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 import { useGetCourse } from "../hooks/courses/useGetCourse";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { useGetAllReviewsByCourseId } from "../hooks/reviews/useGetAllReviewsByCourseId";
-import { useAddViewCount } from "../hooks/courses/useAddViewCount";
 
 import { ActionIcon, Container, Tooltip } from "@mantine/core";
 import CourseInfoPanel from "../components/CourseInfoPanel";
@@ -25,13 +24,6 @@ const CourseDetailPage: React.FC = () => {
   const { course_id } = useParams<{ course_id: string }>();
   const { data: course, isLoading: isInfoLoading } = useGetCourse(course_id || '');
   const { data: reviews, isLoading: isReviewsLoading } = useGetAllReviewsByCourseId(course_id || '');
-
-  const { mutate: addViewCount } = useAddViewCount();
-  useEffect(() => {
-    if (course_id) {
-      addViewCount(course_id);
-    }
-  }, [course_id, addViewCount]);
 
   const handleActionClick = () => {
     if (isAuthenticated) {
