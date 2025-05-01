@@ -10,6 +10,7 @@ import authRoutes from "./routes/auth"
 import coursesRoutes from "./routes/courses";
 import reviewsRoutes from "./routes/reviews";
 import interestsRoutes from "./routes/interests";
+import usersRoutes from "./routes/users";
 
 const app: Express = express();
 const corsOptions = {
@@ -28,6 +29,7 @@ app.use("/api/auth", authRoutes)
 app.use("/api/courses", coursesRoutes);
 app.use("/api/reviews", reviewsRoutes);
 app.use("/api/interests", interestsRoutes);
+app.use("/api/users", usersRoutes);
 
 const startServer = async (): Promise<void> => {
   try {
