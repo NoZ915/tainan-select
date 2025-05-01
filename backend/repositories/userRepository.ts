@@ -7,6 +7,9 @@ class UserRepository{
     async createUser(google_sub: string, name: string){
         return await UserModel.create({ google_sub, name });
     }
+    async updateUser(user_id: number, name: string){
+        const user = await UserModel.findOne({ where: {  } })
+    }
 }
 
 export default new UserRepository();
