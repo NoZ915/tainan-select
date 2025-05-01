@@ -9,9 +9,10 @@ class UserRepository {
         return await UserModel.create({ google_sub, name });
     }
 
-    async updateUser(user_id: number, name: string): Promise<void> {
+    async updateUser(user_id: number, name: string): Promise<string> {
         const user = await UserModel.findOne({ where: { id: user_id } });
         await user?.update({ name });
+        return user?.name ?? "";
     }
 }
 

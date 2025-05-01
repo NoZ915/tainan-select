@@ -11,8 +11,9 @@ class UserService {
         return await userRepository.createUser(google_sub, name);
     }
 
-    async updateUser(user_id: number, name: string): Promise<void> {
+    async updateUser(user_id: number, name: string): Promise<string> {
         await userRepository.updateUser(user_id, name);
+        return name;
     }
 }
 
