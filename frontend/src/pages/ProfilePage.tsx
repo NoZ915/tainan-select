@@ -6,10 +6,12 @@ import { IoDice } from "react-icons/io5";
 import { useAuthStore } from "../stores/authStore";
 import { useGetAllInterests } from "../hooks/interests/useGetAllInterests";
 import CourseCard from "../components/CourseCard";
+import { useUpdateUser } from "../hooks/users/useUpdateUser";
 
 const ProfilePage: React.FC = () => {
 	const { user } = useAuthStore();
-	const [name, setName] = useState(user?.name);
+	const [name, setName] = useState(user?.name ?? "");
+	const { mutate: updateUser } = useUpdateUser();
 
 	// 個人資料
 	const handleGenerateName = () => {
@@ -17,8 +19,8 @@ const ProfilePage: React.FC = () => {
 		setName(generatedName);
 	};
 
-	const handleSave = () => {
-
+	const handleSave = (name: string) => {
+		updateUser(name);
 	};
 
 	// 個人收藏
@@ -44,7 +46,7 @@ const ProfilePage: React.FC = () => {
 
 				<Button
 					fullWidth
-					onClick={handleSave}
+					onClick={() => handleSave(name)}
 				>
 					儲存
 				</Button>

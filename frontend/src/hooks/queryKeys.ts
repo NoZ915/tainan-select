@@ -12,6 +12,4 @@ export const QUERY_KEYS = {
     LATEST_REVIEWS: "latest_reviews",
 
     INTERESTS: "interests",
-
-    USER: "user",
 };

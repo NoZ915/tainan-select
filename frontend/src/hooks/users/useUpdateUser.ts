@@ -1,14 +1,16 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { updateUser } from "../../apis/userAPI";
-import { QUERY_KEYS } from "../queryKeys";
+import { useAuthStore } from "../../stores/authStore";
 
 export const useUpdateUser = () => {
-  const queryClient = useQueryClient();
+  const { user, login } = useAuthStore.getState();
 
   return useMutation({
     mutationFn: (name: string) => updateUser(name),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.USER] });
+    onSuccess: (name) => {
+      if (user) {
+        login({ ...user, name });
+      }
     },
     onError: (err) => console.log(err),
   })
