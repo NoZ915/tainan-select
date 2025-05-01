@@ -2,6 +2,7 @@ body {
   background-color: #F4DEA9;
   margin: 0;
   min-height: 100vh;
+  padding-top: 80px;
 }
 
 #root {
@@ -17,9 +18,11 @@ body {
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -28,6 +31,7 @@ body {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }

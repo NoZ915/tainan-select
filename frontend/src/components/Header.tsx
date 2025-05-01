@@ -19,7 +19,7 @@ const Header: React.FC = () => {
 
   if (isMobile) {
     return (
-      <>
+      <header>
         <Box className={styles.navBox} >
           <Group gap="sm">
             <Burger opened={opened} onClick={() => setOpened((openStatus) => !openStatus)} size="md" />
@@ -45,7 +45,7 @@ const Header: React.FC = () => {
           </nav>
 
         </Drawer>
-      </>
+      </header>
     )
   }
 

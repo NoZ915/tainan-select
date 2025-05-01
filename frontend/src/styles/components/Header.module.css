@@ -1,5 +1,12 @@
 header {
-  margin-bottom: 10px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 8px 4px;
+  z-index: 1000;
+  background-color: #F4DEA9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 header * {
