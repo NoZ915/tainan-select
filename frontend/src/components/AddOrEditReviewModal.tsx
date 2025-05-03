@@ -7,6 +7,7 @@ import { Course } from "../types/courseType";
 import { ReviewsResponse } from "../types/reviewType";
 
 import { useUpsertReview } from "../hooks/reviews/useUpsertRview";
+import ConfirmModal from "./ConfirmModal";
 
 interface AddOrEditReviewModalProps {
   opened: boolean;
@@ -21,7 +22,10 @@ const AddOrEditReviewModal: React.FC<AddOrEditReviewModalProps> = ({ opened, onC
   const [coolness, setCoolness] = useState(review?.coolness ?? 0);
   const [comment, setComment] = useState(review?.comment ?? "");
 
-  const { mutate } = useUpsertReview();
+  const [scoreWarningModalOpen, setScroreWarningModalOpen] = useState(false);
+  const [commentWarningModalOpen, setCommentWarningModalOpen] = useState(false);
+
+  const { mutate, isPending } = useUpsertReview();
 
   useEffect(() => {
     if (review) {
@@ -32,6 +36,20 @@ const AddOrEditReviewModal: React.FC<AddOrEditReviewModalProps> = ({ opened, onC
     }
   }, [review]);
 
+  const isZero = (value: number) => Math.abs(value) < 0.001;
+  const handleCheckReview = (course_id: number) => {
+    if (comment.trim() === "") {
+      setCommentWarningModalOpen(true);
+      return;
+    }
+
+    if (isZero(gain) || isZero(sweetness) || isZero(coolness)) {
+      setScroreWarningModalOpen(true);
+    } else {
+      handleUpsertReview(course_id);
+    }
+  }
+
   const handleUpsertReview = (course_id: number) => {
     mutate({
       course_id,
@@ -40,10 +58,8 @@ const AddOrEditReviewModal: React.FC<AddOrEditReviewModalProps> = ({ opened, onC
       coolness,
       comment
     });
-    setGain(0);
-    setSweetness(0);
-    setCoolness(0);
-    setComment("");
+
+    setScroreWarningModalOpen(false);
     onClose();
   }
 
@@ -79,10 +95,29 @@ const AddOrEditReviewModal: React.FC<AddOrEditReviewModalProps> = ({ opened, onC
       />
 
       {review ? (
-        <Button fullWidth mt="md" onClick={() => handleUpsertReview(course.course.id)}>編輯評價</Button>
+        <Button fullWidth mt="md" onClick={() => handleCheckReview(course.course.id)}>編輯評價</Button>
       ) : (
-        <Button fullWidth mt="md" onClick={() => handleUpsertReview(course.course.id)}>新增評價</Button>
+        <Button fullWidth mt="md" onClick={() => handleCheckReview(course.course.id)}>新增評價</Button>
       )}
+
+      <ConfirmModal
+        opened={scoreWarningModalOpen}
+        onClose={() => setScroreWarningModalOpen(false)}
+        title="確認送出評價"
+        message="您給予的評分中包含 0 分，請確認是否為忘記填寫。如果不是填寫疏漏，請按下『送出評價』；若需修改，請按下『返回』返回補填。"
+        confirmText="送出評價"
+        cancelText="返回"
+        loading={isPending}
+        onConfirm={() => handleUpsertReview(course.course.id)}
+      />
+      <ConfirmModal
+        opened={commentWarningModalOpen}
+        onClose={() => setCommentWarningModalOpen(false)}
+        title="評論不可為空"
+        message="請輸入評論內容後再送出。"
+        confirmText="我知道了"
+        onConfirm={() => setCommentWarningModalOpen(false)}
+      />
 
     </Modal>
   )

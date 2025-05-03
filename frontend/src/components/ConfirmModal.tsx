@@ -17,7 +17,7 @@ const ConfirmModal: React.FC<DeleteReviewModalProps> = ({
   title = "確認動作",
   message = "確定要執行此動作嗎？",
   confirmText = "確認",
-  cancelText = "取消",
+  cancelText,
   onConfirm,
   loading = false,
 }) => {
@@ -26,9 +26,10 @@ const ConfirmModal: React.FC<DeleteReviewModalProps> = ({
     <Modal centered opened={opened} onClose={onClose} title={title} zIndex={1100}>
       <Text>{message}</Text>
       <Group justify="flex-end" mt="md">
+        {cancelText && 
         <Button variant="light" onClick={onClose}>
           {cancelText}
-        </Button>
+        </Button>}
         <Button variant="filled" color="red" onClick={onConfirm} loading={loading}>
           {confirmText}
         </Button>
