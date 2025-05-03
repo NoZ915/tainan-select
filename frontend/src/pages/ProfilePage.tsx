@@ -10,11 +10,15 @@ import { useGetAllInterests } from "../hooks/interests/useGetAllInterests";
 import { useUpdateUser } from "../hooks/users/useUpdateUser";
 
 import CourseCard from "../components/CourseCard";
+import ConfirmModal from "../components/ConfirmModal";
 
 const ProfilePage: React.FC = () => {
 	const { user } = useAuthStore();
+
 	const [name, setName] = useState(user?.name ?? "");
-	const { mutate: updateUser } = useUpdateUser();
+	const { mutate: updateUser, isPending } = useUpdateUser();
+
+	const [updateUserModalOpen, setUpdateUserModalOpen] = useState(false);
 
 	// 個人資料
 	const handleGenerateName = () => {
@@ -26,6 +30,7 @@ const ProfilePage: React.FC = () => {
 	}
 	const handleSave = (name: string) => {
 		updateUser(name);
+		setUpdateUserModalOpen(false);
 	};
 
 	// 個人收藏
@@ -62,7 +67,7 @@ const ProfilePage: React.FC = () => {
 					</Group>
 				</Stack>
 
-				<Button fullWidth onClick={() => handleSave(name)} >
+				<Button fullWidth onClick={() => setUpdateUserModalOpen(true)} >
 					儲存
 				</Button>
 			</Stack>
@@ -80,8 +85,18 @@ const ProfilePage: React.FC = () => {
 						})}
 					</Grid>
 				</div>
-
 			</Container>
+
+			<ConfirmModal
+				opened={updateUserModalOpen}
+				onClose={() => setUpdateUserModalOpen(false)}
+				title="更新個人資料"
+				message="確定要更新個人資料嗎？按下確認後，將立即更新資料，且不會保留舊有資料"
+				confirmText="確認"
+				cancelText="取消"
+				onConfirm={() => handleSave(name)}
+				loading={isPending}
+			/>
 		</Container>
 	);
 }

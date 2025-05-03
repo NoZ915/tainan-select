@@ -11,7 +11,7 @@ import { ReviewsResponse } from "../types/reviewType";
 import { Course } from "../types/courseType";
 
 import AddOrEditReviewModal from "./AddOrEditReviewModal";
-import ConfirmModal  from "./ConfirmModal";
+import ConfirmModal from "./ConfirmModal";
 import { useDeleteReview } from "../hooks/reviews/useDeleteReview";
 
 interface ReviewCardProp {
@@ -30,18 +30,18 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 	}
 
 	const { mutate, isPending } = useDeleteReview();
-  const handleConfirmDelete = (review: ReviewsResponse) => {
-    if (review) {
-      mutate(review.id);
-    }
-    setDeleteReviewModalOpened(false);
-  }
+	const handleConfirmDelete = (review: ReviewsResponse) => {
+		if (review) {
+			mutate(review.id);
+		}
+		setDeleteReviewModalOpened(false);
+	}
 
 	const handleDeleteModal = (review: ReviewsResponse) => {
 		setDeleteReviewModalOpened(true);
 		setSelectedReview(review);
 	}
-	
+
 	return (
 		<Card className={style.card}>
 			<Card.Section className={style.cardSection}>
@@ -85,9 +85,9 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 					<AddOrEditReviewModal opened={AddOrEditReviewModalOpened} onClose={() => setAddOrEditReviewModalOpened(false)} course={course} review={selectedReview} />
 				}
 				{course &&
-					<ConfirmModal 
-						opened={DeleteReviewModalOpened} 
-						onClose={() => setDeleteReviewModalOpened(false)} 
+					<ConfirmModal
+						opened={DeleteReviewModalOpened}
+						onClose={() => setDeleteReviewModalOpened(false)}
 						title="刪除評論"
 						message="確定要刪除評論嗎？一經刪除將無法復原。"
 						confirmText="刪除"
