@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { Link } from "react-router-dom";
 import { ActionIcon, Avatar, Box, Card, Group, Menu, Rating, Text } from "@mantine/core";
 import { BsThreeDots } from "react-icons/bs";
 import { FaEdit } from "react-icons/fa";
@@ -10,8 +11,8 @@ import { ReviewsResponse } from "../types/reviewType";
 import { Course } from "../types/courseType";
 
 import AddOrEditReviewModal from "./AddOrEditReviewModal";
-import DeleteReviewModal from "./DeleteReviewModal";
-import { Link } from "react-router-dom";
+import ConfirmModal  from "./ConfirmModal";
+import { useDeleteReview } from "../hooks/reviews/useDeleteReview";
 
 interface ReviewCardProp {
 	review: ReviewsResponse,
@@ -28,11 +29,19 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 		setSelectedReview(review);
 	}
 
-	const handleDelete = (review: ReviewsResponse) => {
+	const { mutate, isPending } = useDeleteReview();
+  const handleConfirmDelete = (review: ReviewsResponse) => {
+    if (review) {
+      mutate(review.id);
+    }
+    setDeleteReviewModalOpened(false);
+  }
+
+	const handleDeleteModal = (review: ReviewsResponse) => {
 		setDeleteReviewModalOpened(true);
 		setSelectedReview(review);
 	}
-
+	
 	return (
 		<Card className={style.card}>
 			<Card.Section className={style.cardSection}>
@@ -64,7 +73,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 									leftSection={<RiDeleteBin6Fill size={16} />}
 									classNames={{ itemLabel: style.itemLabel }}
 									color="red"
-									onClick={() => handleDelete(review)}
+									onClick={() => handleDeleteModal(review)}
 								>
 									刪除
 								</Menu.Item>
@@ -76,7 +85,16 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 					<AddOrEditReviewModal opened={AddOrEditReviewModalOpened} onClose={() => setAddOrEditReviewModalOpened(false)} course={course} review={selectedReview} />
 				}
 				{course &&
-					<DeleteReviewModal opened={DeleteReviewModalOpened} onClose={() => setDeleteReviewModalOpened(false)} review={selectedReview} />
+					<ConfirmModal 
+						opened={DeleteReviewModalOpened} 
+						onClose={() => setDeleteReviewModalOpened(false)} 
+						title="刪除評論"
+						message="確定要刪除評論嗎？一經刪除將無法復原。"
+						confirmText="刪除"
+						cancelText="取消"
+						loading={isPending}
+						onConfirm={() => handleConfirmDelete(review)}
+					/>
 				}
 			</Card.Section>
 
