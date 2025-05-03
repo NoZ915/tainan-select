@@ -17,7 +17,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ opened, onClose, title }) => {
   }
 
   return (
-    <Modal centered opened={opened} onClose={onClose} title={title}>
+    <Modal centered opened={opened} onClose={onClose} title={title} zIndex={1100}>
       <Text>僅開放 <strong>@gm2.nutn.edu.tw</strong> 的 Google 帳號登入或註冊，未註冊用戶將自動註冊</Text>
       <Group justify="flex-end">
         <Button variant="light" onClick={onClose}>取消</Button>

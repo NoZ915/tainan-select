@@ -19,7 +19,7 @@ const DeleteReviewModal: React.FC<DeleteReviewModalProps> = ({ opened, onClose, 
 
 
   return (
-    <Modal centered opened={opened} onClose={onClose} title="刪除評論">
+    <Modal centered opened={opened} onClose={onClose} title="刪除評論" zIndex={1100}>
       <Text>確定要刪除評論嗎？一經刪除將無法復原。</Text>
       <Group justify="flex-end" mt="md">
         <Button variant="light" onClick={onClose}>取消</Button>

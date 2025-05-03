@@ -56,6 +56,7 @@ const AddOrEditReviewModal: React.FC<AddOrEditReviewModalProps> = ({ opened, onC
       title={course?.course.course_name}
       size="lg"
       className={styles.modal}
+      zIndex={1100}
     >
       <Group>
         <Text>收穫</Text>
