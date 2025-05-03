@@ -41,7 +41,7 @@ const Header: React.FC = () => {
                 {item.label}
               </Link>
             ))}
-            <AuthButton className={styles.mobileAuthButton} />
+            <AuthButton className={styles.mobileAuthButton} onClick={() => setOpened(false)} />
           </nav>
 
         </Drawer>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { generateTainanCharacterName } from "../utils/tainanDiceMaster";
-import { Button, Container, Grid, Group, Text, TextInput } from "@mantine/core";
+import { Button, Container, Grid, Group, Stack, Text, TextInput } from "@mantine/core";
 import styles from "../styles/components/Profile.module.css";
 import { IoDice } from "react-icons/io5";
 import { useAuthStore } from "../stores/authStore";
@@ -28,7 +28,7 @@ const ProfilePage: React.FC = () => {
 
 	return (
 		<Container className={styles.container}>
-			<Container>
+			<Stack gap="xs">
 				<Text className={styles.title}>個人設定</Text>
 
 				<Group>
@@ -50,7 +50,7 @@ const ProfilePage: React.FC = () => {
 				>
 					儲存
 				</Button>
-			</Container>
+			</Stack>
 
 			<Container mt="md">
 				<Text className={styles.title}>個人收藏</Text>

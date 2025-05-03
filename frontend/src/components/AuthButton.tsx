@@ -8,9 +8,10 @@ import { Link } from "react-router-dom";
 
 interface AuthButtonProps {
   className?: string;
+  onClick?: () => void
 }
 
-const AuthButton: React.FC<AuthButtonProps> = ({ className }) => {
+const AuthButton: React.FC<AuthButtonProps> = ({ className, onClick }) => {
   const { isAuthenticated, user } = useAuthStore();
   const { mutate: logoutUser } = useLogoutUser();
 
@@ -32,7 +33,7 @@ const AuthButton: React.FC<AuthButtonProps> = ({ className }) => {
     <div className={className}>
       {isAuthenticated ? (
         <>
-          <Text component={Link} to="/profile">{user?.name}</Text>
+          <Text component={Link} to="/profile" onClick={onClick}>{user?.name}</Text>
           <Button onClick={handleLogout} variant="outline" color="brick-red.6">
             {isLoggingOut ? '登出中...' : `登出`}
           </Button>
