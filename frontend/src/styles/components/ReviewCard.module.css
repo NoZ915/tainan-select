@@ -7,25 +7,29 @@
     text-align: left;
 }
 
-.card{
+.card {
     margin-top: 1rem;
     border: 2px solid black;
     padding: 1.5rem 1.5rem;
 }
 
-.cardSection{
+.cardSection {
     padding: 0.5rem 1.5rem;
 }
 
-.dropdown{
+.dropdown {
     border: 2px solid black;
 }
 
-.itemLabel{
+.itemLabel {
     font-size: 16px;
 }
 
-.link{
+.link {
     color: black;
     text-decoration: none;
+}
+
+.commentText {
+    white-space: pre-wrap;
 }

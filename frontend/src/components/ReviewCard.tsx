@@ -120,7 +120,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 			</Card.Section>
 
 			<Card.Section className={style.cardSection}>
-				<Text>{review.comment}</Text>
+				<Text className={style.commentText}>{review.comment}</Text>
 			</Card.Section>
 		</Card>
 	)
