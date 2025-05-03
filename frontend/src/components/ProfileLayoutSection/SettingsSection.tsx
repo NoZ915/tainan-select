@@ -9,7 +9,7 @@ import styles from "../../styles/components/ProfileLayoutSection/SettingsSection
 import ConfirmModal from "../ConfirmModal";
 import { useUpdateUser } from "../../hooks/users/useUpdateUser";
 
-interface SettingsSectionProps{
+interface SettingsSectionProps {
 	user: User | null
 }
 
@@ -61,7 +61,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({ user }) => {
 				</Group>
 			</Stack>
 
-			<Button fullWidth onClick={() => setUpdateUserModalOpen(true)} >
+			<Button fullWidth onClick={() => setUpdateUserModalOpen(true)} disabled={name.length > 10}>
 				儲存
 			</Button>
 
