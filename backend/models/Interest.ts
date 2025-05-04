@@ -8,7 +8,7 @@ import {
 import db from ".";
 import CourseModel from "./Course";
 
-interface InterestCreationAttributes extends Optional<InferCreationAttributes<InterestModel>, 'id' | 'created_at'> {}
+interface InterestCreationAttributes extends Optional<InferCreationAttributes<InterestModel>, 'id' | 'created_at'> { }
 
 class InterestModel extends Model<
   InferAttributes<InterestModel>,
@@ -54,8 +54,8 @@ InterestModel.init(
 InterestModel.belongsTo(CourseModel, { foreignKey: 'course_id', as: 'course' });
 CourseModel.hasMany(InterestModel, { foreignKey: "course_id" });
 
-InterestModel.sync().catch((error) => {
-  console.error("Interest 模型同步失敗:", error);
-});
+// InterestModel.sync().catch((error) => {
+//   console.error("Interest 模型同步失敗:", error);
+// });
 
 export default InterestModel;

@@ -108,8 +108,8 @@ CourseModel.init(
   }
 );
 
-CourseModel.sync().catch((error) => {
-  console.error("Course 模型同步失敗:", error);
-});
+// CourseModel.sync().catch((error) => {
+//   console.error("Course 模型同步失敗:", error);
+// });
 
 export default CourseModel;

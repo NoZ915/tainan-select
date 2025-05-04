@@ -3,7 +3,7 @@ import db from "./index";
 import UserModel from "./Users";
 import CourseModel from "./Course";
 
-interface ReviewCreationAttributes extends Optional<InferCreationAttributes<ReviewModel>, 'id' | 'favorites' | 'created_at' | 'updated_at'> {}
+interface ReviewCreationAttributes extends Optional<InferCreationAttributes<ReviewModel>, 'id' | 'favorites' | 'created_at' | 'updated_at'> { }
 
 class ReviewModel extends Model<
   InferAttributes<ReviewModel>,
@@ -80,8 +80,8 @@ UserModel.hasMany(ReviewModel, { foreignKey: "user_id" });
 ReviewModel.belongsTo(CourseModel, { foreignKey: "course_id", as: "course" });
 CourseModel.hasMany(ReviewModel, { foreignKey: "course_id" });
 
-ReviewModel.sync().catch((error) => {
-  console.error("Review 模型同步失敗", error);
-})
+// ReviewModel.sync().catch((error) => {
+//   console.error("Review 模型同步失敗", error);
+// })
 
 export default ReviewModel;

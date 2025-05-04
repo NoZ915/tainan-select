@@ -2,7 +2,7 @@ import { DataTypes, InferAttributes, InferCreationAttributes, Model, Optional } 
 import db from "./index";
 import ReviewModel from "./Review";
 
-interface UserCreationAttributes extends Optional<InferCreationAttributes<UserModel>, 'id' | 'uuid' | 'created_at' | 'updated_at'> {}
+interface UserCreationAttributes extends Optional<InferCreationAttributes<UserModel>, 'id' | 'uuid' | 'created_at' | 'updated_at'> { }
 
 class UserModel extends Model<
   InferAttributes<UserModel>,
@@ -65,8 +65,8 @@ UserModel.init(
 
 
 
-UserModel.sync().catch((error) => {
-  console.log("User 模型同步失敗:", error)
-})
+// UserModel.sync().catch((error) => {
+//   console.log("User 模型同步失敗:", error)
+// })
 
 export default UserModel;
