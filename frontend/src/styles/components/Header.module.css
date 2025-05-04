@@ -55,9 +55,11 @@
 }
 
 .logo {
-  max-height: 40px;
-  max-width: 100%;
-  height: auto;
+  height: 40px;
+  max-height: 100%;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
 }
 
 .authButton {
