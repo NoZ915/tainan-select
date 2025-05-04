@@ -12,7 +12,8 @@ export const useToggleInterest = () => {
 			queryClient.setQueryData([QUERY_KEYS.COURSE], (oldData: ToggleInterestResult) => ({
 				...oldData,
 				hasUserAddInterest: data.isInterest
-			}))
+			}));
+			queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INTERESTS] });
 		}
 	})
 }
