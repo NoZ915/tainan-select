@@ -29,7 +29,7 @@ const Header: React.FC = () => {
           </Group>
         </Box>
 
-        <Drawer opened={opened} onClose={() => setOpened(false)} zIndex={1100}>
+        <Drawer opened={opened} onClose={() => setOpened(false)} zIndex={1100} size="80%">
           <nav className={styles.mobileNav}>
             {navItems.map((item) => (
               <Link
@@ -43,7 +43,6 @@ const Header: React.FC = () => {
             ))}
             <AuthButton className={styles.mobileAuthButton} onClick={() => setOpened(false)} />
           </nav>
-
         </Drawer>
       </header>
     )
