@@ -144,7 +144,10 @@ async function runScraper(): Promise<void> {
             id: undefined as any, // 明確設為 undefined，讓資料庫生成
             created_at: new Date(), // 提供當前時間
             updated_at: new Date(), // 提供當前時間
-            course_type: courseType
+            course_type: courseType,
+            interests_count: 0,
+            review_count: 0,
+            view_count: 0
           });
         }
       } catch (error) {
