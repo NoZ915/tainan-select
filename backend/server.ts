@@ -35,7 +35,9 @@ const startServer = async (): Promise<void> => {
   try {
     await db.sequelize.authenticate();
     console.log("Database connected");
-    await db.sequelize.sync(); // 同步資料庫
+    // 同步資料庫，會自動幫忙建立資料表（在全新DB的情況下非常好用）
+    // 但其實migration 跟sync二選一就好，比較建議使用migration
+    // await db.sequelize.sync();
     app.listen(process.env.PORT, () =>
       console.log(`Server running on port ${process.env.PORT}`)
     );
