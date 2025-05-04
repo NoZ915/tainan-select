@@ -11,8 +11,12 @@ axiosInstance.interceptors.response.use(
   (error) => {
     const { logout, isLogoutInProgress, setIsLogoutInProgress } = useAuthStore.getState();
 
-    if (error.response.status === 401 && !isLogoutInProgress) {
-      setIsLogoutInProgress(true);  // 設置標誌，防止再次登出
+    const currentPath = window.location.pathname;
+    const isOAuthCallback = currentPath.includes("/auth/google/callback");
+    const isMailError = currentPath.includes("/mailError");
+
+    if (error.response?.status === 401 && !isLogoutInProgress && !isOAuthCallback && !isMailError) {
+      setIsLogoutInProgress(true); // 設置標誌，防止再次登出
       logout();
       window.location.href = "/";
     }
