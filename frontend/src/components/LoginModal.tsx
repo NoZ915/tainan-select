@@ -9,7 +9,8 @@ interface LoginModalProps {
 
 const LoginModal: React.FC<LoginModalProps> = ({ opened, onClose, title }) => {
   const location = useLocation();
-  const path = location.pathname;
+  const blockedRedirectPaths = ["/mailError"];
+  const path = blockedRedirectPaths.includes(location.pathname) ? "/" : location.pathname;
   const handleLogin = () => {
     onClose();
     localStorage.setItem('redirect_path', path);
