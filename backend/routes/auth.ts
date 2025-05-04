@@ -8,7 +8,10 @@ const router: Router = express.Router();
 // google oAuth + passport
 router.get(
   "/google",
-  passport.authenticate("google", { scope: ["email", "profile"] })
+  passport.authenticate("google", {
+    scope: ["email", "profile"],
+    prompt: 'select_account', // 這個參數會強制 Google 彈出選擇帳號的視窗
+  })
 );
 router.get("/google/callback", (req, res, next) => {
   passport.authenticate("google", { session: false }, (err, user, info) => {
