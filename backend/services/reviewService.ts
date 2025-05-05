@@ -1,7 +1,7 @@
 import db from "../models";
 import CourseRepository from "../repositories/courseRepository";
 import ReviewRepository from "../repositories/reviewRepository";
-import { CreateReviewInput, ReviewsResponse } from "../types/review";
+import { AllReviewsResponseByUser, CreateReviewInput, ReviewsResponse } from "../types/review";
 
 class CourseService {
   async getAllReviewsByCourseId(
@@ -20,6 +20,10 @@ class CourseService {
       user_id
     );
     return { reviews, hasUserReviewedCourse };
+  }
+
+  async getAllReviewsByUserId(user_id: number, limit: number, offset: number): Promise<AllReviewsResponseByUser[]> {
+    return await ReviewRepository.getAllReviewsByUserId(user_id, limit, offset);
   }
 
   // 一次動兩DB，所以加個transaction

@@ -2,7 +2,7 @@ import e from "cors";
 import CourseModel from "../models/Course";
 import ReviewModel from "../models/Review";
 import UserModel from "../models/Users";
-import { CreateReviewInput, LatestReviewsResponse, ReviewsResponse } from "../types/review";
+import { AllReviewsResponseByUser, CreateReviewInput, LatestReviewsResponse, ReviewsResponse } from "../types/review";
 import { Transaction } from "sequelize";
 
 class ReviewRepository {
@@ -47,6 +47,24 @@ class ReviewRepository {
     });
     if (!review) throw new Error("Review not found");
     else return review;
+  }
+
+  async getAllReviewsByUserId(user_id: number, limit: number, offset: number): Promise<AllReviewsResponseByUser[]> {
+    const reviews = await ReviewModel.findAll({
+      where: { user_id },
+      limit,
+      offset,
+      order: [['created_at', 'DESC']],
+      include: [
+        {
+          model: CourseModel,
+          as: 'course',
+          attributes: ["id", "course_name", "department", "academy", "instructor", "instructor_url", "course_room", "course_time", "course_url", "credit_hours", "semester", "created_at", "updated_at", "course_type", "interests_count", "view_count", "review_count"]
+        }
+      ]
+    });
+
+    return reviews as unknown as AllReviewsResponseByUser[];
   }
 
   async upsertReview(input: CreateReviewInput, transaction: Transaction): Promise<void> {
