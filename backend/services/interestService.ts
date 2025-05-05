@@ -40,8 +40,8 @@ class InterestService {
 		}
 	}
 
-	async getAllInterests(user_id: number): Promise<Interest[]>{
-		return await InterestRepository.getAllInterests(user_id);
+	async getAllInterests(user_id: number, limit: number, offset: number): Promise<Interest[]> {
+		return await InterestRepository.getAllInterests(user_id, limit, offset);
 	}
 }
 
