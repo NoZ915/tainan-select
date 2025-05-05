@@ -1,4 +1,5 @@
-import { AppShell, NavLink, Stack } from "@mantine/core";
+import { Box, Card, Container, NavLink } from "@mantine/core";
+import styles from "../styles/components/ProfileLayout.module.css";
 
 interface ProfileLayoutProps {
 	currentTab: string;
@@ -8,48 +9,36 @@ interface ProfileLayoutProps {
 
 const tabs = [
 	{ label: "個人設定", value: "settings" },
-	{ label: "個人收藏", value: "favorites" },
+	{ label: "個人收藏", value: "interests" },
 	{ label: "個人評價", value: "reviews" }
 ];
 
-const ProfileLayout: React.FC<ProfileLayoutProps> = ({ currentTab, onTabChange, children }) => {
+const ProfileLayout: React.FC<ProfileLayoutProps> = ({
+	currentTab,
+	onTabChange,
+	children,
+}) => {
 	return (
-		<AppShell
-			header={{ height: 60 }}
-			navbar={{
-				width: 300,
-				breakpoint: 'sm',
-				// collapsed: { mobile: !opened },
-			}}
-			styles={{
-				main: {
-					backgroundColor: "#f8f9fa", // 主內容背景色
-				},
-			}}
-		>
-			<AppShell.Header>Header</AppShell.Header>
-			<AppShell.Navbar 
-				p="md" 
-				style={{
-					backgroundColor: "#f8f9fa", // 導覽列背景色與 main 一致
-				}}
-			>
-        <Stack>
-          {tabs.map((tab) => (
-            <NavLink
-              key={tab.value}
-              label={tab.label}
-              active={currentTab === tab.value}
-              onClick={() => onTabChange(tab.value)}
-							color="#F4DEA9"
-							variant="filled"
-            />
-          ))}
-        </Stack>
-      </AppShell.Navbar>
-			{children}
-		</AppShell>
+		<Container className={styles.container} >
+			<Box className={styles.box}>
+				<Card className={styles.card}>
+					{tabs.map((tab) => (
+						<NavLink
+							key={tab.value}
+							label={tab.label}
+							active={currentTab === tab.value}
+							onClick={() => onTabChange(tab.value)}
+							variant="light"
+						/>
+					))}
+				</Card>
+
+				<Card className={styles.cardRight}>
+					{children}
+				</Card>
+			</Box>
+		</Container>
 	);
-}
+};
 
 export default ProfileLayout;

@@ -1,0 +1,25 @@
+.container {
+  padding: 40px;
+  display: flex;
+  justify-content: center;
+}
+
+.box {
+  display: flex;
+  gap: 24px;
+  max-width: 1000px;
+  width: 100%;
+}
+
+.card {
+  border: 2px solid black;
+  min-width: 220px;
+  background-color: "#fff";
+}
+
+.cardRight {
+  border: 2px solid black;
+  min-width: 220px;
+  background-color: "#fff";
+  flex: 1;
+}
