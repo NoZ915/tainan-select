@@ -24,23 +24,29 @@ const InterestsSection: React.FC = () => {
 	}, [inView, fetchNextPage, hasNextPage]);
 
 	return (
-		<Container mt="md">
+		<Container mt="md" className={styles.container}>
 			<Text className={styles.title}>個人收藏</Text>
-			<div className={styles.interests}>
-				<Grid gutter="md" className={styles.grid}>
-					{data?.pages.flat()?.map((interest) => {
-						return (
-							<Grid.Col key={interest.id} span={{ base: 12 }}>
-								<CourseCard course={interest.course} />
-							</Grid.Col>
-						)
-					})}
-				</Grid>
 
-				{/* 觀察點，準備載入下一頁 */}
-				<div ref={ref} style={{ height: 1 }} />
-				{isFetchingNextPage && <Loader />}
-			</div>
+			{data?.pages.flat().length === 0 && (
+				<Text c="dimmed" ta="center" mt="md">
+					暫無收藏
+				</Text>
+			)}
+
+			<Grid gutter="md" className={styles.grid} grow>
+				{data?.pages.flat()?.map((interest) => {
+					return (
+						<Grid.Col key={interest.id}>
+							<CourseCard course={interest.course} />
+						</Grid.Col>
+					)
+				})}
+			</Grid>
+
+			{/* 觀察點，準備載入下一頁 */}
+			<div ref={ref} style={{ height: 1 }} />
+			{isFetchingNextPage && <Loader />}
+
 		</Container>
 	)
 }
