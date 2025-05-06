@@ -1,4 +1,4 @@
-import { Container } from "@mantine/core";
+import { Container, Loader } from "@mantine/core";
 import styles from "../styles/components/CourseReviewsPanel.module.css";
 
 import { ReviewsResponse } from "../types/reviewType";
@@ -14,11 +14,11 @@ interface CourseReviewsPanelProps {
 
 const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews, isLoading }) => {
   if (isLoading) {
-    return <>Is Loading...</>
+    return <Loader />
   }
 
-  if (!reviews) {
-    return <>There are no reviews.</>;
+  if (!reviews || !Array.isArray(reviews.reviews) || reviews.reviews.length === 0) {
+    return <>尚無評論</>;
   }
 
   return (

@@ -25,7 +25,10 @@ const CourseInfoPanel: React.FC<CourseInfoPanelProps> = ({ course, isLoading }) 
     return (
       <Flex direction="column" align="flex-start" className={style.flex}>
         <Group>
-          <Text size="md" fw={900} className={style.courseName}>{course.course.course_name}</Text>
+          <Text size="md" fw={900} className={style.courseName}>
+            {course.course.course_name}
+            {course.course.course_url && <Link to={course.course.course_url} target="_blank" className={style.link}>🔗</Link>}
+          </Text>
           <Badge radius="sm">{course.course.semester}</Badge>
           <InterestButton course={course} />
         </Group>
@@ -52,7 +55,10 @@ const CourseInfoPanel: React.FC<CourseInfoPanelProps> = ({ course, isLoading }) 
   return (
     <Flex direction="column" align="flex-start" className={style.flex}>
       <Group>
-        <Text size="md" fw={900} className={style.courseName}>{course.course.course_name}</Text>
+        <Text size="md" fw={900} className={style.courseName}>
+          {course.course.course_name}
+          {course.course.course_url && <Link to={course.course.course_url} target="_blank" className={style.link}>🔗</Link>}
+        </Text>
         <Badge radius="sm">{course.course.semester}</Badge>
         <InterestButton course={course} />
       </Group>

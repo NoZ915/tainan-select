@@ -27,20 +27,20 @@ const ReviewsSection: React.FC = () => {
 		<Container mt="md" className={styles.container}>
 			<Text className={styles.title}>個人收藏</Text>
 
-			{data?.pages.flat().length === 0 && (
+			{data?.pages?.every(page => page.length === 0) && (
 				<Text c="dimmed" ta="center" mt="md">
 					暫無收藏
 				</Text>
 			)}
 
 			<Grid gutter="md" className={styles.grid} grow>
-				{data?.pages.flat()?.map((review) => {
-					return (
+				{data?.pages?.map((page) =>
+					page.map((review) => (
 						<Grid.Col key={review.id}>
 							<ReviewCard review={review} course={{ course: review.course }} />
 						</Grid.Col>
-					)
-				})}
+					))
+				)}
 			</Grid>
 
 			{/* 觀察點，準備載入下一頁 */}
