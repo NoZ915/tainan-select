@@ -7,7 +7,7 @@ export interface ReviewsResponse {
   gain: number;
   sweetness: number;
   coolness: number;
-  comment ?: string;
+  comment?: string;
   favorites: number;
   created_at: Date;
   updated_at: Date;
@@ -19,6 +19,9 @@ export interface ReviewsResponse {
 }
 
 export type LatestReviewsResponse = ReviewsResponse & {
+  course: Course
+}
+export type AllReviewsResponseByUser = ReviewsResponse & {
   course: Course
 }
 
