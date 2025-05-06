@@ -57,6 +57,10 @@ class ReviewRepository {
       order: [['created_at', 'DESC']],
       include: [
         {
+          model: UserModel,
+          attributes: ["name", "avatar"],
+        },
+        {
           model: CourseModel,
           as: 'course',
           attributes: ["id", "course_name", "department", "academy", "instructor", "instructor_url", "course_room", "course_time", "course_url", "credit_hours", "semester", "created_at", "updated_at", "course_type", "interests_count", "view_count", "review_count"]
@@ -64,7 +68,14 @@ class ReviewRepository {
       ]
     });
 
-    return reviews as unknown as AllReviewsResponseByUser[];
+    const reviewsWithOwnerFlag = reviews.map((review) => {
+      const is_owner = review.user_id === user_id;
+      const reviewJson = review.toJSON();
+      const { user_id: userId, ...reviewWithoutUserId } = reviewJson; // 把user_id移除，不要回傳到前端
+      return { ...reviewWithoutUserId, is_owner };
+    });
+
+    return reviewsWithOwnerFlag as unknown as AllReviewsResponseByUser[];
   }
 
   async upsertReview(input: CreateReviewInput, transaction: Transaction): Promise<void> {
