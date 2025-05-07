@@ -14,6 +14,7 @@ export const useToggleInterest = () => {
 				hasUserAddInterest: data.isInterest
 			}));
 			queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INTERESTS] });
+			queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INFINITY_INTERESTS] });
 		}
 	})
 }

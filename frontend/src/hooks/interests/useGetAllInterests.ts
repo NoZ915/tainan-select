@@ -4,7 +4,7 @@ import { getAllInterests } from "../../apis/interestAPI"
 
 export const useGetAllInterests = () => {
     return useInfiniteQuery({
-        queryKey: [QUERY_KEYS.INTERESTS],
+        queryKey: [QUERY_KEYS.INFINITY_INTERESTS],
         queryFn: getAllInterests,
         initialPageParam: 0,
         getNextPageParam: (lastPage, allPages) => {
@@ -14,6 +14,5 @@ export const useGetAllInterests = () => {
         },
         staleTime: 1000 * 60 * 5,
         gcTime: 1000 * 60 * 60,
-
     })
 }

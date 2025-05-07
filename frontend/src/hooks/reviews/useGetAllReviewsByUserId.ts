@@ -4,7 +4,7 @@ import { QUERY_KEYS } from "../queryKeys";
 
 export const useGetAllReviewasByUserId = () => {
   return useInfiniteQuery({
-    queryKey: [QUERY_KEYS.REVIEWS],
+    queryKey: [QUERY_KEYS.INFINITY_REVIEWS],
     queryFn: getAllReviewsByUserId,
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {

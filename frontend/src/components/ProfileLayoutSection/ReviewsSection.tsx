@@ -12,7 +12,7 @@ const ReviewsSection: React.FC = () => {
 		data,
 		fetchNextPage,
 		hasNextPage,
-		isFetchingNextPage,
+		isFetchingNextPage
 	} = useGetAllReviewasByUserId();
 
 	const { ref, inView } = useInView();

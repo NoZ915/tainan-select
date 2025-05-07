@@ -9,7 +9,9 @@ export const QUERY_KEYS = {
     CHECK_AUTH_STATUS: "checkAuthStatus",
 
     REVIEWS: "reviews",
+    INFINITY_REVIEWS: "infinity_reviews",
     LATEST_REVIEWS: "latest_reviews",
 
     INTERESTS: "interests",
+    INFINITY_INTERESTS: "infinity_interests",
 };
