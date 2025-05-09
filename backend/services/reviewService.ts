@@ -26,23 +26,8 @@ class CourseService {
     return await ReviewRepository.getAllReviewsByUserId(user_id, limit, offset);
   }
 
-  // 一次動兩DB，所以加個transaction
   async upsertReview(input: CreateReviewInput): Promise<void> {
-    const transaction = await db.sequelize.transaction();
-
-    try {
-      await ReviewRepository.upsertReview(input, transaction);
-      await CourseRepository.incrementCount(
-        input.course_id,
-        "review_count",
-        transaction
-      );
-
-      await transaction.commit();
-    } catch (err) {
-      await transaction.rollback();
-      throw err;
-    }
+    await ReviewRepository.upsertReview(input);
   }
 
   // 一次動兩DB，所以加個transaction

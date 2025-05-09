@@ -4,6 +4,8 @@ import ReviewModel from "../models/Review";
 import UserModel from "../models/Users";
 import { AllReviewsResponseByUser, CreateReviewInput, LatestReviewsResponse, ReviewsResponse } from "../types/review";
 import { Transaction } from "sequelize";
+import CourseRepository from "./courseRepository";
+import db from "../models";
 
 class ReviewRepository {
   async getAllReviewsByCourseId(
@@ -78,16 +80,31 @@ class ReviewRepository {
     return reviewsWithOwnerFlag as unknown as AllReviewsResponseByUser[];
   }
 
-  async upsertReview(input: CreateReviewInput, transaction: Transaction): Promise<void> {
+  async upsertReview(input: CreateReviewInput): Promise<void> {
+    const transaction = await db.sequelize.transaction();
     const existingReview = await ReviewModel.findOne({
       where: { user_id: input.user_id, course_id: input.course_id },
       transaction
     });
 
     if (existingReview) {
-      await existingReview.update(input, { transaction });
+      await existingReview.update(input);
     } else {
-      await ReviewModel.create(input, { transaction });
+      try {
+        // 一次動兩DB，所以加個transaction
+        await ReviewModel.create(input, { transaction });
+        await CourseRepository.incrementCount(
+          input.course_id,
+          "review_count",
+          transaction
+        );
+
+        await transaction.commit();
+      } catch (err) {
+        await transaction.rollback();
+        throw err;
+      }
+
     }
   }
 
