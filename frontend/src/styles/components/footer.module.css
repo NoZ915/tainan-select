@@ -1,0 +1,25 @@
+.footer {
+  margin-top: 20px;
+  border: 2px solid black;
+  padding: 16px 0;
+  background-color: #f8f9fa;
+}
+
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.text {
+  color: #666;
+}
+
+.linkText {
+  color: #1a1a1a;
+  text-decoration: none;
+}
+
+.linkText:hover {
+  text-decoration: underline;
+}
