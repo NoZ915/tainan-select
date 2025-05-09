@@ -6,8 +6,11 @@ import styles from "../../styles/components/ProfileLayoutSection/InterestsSectio
 
 import { useGetAllInterests } from "../../hooks/interests/useGetAllInterests";
 import CourseCard from "../CourseCard";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 const InterestsSection: React.FC = () => {
+	const isMobile = useIsMobile();
+
 	const {
 		data,
 		fetchNextPage,
@@ -22,6 +25,32 @@ const InterestsSection: React.FC = () => {
 			fetchNextPage();
 		}
 	}, [inView, fetchNextPage, hasNextPage]);
+
+	if (isMobile) {
+		return (
+			<Container className={styles.container}>
+				{data?.pages?.every(page => page.length === 0) && (
+					<Text c="dimmed" ta="center" mt="md">
+						暫無收藏
+					</Text>
+				)}
+
+				<Grid gutter="md" className={styles.grid} grow>
+					{data?.pages?.map((page) =>
+						page.map((interest) => (
+							<Grid.Col key={interest.id}>
+								<CourseCard course={interest.course} />
+							</Grid.Col>
+						))
+					)}
+				</Grid>
+
+				{/* 觀察點，準備載入下一頁 */}
+				<div ref={ref} style={{ height: 1 }} />
+				{isFetchingNextPage && <Loader />}
+			</Container>
+		)
+	}
 
 	return (
 		<Container mt="md" className={styles.container}>

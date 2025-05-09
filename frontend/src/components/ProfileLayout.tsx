@@ -1,4 +1,4 @@
-import { Box, Card, Container, Flex, NavLink, ScrollArea } from "@mantine/core";
+import { Box, Card, Container, Flex, NavLink, Tabs } from "@mantine/core";
 import styles from "../styles/components/ProfileLayout.module.css";
 import { useIsMobile } from "../hooks/useIsMobile";
 
@@ -22,26 +22,23 @@ const ProfileLayout: React.FC<ProfileLayoutProps> = ({
 	const isMobile = useIsMobile();
 	if (isMobile) {
 		return (
-			<Container>
-				<Flex direction="column" gap="md">
-					{/* 手機版導覽橫向滑動 */}
-					<ScrollArea type="auto">
-						<Flex gap="sm" wrap="nowrap">
-							{tabs.map((tab) => (
-								<NavLink
-									key={tab.value}
-									label={tab.label}
-									active={currentTab === tab.value}
-									onClick={() => onTabChange(tab.value)}
-									variant="light"
-									className={styles.mobileNavLink}
-								/>
-							))}
-						</Flex>
-					</ScrollArea>
-					{children}
-				</Flex>
-			</Container>
+			<Flex direction="column" gap="md">
+				<Tabs
+					value={currentTab}
+					onChange={(value) => onTabChange(value ?? "settings")}
+					className={styles.tabs}
+					classNames={{ tab: styles.tab }}
+				>
+					<Tabs.List justify="center" className={styles.tabsList}>
+						{tabs.map((tab) => (
+							<Tabs.Tab key={tab.value} value={tab.value} fw={500}>
+								{tab.label}
+							</Tabs.Tab>
+						))}
+					</Tabs.List>
+				</Tabs>
+				{children}
+			</Flex>
 		);
 	}
 

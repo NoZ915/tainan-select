@@ -28,7 +28,7 @@ const ReviewsSection: React.FC = () => {
 
 	if (isMobile) {
 		return (
-			<Container>
+			<Container className={styles.container}>
 				{data?.pages?.every(page => page.length === 0) && (
 					<Text c="dimmed" ta="center" mt="md">
 						暫無評價
