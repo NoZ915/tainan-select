@@ -1,5 +1,6 @@
 import CourseService from "../services/courseService";
-import { Request, RequestHandler, Response } from "express";
+import CourseViewService from "../services/courseViewService";
+import { RequestHandler } from "express";
 
 export const getAllCourses: RequestHandler = async (
   req,
@@ -64,9 +65,17 @@ export const getAllAcademies: RequestHandler = async (
 export const getCourse: RequestHandler = async (req, res): Promise<void> => {
   try {
     const user_id = req.user?.id;
+    const ip = req.ip;
+    const user_agent = req.headers['user-agent'] ?? '';
+
     const course_id = parseInt(req.params.course_id);
     const course = await CourseService.getCourse(user_id, course_id);
-    if(course) await CourseService.addViewCount(course_id);
+    
+    if (course && (await CourseViewService.shouldInsertView(course_id, user_id, ip, user_agent))) {
+      await CourseViewService.insertCourseView(course_id, user_id, ip, user_agent);
+      await CourseService.addViewCount(course_id);
+    }
+    
     res.status(200).json(course);
   } catch (err) {
     res.status(500).json({ message: err });
