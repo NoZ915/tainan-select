@@ -73,6 +73,6 @@ module.exports = {
   },
 
   async down(queryInterface) {
-    await queryInterface.dropTable("Reviews");
+    // await queryInterface.dropTable("Reviews");
   },
 };

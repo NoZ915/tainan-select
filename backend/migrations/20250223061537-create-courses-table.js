@@ -54,6 +54,6 @@ module.exports = {
     });
   },
   down: async (queryInterface) => {
-    await queryInterface.dropTable("Courses");
+    // await queryInterface.dropTable("Courses");
   },
 };

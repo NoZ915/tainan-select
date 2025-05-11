@@ -8,6 +8,6 @@ module.exports = {
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.renameColumn('Courses', 'interests_count', 'request_count');
+    // await queryInterface.renameColumn('Courses', 'interests_count', 'request_count');
   }
 };
