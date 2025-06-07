@@ -1,8 +1,11 @@
+import { Link } from "react-router-dom";
+
+import formatCourseTime from "../utils/formatCourseTime";
+import { Course } from "../types/courseType";
+
+import { FaCommentAlt, FaHeart, FaEye } from "react-icons/fa";
 import { Badge, Card, Group, Text } from "@mantine/core";
 import style from "../styles/components/CourseCard.module.css";
-import { FaCommentAlt, FaHeart, FaEye } from "react-icons/fa";
-import { Link } from "react-router-dom";
-import { Course } from "../types/courseType";
 
 interface CourseCardProp {
 	course: Course
@@ -16,7 +19,7 @@ const CourseCard: React.FC<CourseCardProp> = ({ course }) => {
 				<Text fw={300} c="gray">{course.instructor}</Text>
 
 				<Group justify="center">
-					<Text fw={300} c="gray">{course.course_room} / {course.course_time}</Text>
+					<Text fw={300} c="gray">{course.course_room} / {formatCourseTime(course.course_time)}</Text>
 				</Group>
 
 				<Group justify="center" mt="sm" >
