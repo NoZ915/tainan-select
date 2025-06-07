@@ -51,7 +51,7 @@ class CourseRepository {
         order.push(["review_count", "desc"]);
         break;
       case "interestDesc":
-        order.push(["interest_count", "desc"]);
+        order.push(["interests_count", "desc"]);
         break;
       case "viewDesc":
         order.push(["view_count", "desc"]);
