@@ -5,7 +5,7 @@ import { useGetCourses } from '../hooks/courses/useGetCourses';
 
 import { SearchParams, Course } from '../types/courseType';
 
-import { Grid, Text, Loader, Center, Pagination, Container } from '@mantine/core';
+import { Grid, Text, Loader, Center, Pagination, Container, Select } from '@mantine/core';
 import style from '../styles/pages/CoursesPage.module.css';
 
 import CourseFilter from '../components/CourseFilter';
@@ -35,7 +35,8 @@ const CoursesPage: React.FC = () => {
 		category: initialCategory,
 		academy: initialAcademy,
 		department: initialDepartment,
-		courseType: initialCourseType
+		courseType: initialCourseType,
+		sortBy: ""
 	});
 
 	useEffect(() => {
@@ -47,9 +48,11 @@ const CoursesPage: React.FC = () => {
 			academy: queryParams.get("academy") || "",
 			department: queryParams.get("department") || "",
 			courseType: queryParams.get("courseType") || "",
+			sortBy: ""
 		};
 		setPage(updatedCombinedSearchParams.page);
 		setSearchParams(updatedCombinedSearchParams);
+		setSortOption("評價數 高→低");
 	}, [queryParams]);
 
 	const handleClickPage = (page: number) => {
@@ -69,6 +72,25 @@ const CoursesPage: React.FC = () => {
 
 		navigate(`?${newQueryParams.toString()}`);
 	};
+
+	// 排序功能
+	const [sortOption, setSortOption] = useState("評價數 高→低");
+	const handleSortBy = (value: string | null) => {
+		if(!value) return;
+		setSortOption(value);
+
+		switch(value){
+			case "評價數 高→低":
+				setSearchParams({...searchParams, sortBy: "reviewDesc"});
+				break;
+			case "收藏數 高→低":
+				setSearchParams({...searchParams, sortBy: "interestDesc"});
+				break;
+			case "觀看數 高→低":
+				setSearchParams({...searchParams, sortBy: "viewDesc"});
+				break;
+		}
+	}
 
 	const { data, isLoading, isPending, error } = useGetCourses(searchParams);
 
@@ -98,32 +120,47 @@ const CoursesPage: React.FC = () => {
 				onClick={setPage}
 			/>
 
-			<Grid gutter="md">
-				{data?.courses.map((course: Course) => (
-					<Grid.Col key={course.id} span={{ base: 12, sm: 6, md: 4 }}>
-						<CourseCard course={course} />
-					</Grid.Col>
-				))}
-
-				{data?.courses.length === 0 && (
-					<Container mt="md">
-						<Text c="gray">找不到符合條件的課程</Text>
-					</Container>
-				)}
-			</Grid>
-
-			{data?.pagination && (
-				<Center>
-					<Pagination
-						classNames={{ control: style.pagination }}
-						size={isMobile? "sm" : "md"}
-						mt="md"
-						total={data.pagination.totalPages}
-						value={page}
-						onChange={(page) => handleClickPage(page)}
+			<div>
+				<div className={style.selectContainer}>
+					<Select
+						value={sortOption}
+						onChange={(value) => handleSortBy(value)}
+						variant="unstyled"
+						radius="xs"
+						clearable={false}
+						checkIconPosition="right"
+						placeholder="排序方式"
+						defaultValue="評價數 高→低"
+						data={["評價數 高→低", "收藏數 高→低", "觀看數 高→低"]}
 					/>
-				</Center>
-			)}
+				</div>
+				<Grid gutter="md" className={style.gridContainer}>
+					{data?.courses.map((course: Course) => (
+						<Grid.Col key={course.id} span={{ base: 12, sm: 6, md: 4 }}>
+							<CourseCard course={course} />
+						</Grid.Col>
+					))}
+
+					{data?.courses.length === 0 && (
+						<Container mt="md">
+							<Text c="gray">找不到符合條件的課程</Text>
+						</Container>
+					)}
+				</Grid>
+
+				{data?.pagination && (
+					<Center>
+						<Pagination
+							classNames={{ control: style.pagination }}
+							size={isMobile ? "sm" : "md"}
+							mt="md"
+							total={data.pagination.totalPages}
+							value={page}
+							onChange={(page) => handleClickPage(page)}
+						/>
+					</Center>
+				)}
+			</div>
 		</div>
 	);
 };

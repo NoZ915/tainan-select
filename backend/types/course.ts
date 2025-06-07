@@ -20,6 +20,7 @@ export interface CourseSearchParams {
   academy: string;
   department: string;
   courseType: string;
+  sortBy?: string;
 }
 
 export interface PaginationParams {

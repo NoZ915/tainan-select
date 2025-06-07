@@ -44,8 +44,25 @@ class CourseRepository {
     if (search && search.academy) whereCondition.academy = search.academy;
     if (search && search.courseType) whereCondition.course_type = search.courseType;
 
+    // 排序功能
+    let order: any[] = [];
+    switch(search?.sortBy){
+      case "reviewDesc":
+        order.push(["review_count", "desc"]);
+        break;
+      case "interestDesc":
+        order.push(["interests_count", "desc"]);
+        break;
+      case "viewDesc":
+        order.push(["view_count", "desc"]);
+        break;
+      default:
+        order.push(["review_count", "desc"]);
+        break;
+    }
+
     const [courses, total] = await Promise.all([
-      CourseModel.findAll({ where: whereCondition, limit, offset }),
+      CourseModel.findAll({ where: whereCondition, limit, offset, order }),
       CourseModel.count({ where: whereCondition }),
     ]);
     return { courses, total };

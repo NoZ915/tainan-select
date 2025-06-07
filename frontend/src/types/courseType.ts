@@ -44,4 +44,5 @@ export interface SearchParams {
   academy: string;
   department: string;
   courseType: string;
+  sortBy?: string;
 }
