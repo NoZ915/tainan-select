@@ -3,7 +3,7 @@ import Header from './components/Header';
 import { useEffect } from 'react';
 import { useAuthStore } from './stores/authStore';
 import { useCheckAuthStatus } from './hooks/auth/useCheckAuthStatus';
-import Footer from './components/footer';
+import Footer from './components/Footer';
 
 function App() {
   const { logout } = useAuthStore();
@@ -17,11 +17,13 @@ function App() {
   }, [data, logout]);
 
   return (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Header />
-      <Outlet />
+      <main style={{ flex: 1 }}>
+        <Outlet />
+      </main>
       <Footer />
-    </>
+    </div>
   )
 }
 
