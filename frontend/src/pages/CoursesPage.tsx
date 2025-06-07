@@ -1,13 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
+
+import { useIsMobile } from '../hooks/useIsMobile';
 import { useGetCourses } from '../hooks/courses/useGetCourses';
+
 import { SearchParams, Course } from '../types/courseType';
+
 import { Grid, Text, Loader, Center, Pagination, Container } from '@mantine/core';
 import style from '../styles/pages/CoursesPage.module.css';
+
 import CourseFilter from '../components/CourseFilter';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import CourseCard from '../components/CourseCard';
 
 const CoursesPage: React.FC = () => {
+	const isMobile = useIsMobile();
 	const { search } = useLocation();
 	const { page: pageParam } = useParams();
 	const navigate = useNavigate();
@@ -110,6 +116,7 @@ const CoursesPage: React.FC = () => {
 				<Center>
 					<Pagination
 						classNames={{ control: style.pagination }}
+						size={isMobile? "sm" : "md"}
 						mt="md"
 						total={data.pagination.totalPages}
 						value={page}
