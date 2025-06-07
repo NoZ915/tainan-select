@@ -16,6 +16,7 @@ export const getAllCourses: RequestHandler = async (
       academy: String(req.query.academy || ""),
       department: String(req.query.department || ""),
       courseType: String(req.query.courseType || ""),
+      sortBy: String(req.query.sortBy || "")
     };
 
     const { courses, total } = await CourseService.getAllCourses({
