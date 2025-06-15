@@ -14,6 +14,7 @@ const Header: React.FC = () => {
   const navItems = [
     { label: "搜尋", path: "/" },
     { label: "動態", path: "/dynamic" },
+    { label: "課表", path: "/timetable" }
     // { label: "常用", path: "/frequent" },
   ];
 

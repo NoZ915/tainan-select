@@ -13,6 +13,7 @@ import App from './App.tsx'
 import CoursesPage from './pages/CoursesPage.tsx';
 import CourseDetailPage from './pages/CourseDetailPage.tsx';
 import DynamicPage from './pages/DynamicPage.tsx';
+import TimetablePage from './pages/TimetablePage.tsx';
 import FrequentPage from './pages/FrequentPage.tsx';
 import OAuthCallbackPage from './pages/OAuthCallbackPage.tsx';
 import MailErrorPage from './pages/MailErrorPage.tsx';
@@ -30,6 +31,7 @@ const router = createBrowserRouter([
       { path: "/auth/google/callback", element: <OAuthCallbackPage /> },
       { path: "/course/:course_id", element: <CourseDetailPage /> },
       { path: "/dynamic", element: <DynamicPage /> },
+      { path: "/timetable", element: <TimetablePage /> },
       { path: "/frequent", element: <FrequentPage /> },
 
       // 受保護的route（未登入無法瀏覽）
