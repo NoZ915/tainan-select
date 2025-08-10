@@ -4,6 +4,8 @@ import * as cheerio from "cheerio";
 import db from "../models";
 import Course from "../models/Course";
 import { googleRequestCURL } from "./googleRequestCURL";
+import { parseCourseTime } from "../utils/parseCourseTime";
+import CourseScheduleModel from "../models/CourseSchedule";
 
 const courses: string[] = [];
 
@@ -129,8 +131,21 @@ async function runScraper(): Promise<void> {
             credit_hours: parseInt(course.creditHours),
             updated_at: new Date(),
           });
+
+          // 刪除舊的 CourseSchedule 再新增
+          await CourseScheduleModel.destroy({ where: { course_id: existingCourse.id } });
+          const schedules = parseCourseTime(courseTime);
+          await CourseScheduleModel.bulkCreate(
+            schedules.map(s => ({
+              course_id: existingCourse.id,
+              day: Number(s.day),
+              start_period: s.startPeriod,
+              span: s.span
+            }))
+          );
+
         } else {
-          await Course.create({
+          const createdCourse = await Course.create({
             course_name: course.courseName,
             department: course.department,
             academy: course.academy,
@@ -149,6 +164,16 @@ async function runScraper(): Promise<void> {
             review_count: 0,
             view_count: 0
           });
+
+          const schedules = parseCourseTime(courseTime);
+          await CourseScheduleModel.bulkCreate(
+            schedules.map(s => ({
+              course_id: createdCourse.id,
+              day: Number(s.day),
+              start_period: s.startPeriod,
+              span: s.span,
+            }))
+          );
         }
       } catch (error) {
         console.error(
