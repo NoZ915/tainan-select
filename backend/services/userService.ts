@@ -6,9 +6,9 @@ class UserService {
         return await userRepository.getUserByGoogleSub(google_sub);
     }
 
-    async createUser(google_sub: string) {
+    async createUser(google_sub: string, whitelist_id: number | null = null) {
         const name = generateTainanCharacterName();
-        return await userRepository.createUser(google_sub, name);
+        return await userRepository.createUser(google_sub, name, whitelist_id);
     }
 
     async updateUser(user_id: number, name: string): Promise<string> {
