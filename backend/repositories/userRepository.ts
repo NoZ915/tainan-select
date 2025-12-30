@@ -5,8 +5,8 @@ class UserRepository {
         return await UserModel.findOne({ where: { google_sub } });
     }
 
-    async createUser(google_sub: string, name: string) {
-        return await UserModel.create({ google_sub, name });
+    async createUser(google_sub: string, name: string, whitelist_id: number | null = null) {
+        return await UserModel.create({ google_sub, name, whitelist_id });
     }
 
     async updateUser(user_id: number, name: string): Promise<string> {

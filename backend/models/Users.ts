@@ -14,6 +14,7 @@ class UserModel extends Model<
   declare name?: string;
   declare detail?: string;
   declare avatar?: string;
+  declare whitelist_id?: number | null;
   declare created_at: Date;
   declare updated_at: Date;
 }
@@ -44,6 +45,10 @@ UserModel.init(
     },
     avatar: {
       type: DataTypes.STRING(255),
+    },
+    whitelist_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     created_at: {
       type: DataTypes.DATE,
