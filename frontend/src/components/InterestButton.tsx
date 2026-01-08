@@ -22,6 +22,8 @@ const InterestButton: React.FC<InterestButtonProps> = ({course}) => {
 			const a = toggleInterest(course_id)
 			console.log(a)
 		}
+
+		toggleInterest(courseId)
 	}
 
 	return (
@@ -29,8 +31,8 @@ const InterestButton: React.FC<InterestButtonProps> = ({course}) => {
 			onClick={handleToggleInterest}
 			leftSection={
 				course?.hasUserAddInterest
-				? <FaHeart size={20} />
-				: <FaRegHeart size={20} />
+					? <FaHeart size={20} />
+					: <FaRegHeart size={20} />
 			}
 			variant={ course?.hasUserAddInterest ? 'filled': 'outline' }
 			size='lg'
