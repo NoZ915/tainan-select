@@ -1,10 +1,10 @@
-import { Container, Loader } from "@mantine/core";
-import styles from "../styles/components/CourseReviewsPanel.module.css";
+import { Container, Loader } from '@mantine/core'
+import styles from '../styles/components/CourseReviewsPanel.module.css'
 
-import { ReviewsResponse } from "../types/reviewType";
-import { Course } from "../types/courseType";
+import { ReviewsResponse } from '../types/reviewType'
+import { Course } from '../types/courseType'
 
-import ReviewCard from "./ReviewCard";
+import ReviewCard from './ReviewCard'
 
 interface CourseReviewsPanelProps {
   course: { course: Course } | null | undefined;
@@ -18,7 +18,7 @@ const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews
   }
 
   if (!reviews || !Array.isArray(reviews.reviews) || reviews.reviews.length === 0) {
-    return <>尚無評論</>;
+    return <>尚無評論</>
   }
 
   return (
@@ -32,4 +32,4 @@ const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews
   )
 }
 
-export default CourseReviewsPanel;
+export default CourseReviewsPanel

@@ -1,18 +1,18 @@
-import { useState } from "react";
+import { useState } from 'react'
 
-import { Link } from "react-router-dom";
-import { ActionIcon, Avatar, Box, Card, Group, Menu, Rating, Text } from "@mantine/core";
-import { BsThreeDots } from "react-icons/bs";
-import { FaEdit } from "react-icons/fa";
-import { RiDeleteBin6Fill } from "react-icons/ri";
-import style from "../styles/components/ReviewCard.module.css"
+import { Link } from 'react-router-dom'
+import { ActionIcon, Avatar, Box, Card, Group, Menu, Rating, Text } from '@mantine/core'
+import { BsThreeDots } from 'react-icons/bs'
+import { FaEdit } from 'react-icons/fa'
+import { RiDeleteBin6Fill } from 'react-icons/ri'
+import style from '../styles/components/ReviewCard.module.css'
 
-import { ReviewsResponse } from "../types/reviewType";
-import { Course } from "../types/courseType";
+import { ReviewsResponse } from '../types/reviewType'
+import { Course } from '../types/courseType'
 
-import AddOrEditReviewModal from "./AddOrEditReviewModal";
-import ConfirmModal from "./ConfirmModal";
-import { useDeleteReview } from "../hooks/reviews/useDeleteReview";
+import AddOrEditReviewModal from './AddOrEditReviewModal'
+import ConfirmModal from './ConfirmModal'
+import { useDeleteReview } from '../hooks/reviews/useDeleteReview'
 
 interface ReviewCardProp {
 	review: ReviewsResponse,
@@ -20,34 +20,34 @@ interface ReviewCardProp {
 }
 
 const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
-	const [AddOrEditReviewModalOpened, setAddOrEditReviewModalOpened] = useState(false);
-	const [DeleteReviewModalOpened, setDeleteReviewModalOpened] = useState(false);
-	const [selectedReview, setSelectedReview] = useState<ReviewsResponse | null>(null);
+	const [AddOrEditReviewModalOpened, setAddOrEditReviewModalOpened] = useState(false)
+	const [DeleteReviewModalOpened, setDeleteReviewModalOpened] = useState(false)
+	const [selectedReview, setSelectedReview] = useState<ReviewsResponse | null>(null)
 
 	const handleEdit = (review: ReviewsResponse) => {
-		setAddOrEditReviewModalOpened(true);
-		setSelectedReview(review);
+		setAddOrEditReviewModalOpened(true)
+		setSelectedReview(review)
 	}
 
-	const { mutate, isPending } = useDeleteReview();
+	const { mutate, isPending } = useDeleteReview()
 	const handleConfirmDelete = (review: ReviewsResponse) => {
 		if (review) {
-			mutate(review.id);
+			mutate(review.id)
 		}
-		setDeleteReviewModalOpened(false);
+		setDeleteReviewModalOpened(false)
 	}
 
 	const handleDeleteModal = (review: ReviewsResponse) => {
-		setDeleteReviewModalOpened(true);
-		setSelectedReview(review);
+		setDeleteReviewModalOpened(true)
+		setSelectedReview(review)
 	}
 
 	return (
 		<Card className={style.card}>
 			<Card.Section className={style.cardSection}>
-				<Group justify="space-between">
+				<Group justify='space-between'>
 					<Group>
-						<Avatar variant="light" size="lg" color="brick-red.6" src="" />
+						<Avatar variant='light' size='lg' color='brick-red.6' src='' />
 						<Box>
 							<Text>{review.UserModel.name}</Text>
 							<Text>{new Date(review.updated_at).toLocaleString()}</Text>
@@ -56,7 +56,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 					{review.is_owner && (
 						<Menu>
 							<Menu.Target>
-								<ActionIcon variant="fullfill" size="lg" radius="xs">
+								<ActionIcon variant='fullfill' size='lg' radius='xs'>
 									<BsThreeDots size={16} />
 								</ActionIcon>
 							</Menu.Target>
@@ -72,7 +72,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 								<Menu.Item
 									leftSection={<RiDeleteBin6Fill size={16} />}
 									classNames={{ itemLabel: style.itemLabel }}
-									color="red"
+									color='red'
 									onClick={() => handleDeleteModal(review)}
 								>
 									刪除
@@ -88,10 +88,10 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 					<ConfirmModal
 						opened={DeleteReviewModalOpened}
 						onClose={() => setDeleteReviewModalOpened(false)}
-						title="刪除評論"
-						message="確定要刪除評論嗎？一經刪除將無法復原。"
-						confirmText="刪除"
-						cancelText="取消"
+						title='刪除評論'
+						message='確定要刪除評論嗎？一經刪除將無法復原。'
+						confirmText='刪除'
+						cancelText='取消'
 						loading={isPending}
 						onConfirm={() => handleConfirmDelete(review)}
 					/>
@@ -99,7 +99,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 			</Card.Section>
 
 			<Card.Section className={style.cardSection}>
-				<Text size="md" fw={900} className={style.courseName}>
+				<Text size='md' fw={900} className={style.courseName}>
 					<Link to={`/course/${course?.course.id}`} className={style.link}>
 						{course?.course.course_name} / {course?.course.instructor}
 					</Link>
@@ -109,13 +109,13 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 			<Card.Section className={style.cardSection}>
 				<Group>
 					<Text>收穫</Text>
-					<Rating value={review.gain} color="brick-red.6" size="md" fractions={2} readOnly></Rating>
+					<Rating value={review.gain} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
 
 					<Text>甜度</Text>
-					<Rating value={review.sweetness} color="brick-red.6" size="md" fractions={2} readOnly></Rating>
+					<Rating value={review.sweetness} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
 
 					<Text>涼度</Text>
-					<Rating value={review.coolness} color="brick-red.6" size="md" fractions={2} readOnly></Rating>
+					<Rating value={review.coolness} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
 				</Group>
 			</Card.Section>
 
@@ -126,4 +126,4 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 	)
 }
 
-export default ReviewCard;
+export default ReviewCard

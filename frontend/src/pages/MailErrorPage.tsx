@@ -1,4 +1,4 @@
-import { Text } from "@mantine/core";
+import { Text } from '@mantine/core'
 
 const MailErrorPage: React.FC = () => {
     return(
@@ -6,4 +6,4 @@ const MailErrorPage: React.FC = () => {
     )
 }
 
-export default MailErrorPage;
+export default MailErrorPage
