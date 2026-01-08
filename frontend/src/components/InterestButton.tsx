@@ -12,16 +12,18 @@ interface InterestButtonProps {
 	course: { course: Course, hasUserAddInterest: boolean } | null | undefined;
 }
 
-const InterestButton: React.FC<InterestButtonProps> = ({course}) => {
+const InterestButton: React.FC<InterestButtonProps> = ({ course }) => {
 	const { isAuthenticated } = useAuthStore();
 	const { mutate: toggleInterest } = useToggleInterest();
 
 	const handleToggleInterest = () => {
-		const course_id = (course?.course.id);
-		if(course_id){
-			const a = toggleInterest(course_id);
-			console.log(a)
+		const courseId = course?.course.id
+
+		if (!courseId) {
+			return
 		}
+
+		toggleInterest(courseId)
 	}
 
 	return (
@@ -29,16 +31,16 @@ const InterestButton: React.FC<InterestButtonProps> = ({course}) => {
 			onClick={handleToggleInterest}
 			leftSection={
 				course?.hasUserAddInterest
-				? <FaHeart size={20} />
-				: <FaRegHeart size={20} />
+					? <FaHeart size={20} />
+					: <FaRegHeart size={20} />
 			}
-			variant={ course?.hasUserAddInterest ? "filled": "outline" }
+			variant={course?.hasUserAddInterest ? "filled" : "outline"}
 			size="lg"
 			disabled={!isAuthenticated}
 			className={styles.button}
 		>
 			<Text>
-				{ course?.hasUserAddInterest ? "取消收藏" : "加入收藏" }
+				{course?.hasUserAddInterest ? "取消收藏" : "加入收藏"}
 			</Text>
 		</Button>
 	)
