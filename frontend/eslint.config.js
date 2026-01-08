@@ -24,15 +24,8 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
 
-      // 不加分號
-      semi: 'off',
-      '@typescript-eslint/semi': ['error', 'never'],
-
-      // 單引號
-      quotes: 'off',
-      '@typescript-eslint/quotes': ['error', 'single', { avoidEscape: true }],
-
-      // JSX 屬性引號使用單引號
+      semi: ['error', 'never'],
+      quotes: ['error', 'single', { avoidEscape: true }],
       'jsx-quotes': ['error', 'prefer-single'],
     },
   },
