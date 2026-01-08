@@ -1,4 +1,4 @@
-import { Course } from "./courseType";
+import { Course } from './courseType'
 
 export interface ReviewsResponse {
   id: number,

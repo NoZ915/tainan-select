@@ -1,24 +1,24 @@
-import { useEffect } from "react";
-import { useAuthStore } from "../stores/authStore";
-import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { notifications } from "@mantine/notifications";
+import { useEffect } from 'react'
+import { useAuthStore } from '../stores/authStore'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { notifications } from '@mantine/notifications'
 
 const ProtectedRoute: React.FC = () => {
-  const { isAuthenticated } = useAuthStore();  // 使用zustand管理的認證狀態
-  const location = useLocation();
+  const { isAuthenticated } = useAuthStore()  // 使用zustand管理的認證狀態
+  const location = useLocation()
 
   useEffect(() => {
     if (!isAuthenticated) {
       notifications.show({
-        title: "尚未登入",
-        message: "請先登入帳號",
-        color: "red",
+        title: '尚未登入',
+        message: '請先登入帳號',
+        color: 'red',
     })
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated])
 
   if (!isAuthenticated) {
-    return <Navigate to="/" state={{ from: location }} />
+    return <Navigate to='/' state={{ from: location }} />
 }
 
   return (
@@ -26,4 +26,4 @@ const ProtectedRoute: React.FC = () => {
   )
 }
 
-export default ProtectedRoute;
+export default ProtectedRoute

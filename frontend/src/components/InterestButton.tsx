@@ -1,25 +1,25 @@
-import { FaHeart, FaRegHeart } from "react-icons/fa";
+import { FaHeart, FaRegHeart } from 'react-icons/fa'
 
-import { useToggleInterest } from "../hooks/interests/useToggleInterest";
-import { useAuthStore } from "../stores/authStore";
+import { useToggleInterest } from '../hooks/interests/useToggleInterest'
+import { useAuthStore } from '../stores/authStore'
 
-import { Course } from "../types/courseType";
+import { Course } from '../types/courseType'
 
-import styles from "../styles/components/InterestButton.module.css";
-import { Button, Text } from "@mantine/core";
+import styles from '../styles/components/InterestButton.module.css'
+import { Button, Text } from '@mantine/core'
 
 interface InterestButtonProps {
 	course: { course: Course, hasUserAddInterest: boolean } | null | undefined;
 }
 
 const InterestButton: React.FC<InterestButtonProps> = ({course}) => {
-	const { isAuthenticated } = useAuthStore();
-	const { mutate: toggleInterest } = useToggleInterest();
+	const { isAuthenticated } = useAuthStore()
+	const { mutate: toggleInterest } = useToggleInterest()
 
 	const handleToggleInterest = () => {
-		const course_id = (course?.course.id);
+		const course_id = (course?.course.id)
 		if(course_id){
-			const a = toggleInterest(course_id);
+			const a = toggleInterest(course_id)
 			console.log(a)
 		}
 	}
@@ -32,16 +32,16 @@ const InterestButton: React.FC<InterestButtonProps> = ({course}) => {
 				? <FaHeart size={20} />
 				: <FaRegHeart size={20} />
 			}
-			variant={ course?.hasUserAddInterest ? "filled": "outline" }
-			size="lg"
+			variant={ course?.hasUserAddInterest ? 'filled': 'outline' }
+			size='lg'
 			disabled={!isAuthenticated}
 			className={styles.button}
 		>
 			<Text>
-				{ course?.hasUserAddInterest ? "取消收藏" : "加入收藏" }
+				{ course?.hasUserAddInterest ? '取消收藏' : '加入收藏' }
 			</Text>
 		</Button>
 	)
 }
 
-export default InterestButton;
+export default InterestButton

@@ -1,13 +1,13 @@
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom'
 
-import formatCourseTime from "../utils/formatCourseTime.tsx";
-import { useIsMobile } from "../hooks/useIsMobile";
-import { Course } from "../types/courseType";
+import formatCourseTime from '../utils/formatCourseTime.tsx'
+import { useIsMobile } from '../hooks/useIsMobile'
+import { Course } from '../types/courseType'
 
-import { Badge, Flex, Group, Text } from "@mantine/core";
-import style from "../styles/components/CourseInfoPanel.module.css"
+import { Badge, Flex, Group, Text } from '@mantine/core'
+import style from '../styles/components/CourseInfoPanel.module.css'
 
-import InterestButton from "./InterestButton";
+import InterestButton from './InterestButton'
 
 interface CourseInfoPanelProps {
   course: { course: Course, hasUserAddInterest: boolean } | null | undefined;
@@ -15,32 +15,32 @@ interface CourseInfoPanelProps {
 }
 
 const CourseInfoPanel: React.FC<CourseInfoPanelProps> = ({ course, isLoading }) => {
-  const isMobile = useIsMobile();
+  const isMobile = useIsMobile()
 
   if (isLoading) {
     return <>Is Loading...</>
   }
 
   if (!course) {
-    return <>Course information is not available.</>;
+    return <>Course information is not available.</>
   }
 
   if (isMobile) {
     return (
-      <Flex direction="column" align="flex-start" className={style.flex}>
+      <Flex direction='column' align='flex-start' className={style.flex}>
         <Group>
-          <Text size="md" fw={900} className={style.courseName}>
+          <Text size='md' fw={900} className={style.courseName}>
             {course.course.course_name}
-            {course.course.course_url && <Link to={course.course.course_url} target="_blank" className={style.link}>🔗</Link>}
+            {course.course.course_url && <Link to={course.course.course_url} target='_blank' className={style.link}>🔗</Link>}
           </Text>
-          <Badge radius="sm">{course.course.semester}</Badge>
+          <Badge radius='sm'>{course.course.semester}</Badge>
           <InterestButton course={course} />
         </Group>
 
         <div>
           <Text className={style.label}>開課單位 / 授課老師</Text>
           <Text className={style.courseDetail}>{course.course.academy} / {course.course.instructor}
-            {course.course.instructor_url && <Link to={course.course.instructor_url} target="_blank" className={style.link}>🔗</Link>}</Text>
+            {course.course.instructor_url && <Link to={course.course.instructor_url} target='_blank' className={style.link}>🔗</Link>}</Text>
         </div>
 
         <div>
@@ -57,13 +57,13 @@ const CourseInfoPanel: React.FC<CourseInfoPanelProps> = ({ course, isLoading }) 
   }
 
   return (
-    <Flex direction="column" align="flex-start" className={style.flex}>
+    <Flex direction='column' align='flex-start' className={style.flex}>
       <Group>
-        <Text size="md" fw={900} className={style.courseName}>
+        <Text size='md' fw={900} className={style.courseName}>
           {course.course.course_name}
-          {course.course.course_url && <Link to={course.course.course_url} target="_blank" className={style.link}>🔗</Link>}
+          {course.course.course_url && <Link to={course.course.course_url} target='_blank' className={style.link}>🔗</Link>}
         </Text>
-        <Badge radius="sm">{course.course.semester}</Badge>
+        <Badge radius='sm'>{course.course.semester}</Badge>
         <InterestButton course={course} />
       </Group>
 
@@ -73,10 +73,10 @@ const CourseInfoPanel: React.FC<CourseInfoPanelProps> = ({ course, isLoading }) 
       </div>
 
       <div>
-        <Text className={style.label} style={{ textAlign: "left" }}>授課老師</Text>
+        <Text className={style.label} style={{ textAlign: 'left' }}>授課老師</Text>
         <Text className={style.courseDetail}>
           {course.course.instructor}
-          {course.course.instructor_url && <Link to={course.course.instructor_url} target="_blank" className={style.link}>🔗</Link>}
+          {course.course.instructor_url && <Link to={course.course.instructor_url} target='_blank' className={style.link}>🔗</Link>}
         </Text>
       </div>
 
@@ -103,4 +103,4 @@ const CourseInfoPanel: React.FC<CourseInfoPanelProps> = ({ course, isLoading }) 
   )
 }
 
-export default CourseInfoPanel;
+export default CourseInfoPanel
