@@ -16,15 +16,15 @@ const InterestButton: React.FC<InterestButtonProps> = ({course}) => {
 	const { isAuthenticated } = useAuthStore()
 	const { mutate: toggleInterest } = useToggleInterest()
 
-	const handleToggleInterest = () => {
-		const course_id = (course?.course.id)
-		if(course_id){
-			const a = toggleInterest(course_id)
-			console.log(a)
-		}
+  const handleToggleInterest = () => {
+    const courseId = course?.course.id
 
-		toggleInterest(courseId)
-	}
+    if (!courseId) {
+      return
+    }
+
+    toggleInterest(courseId)
+  }
 
 	return (
 		<Button
