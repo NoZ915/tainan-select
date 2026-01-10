@@ -11,10 +11,10 @@ export function titleCourse(courseTitleParams: CourseTitleParams): string {
   const { courseName, teacherName, semester } = courseTitleParams
 
   const titleSegments = [
+    BRAND,
     courseName,
     teacherName,
     semester,
-    BRAND,
   ].filter(isNonEmptyText)
 
   return clampTitle(titleSegments.join(TITLE_SEPARATOR))
@@ -22,8 +22,8 @@ export function titleCourse(courseTitleParams: CourseTitleParams): string {
 
 export function titleStatic(pageName: string): string {
   const titleSegments = [
-    pageName,
     BRAND,
+    pageName,
   ].filter(isNonEmptyText)
 
   return clampTitle(titleSegments.join(TITLE_SEPARATOR))
