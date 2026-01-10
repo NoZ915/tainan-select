@@ -7,7 +7,7 @@ type CourseTitleParams = {
   semester?: string
 }
 
-export function titleCourse(courseTitleParams: CourseTitleParams): string {
+export function buildTitleCourse(courseTitleParams: CourseTitleParams): string {
   const { courseName, teacherName, semester } = courseTitleParams
 
   const titleSegments = [
@@ -20,7 +20,7 @@ export function titleCourse(courseTitleParams: CourseTitleParams): string {
   return clampTitle(titleSegments.join(TITLE_SEPARATOR))
 }
 
-export function titleStatic(pageName: string): string {
+export function buildTitleStatic(pageName: string): string {
   const titleSegments = [
     BRAND,
     pageName,
@@ -29,10 +29,10 @@ export function titleStatic(pageName: string): string {
   return clampTitle(titleSegments.join(TITLE_SEPARATOR))
 }
 
-export function titleCourseFallback(courseId?: string): string {
+export function buildTitleCourseFallback(courseId?: string): string {
   const fallbackText = isNonEmptyText(courseId)
     ? `課程詳情（${courseId.trim()}）`
     : '課程詳情'
 
-  return titleStatic(fallbackText)
+  return buildTitleStatic(fallbackText)
 }

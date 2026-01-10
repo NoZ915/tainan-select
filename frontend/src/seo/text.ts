@@ -1,4 +1,4 @@
-export const BRAND = 'TAINAN 選 | 南大課程評價'
+export const BRAND = 'TAINAN選｜南大選課評價'
 export const TITLE_SEPARATOR = '｜'
 export const TITLE_MAX_LENGTH = 70
 

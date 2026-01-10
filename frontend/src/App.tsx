@@ -1,7 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { useEffect } from 'react'
 
-import { useRouteTitle } from './seo/useRouteTitle'
 import { useAuthStore } from './stores/authStore'
 import { useCheckAuthStatus } from './hooks/auth/useCheckAuthStatus'
 
@@ -11,8 +10,6 @@ import Footer from './components/Footer'
 function App() {
   const { logout } = useAuthStore()
   const { data } = useCheckAuthStatus()
-
-  useRouteTitle()
 
   useEffect(() => {
     if (data && !data.authenticated) {
