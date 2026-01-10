@@ -4,7 +4,9 @@ import { getCourse } from '../../apis/courseAPI'
 
 export const useGetCourse = (course_id: string) => {
     return useQuery({
-        queryKey: [QUERY_KEYS.COURSE],
-        queryFn: () => getCourse(course_id)
+        queryKey: [QUERY_KEYS.COURSE, course_id],
+        queryFn: () => getCourse(course_id),
+        enabled: !!course_id,
+        staleTime: 5 * 60 * 1000,
     })
 }
