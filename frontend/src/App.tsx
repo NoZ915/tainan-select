@@ -4,6 +4,8 @@ import { useEffect } from 'react'
 import { useAuthStore } from './stores/authStore'
 import { useCheckAuthStatus } from './hooks/auth/useCheckAuthStatus'
 
+import RouteHeadTitle from './seo/RouteHeadTitle'
+
 import Header from './components/Header'
 import Footer from './components/Footer'
 
@@ -20,6 +22,7 @@ function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <RouteHeadTitle />
       <Header />
       <main style={{ flex: 1 }}>
         <Outlet />

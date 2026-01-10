@@ -36,3 +36,25 @@ export function buildTitleCourseFallback(courseId?: string): string {
 
   return buildTitleStatic(fallbackText)
 }
+
+export function buildCoursesListTitle(search: string) {
+  const params = new URLSearchParams(search)
+
+  const keyword = params.get('search')?.trim()
+  const academy = params.get('academy')?.trim()
+  const department = params.get('department')?.trim()
+  const category = params.get('category')?.trim()
+
+  if (!keyword && !academy && !department && !category) {
+    return buildTitleStatic('課程列表')
+  }
+
+  const parts: string[] = []
+  if (keyword) parts.push(`搜尋：${keyword}`)
+
+  if (department) parts.push(department)
+  else if (academy) parts.push(academy)
+  else if (category) parts.push(category)
+
+  return buildTitleStatic(parts.join('｜'))
+}

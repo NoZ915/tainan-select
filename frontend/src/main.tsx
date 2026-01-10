@@ -10,7 +10,7 @@ import '@mantine/notifications/styles.css'
 import { theme } from './styles/theme.ts'
 import './styles/App.css'
 
-import { buildTitleStatic } from './seo/titles.ts'
+import { buildCoursesListTitle, buildTitleStatic } from './seo/titles.ts'
 
 import App from './App.tsx'
 import CoursesPage from './pages/CoursesPage.tsx'
@@ -31,7 +31,10 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       // 首頁 / 課程列表
-      { index: true, element: <CoursesPage />},
+      { index: true, 
+        element: <CoursesPage />,
+        handle: { seo: { title: ({ search }: { search: string }) => buildCoursesListTitle(search) } }
+      },
 
       // 其他頁面
       { path: 'mailError', element: <MailErrorPage />, handle: { seo: { title: buildTitleStatic('信箱驗證失敗') } } },
