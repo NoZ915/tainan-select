@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { useHead } from '@unhead/react'
 import { useAuthStore } from '../stores/authStore'
 import { useGetCourse } from '../hooks/courses/useGetCourse'
 import { useIsMobile } from '../hooks/useIsMobile'
@@ -14,8 +15,8 @@ import LoginModal from '../components/LoginModal'
 import { FaPlus } from 'react-icons/fa'
 import styles from '../styles/pages/CourseDetailPage.module.css'
 
-import { usePageTitle } from '../seo/usePageTitle'
-import { titleCourse, titleCourseFallback } from '../seo/titles'
+import { buildTitleCourse, buildTitleCourseFallback } from '../seo/titles'
+import { BRAND } from '../seo/text'
 import { Course } from '../types/courseType'
 
 function getNonEmptyString(value: unknown): string | undefined {
@@ -50,24 +51,37 @@ const CourseDetailPage: React.FC = () => {
   const { data: reviews, isLoading: isReviewsLoading } = useGetAllReviewsByCourseId(courseId)
 
   const course = courseResponse?.course
+  const courseName = getCourseName(course)
+  const teacherName = getTeacherName(course)
+  const semester = getSemester(course)
 
   const pageTitle = useMemo(() => {
-    const courseName = getCourseName(course)
-    const teacherName = getTeacherName(course)
-    const semester = getSemester(course)
-
     if (courseName) {
-      return titleCourse({
+      return buildTitleCourse({
         courseName,
         teacherName,
         semester,
       })
     }
 
-    return titleCourseFallback(courseId)
-  }, [course, courseId])
+    return buildTitleCourseFallback(courseId)
+  }, [courseName, teacherName, semester, courseId])
 
-  usePageTitle(pageTitle)
+  const description = useMemo(() => {
+    if (!courseName) return BRAND
+    const parts = [
+      courseName,
+      teacherName ? `授課：${teacherName}` : undefined,
+      semester ? `學期：${semester}` : undefined,
+      '南大課程評價與心得',
+    ].filter(Boolean)
+    return parts.join('｜')
+  }, [courseName, teacherName, semester])
+
+  useHead({
+    title: pageTitle,
+    meta: [{ name: 'description', content: description }],
+  })
 
   const handleActionClick = () => {
     if (isAuthenticated) {
