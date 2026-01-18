@@ -74,16 +74,24 @@ const AddOrEditReviewModal: React.FC<AddOrEditReviewModalProps> = ({ opened, onC
       className={styles.modal}
       zIndex={1100}
     >
-      <Group>
-        <Text>收穫</Text>
-        <Rating color='brick-red.6' size='md' fractions={2} onChange={(g) => setGain(g)} value={gain}></Rating>
+      <div className={styles.ratingsBox}>
+        <Group className={styles.ratings}>
+          <Group className={styles.ratingItem}>
+            <Text>收穫</Text>
+            <Rating color='brick-red.6' size='md' fractions={2} onChange={(g) => setGain(g)} value={gain}></Rating>
+          </Group>
 
-        <Text>甜度</Text>
-        <Rating color='brick-red.6' size='md' fractions={2} onChange={(s) => setSweetness(s)} value={sweetness}></Rating>
+          <Group className={styles.ratingItem}>
+            <Text>甜度</Text>
+            <Rating color='brick-red.6' size='md' fractions={2} onChange={(s) => setSweetness(s)} value={sweetness}></Rating>
+          </Group>
 
-        <Text>涼度</Text>
-        <Rating color='brick-red.6' size='md' fractions={2} onChange={(c) => setCoolness(c)} value={coolness}></Rating>
-      </Group>
+          <Group className={styles.ratingItem}>
+            <Text>涼度</Text>
+            <Rating color='brick-red.6' size='md' fractions={2} onChange={(c) => setCoolness(c)} value={coolness}></Rating>
+          </Group>
+        </Group>
+      </div>
 
       <Text mt='md'>評論</Text>
       <Textarea
