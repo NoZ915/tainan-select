@@ -18,6 +18,7 @@ class ReviewRepository {
   ): Promise<ReviewsResponse[]> {
     const reviews = await ReviewModel.findAll({
       where: { course_id },
+      order: [["updated_at", "DESC"]],
       include: [
         {
           model: UserModel,
@@ -25,15 +26,18 @@ class ReviewRepository {
         },
       ],
     });
-
     // 目前使用者的評價優先顯示
-    const sortedReviews = reviews.sort((a, b) => {
-      if (a.user_id === user_id) return -1;
-      if (b.user_id === user_id) return 1;
-      return 0;
-    });
+    const ownerReviews = [];
+    const otherReviews = [];
+    for (const review of reviews) {
+      if (review.user_id === user_id) {
+        ownerReviews.push(review);
+      } else {
+        otherReviews.push(review);
+      }
+    }
 
-    const reviewsWithOwnerFlag = sortedReviews.map((review) => {
+    const reviewsWithOwnerFlag = [...ownerReviews, ...otherReviews].map((review) => {
       const is_owner = review.user_id === user_id;
       const reviewJson = review.toJSON();
       const { user_id: userId, ...reviewWithoutUserId } = reviewJson; // 把user_id移除，不要回傳到前端
