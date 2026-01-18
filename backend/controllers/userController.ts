@@ -19,6 +19,10 @@ export const updateUser: RequestHandler = async (req, res): Promise<void> => {
     const userName = await UserService.updateUser(user_id, name);
     res.status(200).json(userName);
   } catch (err) {
+    if (err instanceof Error && err.message === "NAME_ALREADY_EXISTS") {
+      res.status(409).json({ message: "名稱已被使用" });
+      return;
+    }
     res.status(500).json({ message: err });
   }
 }
