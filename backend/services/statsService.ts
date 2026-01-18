@@ -4,14 +4,14 @@ import UserRepository from "../repositories/userRepository";
 
 class StatsService {
   private cache: {
-    data: { courseCount: number; commentCount: number; userCount: number };
+    data: { courseCount: number; reviewCount: number; userCount: number };
     expiresAt: number;
   } | null = null;
   private readonly cacheTtlMs = 60 * 1000;
 
   async getPlatformStats(): Promise<{
     courseCount: number;
-    commentCount: number;
+    reviewCount: number;
     userCount: number;
   }> {
     const now = Date.now();
@@ -19,7 +19,7 @@ class StatsService {
       return this.cache.data;
     }
 
-    const [courseCount, commentCount, userCount] = await Promise.all([
+    const [courseCount, reviewCount, userCount] = await Promise.all([
       CourseRepository.getAllCoursesCount(),
       ReviewRepository.getAllReviewsCount(),
       UserRepository.getAllUsersCount(),
@@ -27,7 +27,7 @@ class StatsService {
 
     const data = {
       courseCount,
-      commentCount,
+      reviewCount,
       userCount,
     };
 
