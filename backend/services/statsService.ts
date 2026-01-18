@@ -7,7 +7,7 @@ class StatsService {
     data: { courseCount: number; reviewCount: number; userCount: number };
     expiresAt: number;
   } | null = null;
-  private readonly cacheTtlMs = 60 * 1000;
+  private readonly cacheTtlMs = 10 * 60 * 1000;
 
   clearCache(): void {
     this.cache = null;
