@@ -107,16 +107,24 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 			</Card.Section>
 
 			<Card.Section className={style.cardSection}>
-				<Group>
-					<Text>收穫</Text>
-					<Rating value={review.gain} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
+				<div className={style.ratingsBox}>
+					<Group className={style.ratings}>
+					<Group className={style.ratingItem}>
+						<Text>收穫</Text>
+						<Rating value={review.gain} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
+					</Group>
 
-					<Text>甜度</Text>
-					<Rating value={review.sweetness} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
+					<Group className={style.ratingItem}>
+						<Text>甜度</Text>
+						<Rating value={review.sweetness} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
+					</Group>
 
-					<Text>涼度</Text>
-					<Rating value={review.coolness} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
-				</Group>
+					<Group className={style.ratingItem}>
+						<Text>涼度</Text>
+						<Rating value={review.coolness} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
+					</Group>
+					</Group>
+				</div>
 			</Card.Section>
 
 			<Card.Section className={style.cardSection}>

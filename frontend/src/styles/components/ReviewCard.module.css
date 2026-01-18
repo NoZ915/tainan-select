@@ -1,34 +1,64 @@
-* {
-    /* border: 1px solid black; */
-}
-
 .container {
-    padding-inline: 0;
-    text-align: left;
+  padding-inline: 0;
+  text-align: left;
 }
 
 .card {
-    border: 2px solid black;
-    padding: 1.5rem 1.5rem;
+  border: 2px solid black;
+  padding: 1.5rem 1.5rem;
 }
 
 .cardSection {
-    padding: 0.5rem 1.5rem;
+  padding: 0.5rem 1.5rem;
 }
 
 .dropdown {
-    border: 2px solid black;
+  border: 2px solid black;
 }
 
 .itemLabel {
-    font-size: 16px;
+  font-size: 16px;
 }
 
 .link {
-    color: black;
-    text-decoration: none;
+  color: black;
+  text-decoration: none;
 }
 
 .commentText {
-    white-space: pre-wrap;
+  white-space: pre-wrap;
+}
+
+.ratingsBox {
+  border: 1px solid #e1dbd2;
+  border-radius: 6px;
+  padding: 0.75rem 0.75rem;
+  
+  background-color: #f7f5f2;
+}
+
+.ratings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.ratingItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .ratings {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+  }
+
+  .ratingItem {
+      width: 100%;
+      justify-content: space-between;
+  }
 }
