@@ -60,6 +60,7 @@ class CourseRepository {
         order.push(["review_count", "desc"]);
         break;
     }
+    order.push(["updated_at", "desc"]);
 
     const [courses, total] = await Promise.all([
       CourseModel.findAll({ where: whereCondition, limit, offset, order }),
