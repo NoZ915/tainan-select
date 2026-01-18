@@ -5,11 +5,35 @@
 
 .card {
   border: 2px solid black;
-  padding: 1.5rem 1.5rem;
+  padding: 1.25rem 1.25rem;
 }
 
 .cardSection {
-  padding: 0.5rem 1.5rem;
+  padding: 0.5rem 1.25rem;
+}
+
+.headerRow {
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.userInfo {
+  flex: 1;
+  min-width: 0;
+  align-items: flex-start;
+}
+
+.userMeta {
+  min-width: 0;
+}
+
+.menuButton {
+  color: #6f6f6f;
+}
+
+.menuButton:hover {
+  background-color: #f3f3f3;
+  color: #2e2e2e;
 }
 
 .dropdown {
@@ -17,7 +41,7 @@
 }
 
 .itemLabel {
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .link {

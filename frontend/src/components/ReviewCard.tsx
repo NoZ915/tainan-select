@@ -82,10 +82,10 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 	return (
 		<Card className={style.card}>
 			<Card.Section className={style.cardSection}>
-				<Group justify='space-between'>
-					<Group>
+				<Group justify='space-between' className={style.headerRow}>
+					<Group className={style.userInfo}>
 						<Avatar variant='light' size='lg' color='brick-red.6' src='' />
-						<Box>
+						<Box className={style.userMeta}>
 							<Text>{review.UserModel.name}</Text>
 							<Text size='xs' c='dimmed'>{new Date(review.updated_at).toLocaleString()}</Text>
 						</Box>
@@ -93,7 +93,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 					{review.is_owner && (
 						<Menu>
 							<Menu.Target>
-								<ActionIcon variant='fullfill' size='lg' radius='xs'>
+								<ActionIcon variant='subtle' size='lg' radius='md' className={style.menuButton}>
 									<BsThreeDots size={16} />
 								</ActionIcon>
 							</Menu.Target>
