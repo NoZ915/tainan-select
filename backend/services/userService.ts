@@ -8,10 +8,38 @@ class UserService {
     }
 
     async createUser(google_sub: string, whitelist_id: number | null = null) {
-        const name = generateTainanCharacterName();
-        const user = await userRepository.createUser(google_sub, name, whitelist_id);
-        StatsService.clearCache();
-        return user;
+        const maxAttempts = 5;
+        for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+            const name = generateTainanCharacterName();
+            try {
+                const user = await userRepository.createUser(google_sub, name, whitelist_id);
+                StatsService.clearCache();
+                return user;
+            } catch (err: any) {
+                if (err?.name === "SequelizeUniqueConstraintError") {
+                    continue;
+                }
+                throw err;
+            }
+        }
+
+        const baseName = generateTainanCharacterName();
+        let index = 1;
+        // Fall back to a deterministic suffix if random names keep colliding.
+        while (true) {
+            const nameWithIndex = `${baseName}${index}`;
+            try {
+                const user = await userRepository.createUser(google_sub, nameWithIndex, whitelist_id);
+                StatsService.clearCache();
+                return user;
+            } catch (err: any) {
+                if (err?.name === "SequelizeUniqueConstraintError") {
+                    index += 1;
+                    continue;
+                }
+                throw err;
+            }
+        }
     }
 
     async updateUser(user_id: number, name: string): Promise<string> {
