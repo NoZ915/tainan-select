@@ -27,6 +27,35 @@
 
 .commentText {
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.commentBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.commentClamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.readMore {
+  border: none;
+  padding: 0;
+  color: #8a8a8a;
+  cursor: pointer;
+  font-size: inherit;
+  background: none;
+}
+
+.readMore:hover {
+  color: #6f6f6f;
 }
 
 .ratingsBox {
