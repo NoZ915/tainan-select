@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 
 import { useCountUp } from '../hooks/useCountUp'
+import { useGetPlatformStats } from '../hooks/stats/useGetPlatformStats'
 
 import { Container, Paper, SimpleGrid, Stack, Text, ThemeIcon } from '@mantine/core'
 import { FiBookOpen, FiMessageCircle, FiUsers } from 'react-icons/fi'
@@ -43,21 +44,22 @@ const StatItem: React.FC<StatItemProps> = ({ label, value, icon, triggerKey }) =
 
 const PlatformStatsPanel: React.FC = () => {
   const [triggerKey, setTriggerKey] = useState(0)
+  const { data: statsData } = useGetPlatformStats()
   useEffect(() => {
     setTriggerKey((k) => k + 1)
-  }, [])
+  }, [statsData])
 
   const stats = {
-    commentCount: 1287,
-    userCount: 642,
-    courseCount: 4389,
+    reviewCount: statsData?.reviewCount ?? 0,
+    userCount: statsData?.userCount ?? 0,
+    courseCount: statsData?.courseCount ?? 0,
   }
 
   return (
     <Container className={styles.container}>
       <SimpleGrid cols={3} spacing={{ base: 'xs', sm: 'md' }}>
         <StatItem label='課程數' value={stats.courseCount} icon={<FiBookOpen size={52} />} triggerKey={triggerKey} />
-        <StatItem label='評價數' value={stats.commentCount} icon={<FiMessageCircle size={52} />} triggerKey={triggerKey} />
+        <StatItem label='評價數' value={stats.reviewCount} icon={<FiMessageCircle size={52} />} triggerKey={triggerKey} />
         <StatItem label='註冊人數' value={stats.userCount} icon={<FiUsers size={52} />} triggerKey={triggerKey} />
       </SimpleGrid>
     </Container>

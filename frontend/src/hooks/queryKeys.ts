@@ -14,6 +14,8 @@ export const QUERY_KEYS = {
   INTERESTS: 'interests',
   INFINITY_INTERESTS: 'infinity_interests',
   
+  PLATFORM_STATS: 'platform_stats',
+  
   // NOTE: 暫時移除此功能
   POPULAR_COURSES: 'popular_courses',
 }
