@@ -10,6 +10,6 @@ router.get("/:course_id", getCookie, getCourse);
 router.get("/", getAllCourses);
 
 // NOTE: 暫時移除此功能
-router.get("/getMostCuriousButUnreviewedCourses", getMostCuriousButUnreviewedCourses);
+// router.get("/getMostCuriousButUnreviewedCourses", getMostCuriousButUnreviewedCourses);
 
 export default router;
