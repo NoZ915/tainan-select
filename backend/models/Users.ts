@@ -39,6 +39,7 @@ UserModel.init(
     },
     name: {
       type: DataTypes.STRING(100),
+      unique: true,
     },
     detail: {
       type: DataTypes.TEXT,
