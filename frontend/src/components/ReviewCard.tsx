@@ -50,7 +50,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 						<Avatar variant='light' size='lg' color='brick-red.6' src='' />
 						<Box>
 							<Text>{review.UserModel.name}</Text>
-							<Text>{new Date(review.updated_at).toLocaleString()}</Text>
+							<Text size='xs' c='dimmed'>{new Date(review.updated_at).toLocaleString()}</Text>
 						</Box>
 					</Group>
 					{review.is_owner && (

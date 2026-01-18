@@ -1,4 +1,4 @@
-import { Container, Grid, Loader, Text } from '@mantine/core'
+import { Container, Loader, Stack, Text } from '@mantine/core'
 import { useGetLatestReviews } from '../hooks/reviews/useGetLatestReiviews'
 import ReviewCard from './ReviewCard'
 import styles from '../styles/components/LatestReviewsPanel.module.css'
@@ -13,18 +13,15 @@ const LatestReviewsPanel: React.FC = () => {
 			{isLoading ? (
 				<Loader />
 			) : (
-				<Grid >
-					{
-						latestReivews?.map((review) => (
-							<Grid.Col key={review.id} span={{ base: 12 }} className={styles.gridCol}>
-								<ReviewCard
-									review={review}
-									course={{ course: review.course }}
-								/>
-							</Grid.Col>
-						))
-					}
-				</Grid>
+				<Stack gap='1rem' className={styles.list}>
+					{latestReivews?.map((review) => (
+						<ReviewCard
+							key={review.id}
+							review={review}
+							course={{ course: review.course }}
+						/>
+					))}
+				</Stack>
 
 			)}
 
