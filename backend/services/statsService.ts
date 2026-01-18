@@ -9,6 +9,10 @@ class StatsService {
   } | null = null;
   private readonly cacheTtlMs = 60 * 1000;
 
+  clearCache(): void {
+    this.cache = null;
+  }
+
   async getPlatformStats(): Promise<{
     courseCount: number;
     reviewCount: number;
