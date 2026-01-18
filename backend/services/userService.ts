@@ -15,6 +15,10 @@ class UserService {
     }
 
     async updateUser(user_id: number, name: string): Promise<string> {
+        const existingUser = await userRepository.getUserByNameExceptId(name, user_id);
+        if (existingUser) {
+            throw new Error("NAME_ALREADY_EXISTS");
+        }
         await userRepository.updateUser(user_id, name);
         return name;
     }

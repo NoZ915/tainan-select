@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import UserModel from "../models/Users";
 
 class UserRepository {
@@ -7,6 +8,15 @@ class UserRepository {
 
     async createUser(google_sub: string, name: string, whitelist_id: number | null = null) {
         return await UserModel.create({ google_sub, name, whitelist_id });
+    }
+
+    async getUserByNameExceptId(name: string, user_id: number): Promise<UserModel | null> {
+        return await UserModel.findOne({
+            where: {
+                name,
+                id: { [Op.ne]: user_id },
+            }
+        });
     }
 
     async updateUser(user_id: number, name: string): Promise<string> {
