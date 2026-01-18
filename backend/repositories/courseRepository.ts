@@ -75,6 +75,10 @@ class CourseRepository {
     return await CourseModel.findByPk(course_id);
   }
 
+  async getAllCoursesCount(): Promise<number> {
+    return await CourseModel.count();
+  }
+
   async getAllDepartments(): Promise<string[]> {
     const departments = await CourseModel.findAll({
       attributes: [[db.Sequelize.fn("DISTINCT", db.Sequelize.col("department")), "department"]],

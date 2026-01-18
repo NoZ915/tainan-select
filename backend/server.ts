@@ -11,6 +11,7 @@ import coursesRoutes from "./routes/courses";
 import reviewsRoutes from "./routes/reviews";
 import interestsRoutes from "./routes/interests";
 import usersRoutes from "./routes/users";
+import statsRoutes from "./routes/stats";
 
 const app: Express = express();
 const corsOptions = {
@@ -30,6 +31,7 @@ app.use("/api/courses", coursesRoutes);
 app.use("/api/reviews", reviewsRoutes);
 app.use("/api/interests", interestsRoutes);
 app.use("/api/users", usersRoutes);
+app.use("/api/stats", statsRoutes);
 
 const startServer = async (): Promise<void> => {
   try {
