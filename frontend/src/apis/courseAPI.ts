@@ -25,6 +25,7 @@ export const getAcademies = async (): Promise<{ academies: string[] }> => {
   return response.data
 }
 
+// NOTE: 暫時移除此功能
 export const getMostCuriousButUnreviewedCourses = async (): Promise<Course[]> => {
   const response = await axiosInstance.get('/courses/getMostCuriousButUnreviewedCourses')
   return response.data

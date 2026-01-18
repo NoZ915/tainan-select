@@ -14,6 +14,10 @@ class UserRepository {
         await user?.update({ name });
         return user?.name ?? "";
     }
+
+    async getAllUsersCount(): Promise<number> {
+        return await UserModel.count();
+    }
 }
 
 export default new UserRepository();

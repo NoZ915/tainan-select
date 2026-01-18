@@ -1,9 +1,12 @@
-import { Group, Text, Box, Container, Image, Burger, Drawer } from '@mantine/core'
-import { Link, useLocation } from 'react-router-dom'
-import styles from '../styles/components/Header.module.css'
-import AuthButton from './AuthButton'
 import { useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+
 import { useIsMobile } from '../hooks/useIsMobile'
+
+import { Group, Text, Box, Container, Image, Burger, Drawer } from '@mantine/core'
+import styles from '../styles/components/Header.module.css'
+
+import AuthButton from './AuthButton'
 
 const Header: React.FC = () => {
   const location = useLocation() // 用於獲取當前路徑

@@ -1,4 +1,5 @@
 import userRepository from "../repositories/userRepository";
+import StatsService from "./statsService";
 import { generateTainanCharacterName } from "../utils/tainanDiceMaster";
 
 class UserService {
@@ -8,7 +9,9 @@ class UserService {
 
     async createUser(google_sub: string, whitelist_id: number | null = null) {
         const name = generateTainanCharacterName();
-        return await userRepository.createUser(google_sub, name, whitelist_id);
+        const user = await userRepository.createUser(google_sub, name, whitelist_id);
+        StatsService.clearCache();
+        return user;
     }
 
     async updateUser(user_id: number, name: string): Promise<string> {

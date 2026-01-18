@@ -12,6 +12,7 @@ export const useUpsertReview = () => {
             queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.REVIEWS] })
             queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INFINITY_REVIEWS] })
             queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LATEST_REVIEWS] })
+            queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PLATFORM_STATS] })
         },
         onError: (err) => console.log(err)
     })

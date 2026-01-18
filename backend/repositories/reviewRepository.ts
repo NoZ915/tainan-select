@@ -8,6 +8,10 @@ import CourseRepository from "./courseRepository";
 import db from "../models";
 
 class ReviewRepository {
+  async getAllReviewsCount(): Promise<number> {
+    return await ReviewModel.count();
+  }
+
   async getAllReviewsByCourseId(
     course_id: number,
     user_id: number | undefined

@@ -75,6 +75,10 @@ class CourseRepository {
     return await CourseModel.findByPk(course_id);
   }
 
+  async getAllCoursesCount(): Promise<number> {
+    return await CourseModel.count();
+  }
+
   async getAllDepartments(): Promise<string[]> {
     const departments = await CourseModel.findAll({
       attributes: [[db.Sequelize.fn("DISTINCT", db.Sequelize.col("department")), "department"]],
@@ -97,6 +101,7 @@ class CourseRepository {
     return academyList;
   }
 
+  // NOTE: 暫時移除此功能
   async getMostCuriousButUnreviewedCourses(): Promise<Course[]> {
     // 想了解程度 ÷ 評論數 = 被大量收藏或瀏覽、但評論數很少的課程
     const courses = await CourseModel.findAll({

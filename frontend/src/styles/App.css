@@ -8,8 +8,8 @@ body {
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  margin-top: 70px;
-  padding: 1rem 0.5rem;
+  margin-top: 80px;
+  padding: 20px 8px;
   text-align: center;
 }
 
