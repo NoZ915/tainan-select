@@ -7,6 +7,10 @@
     text-align: left;
 }
 
+.container > * + * {
+    margin-top: 1rem;
+}
+
 .card{
     margin-top: 1rem;
     border: 2px solid black;

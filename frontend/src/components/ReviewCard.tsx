@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Link } from 'react-router-dom'
 import { ActionIcon, Avatar, Box, Card, Group, Menu, Rating, Text } from '@mantine/core'
@@ -20,12 +20,15 @@ interface ReviewCardProp {
 }
 
 const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
-	const [AddOrEditReviewModalOpened, setAddOrEditReviewModalOpened] = useState(false)
-	const [DeleteReviewModalOpened, setDeleteReviewModalOpened] = useState(false)
+	const [isAddOrEditReviewModalOpen, setIsAddOrEditReviewModalOpen] = useState(false)
+	const [isDeleteReviewModalOpen, setIsDeleteReviewModalOpen] = useState(false)
 	const [selectedReview, setSelectedReview] = useState<ReviewsResponse | null>(null)
+	const [isCommentExpanded, setIsCommentExpanded] = useState(false)
+	const [isCommentTruncated, setIsCommentTruncated] = useState(false)
+	const commentElementRef = useRef<HTMLParagraphElement | null>(null)
 
 	const handleEdit = (review: ReviewsResponse) => {
-		setAddOrEditReviewModalOpened(true)
+		setIsAddOrEditReviewModalOpen(true)
 		setSelectedReview(review)
 	}
 
@@ -34,29 +37,63 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 		if (review) {
 			mutate(review.id)
 		}
-		setDeleteReviewModalOpened(false)
+		setIsDeleteReviewModalOpen(false)
 	}
 
 	const handleDeleteModal = (review: ReviewsResponse) => {
-		setDeleteReviewModalOpened(true)
+		setIsDeleteReviewModalOpen(true)
 		setSelectedReview(review)
 	}
+
+	useEffect(() => {
+		setIsCommentExpanded(false)
+	}, [review.comment])
+
+	useEffect(() => {
+		const el = commentElementRef.current
+		if (!el) {
+			return
+		}
+
+		const checkTruncate = () => {
+			if (isCommentExpanded) {
+				setIsCommentTruncated(false)
+				return
+			}
+			setIsCommentTruncated(el.scrollHeight > el.clientHeight + 1)
+		}
+
+		const scheduleCheck = () => {
+			requestAnimationFrame(checkTruncate)
+		}
+
+		scheduleCheck()
+
+		const resizeObserver = new ResizeObserver(scheduleCheck)
+		resizeObserver.observe(el)
+		window.addEventListener('resize', scheduleCheck)
+
+		return () => {
+			resizeObserver.disconnect()
+			window.removeEventListener('resize', scheduleCheck)
+		}
+	}, [isCommentExpanded, review.comment])
 
 	return (
 		<Card className={style.card}>
 			<Card.Section className={style.cardSection}>
-				<Group justify='space-between'>
-					<Group>
+				<Group justify='space-between' className={style.headerRow}>
+					<Group className={style.userInfo}>
 						<Avatar variant='light' size='lg' color='brick-red.6' src='' />
-						<Box>
+						<Box className={style.userMeta}>
 							<Text>{review.UserModel.name}</Text>
-							<Text>{new Date(review.updated_at).toLocaleString()}</Text>
+							<Text size='xs' c='dimmed'>{new Date(review.updated_at).toLocaleString()}</Text>
 						</Box>
 					</Group>
 					{review.is_owner && (
 						<Menu>
 							<Menu.Target>
-								<ActionIcon variant='fullfill' size='lg' radius='xs'>
+								<ActionIcon variant='subtle' size='lg' radius='md' className={style.menuButton}>
 									<BsThreeDots size={16} />
 								</ActionIcon>
 							</Menu.Target>
@@ -82,12 +119,12 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 					)}
 				</Group>
 				{course &&
-					<AddOrEditReviewModal opened={AddOrEditReviewModalOpened} onClose={() => setAddOrEditReviewModalOpened(false)} course={course} review={selectedReview} />
+					<AddOrEditReviewModal opened={isAddOrEditReviewModalOpen} onClose={() => setIsAddOrEditReviewModalOpen(false)} course={course} review={selectedReview} />
 				}
 				{course &&
 					<ConfirmModal
-						opened={DeleteReviewModalOpened}
-						onClose={() => setDeleteReviewModalOpened(false)}
+						opened={isDeleteReviewModalOpen}
+						onClose={() => setIsDeleteReviewModalOpen(false)}
 						title='刪除評論'
 						message='確定要刪除評論嗎？一經刪除將無法復原。'
 						confirmText='刪除'
@@ -107,20 +144,45 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 			</Card.Section>
 
 			<Card.Section className={style.cardSection}>
-				<Group>
-					<Text>收穫</Text>
-					<Rating value={review.gain} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
+				<div className={style.ratingsBox}>
+					<Group className={style.ratings}>
+					<Group className={style.ratingItem}>
+						<Text>收穫</Text>
+						<Rating value={review.gain} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
+					</Group>
 
-					<Text>甜度</Text>
-					<Rating value={review.sweetness} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
+					<Group className={style.ratingItem}>
+						<Text>甜度</Text>
+						<Rating value={review.sweetness} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
+					</Group>
 
-					<Text>涼度</Text>
-					<Rating value={review.coolness} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
-				</Group>
+					<Group className={style.ratingItem}>
+						<Text>涼度</Text>
+						<Rating value={review.coolness} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
+					</Group>
+					</Group>
+				</div>
 			</Card.Section>
 
 			<Card.Section className={style.cardSection}>
-				<Text className={style.commentText}>{review.comment}</Text>
+				<div className={style.commentBlock}>
+					<Text
+						ref={commentElementRef}
+						className={`${style.commentText}${isCommentExpanded ? '' : ` ${style.commentClamp}`}`}
+					>
+						{review.comment}
+					</Text>
+					{isCommentTruncated && !isCommentExpanded && (
+						<button type='button' className={style.readMore} onClick={() => setIsCommentExpanded(true)}>
+							顯示較多
+						</button>
+					)}
+					{isCommentExpanded && (
+						<button type='button' className={style.readMore} onClick={() => setIsCommentExpanded(false)}>
+							顯示較少
+						</button>
+					)}
+				</div>
 			</Card.Section>
 		</Card>
 	)
