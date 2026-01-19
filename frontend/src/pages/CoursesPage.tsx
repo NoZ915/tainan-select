@@ -33,6 +33,9 @@ const getSortByValue = (label: SortLabel) =>
 const isSortLabel = (value: string): value is SortLabel =>
 	SORT_OPTIONS.some((option) => option.label === value)
 
+const normalizeSortBy = (value?: string): SortByValue =>
+	SORT_OPTIONS.some((option) => option.value === value) ? (value as SortByValue) : DEFAULT_SORT_BY
+
 const buildSearchParams = (queryParams: URLSearchParams): SearchParams => ({
 	page: parseInt(queryParams.get('page') || '1', 10),
 	limit: DEFAULT_LIMIT,
@@ -41,7 +44,7 @@ const buildSearchParams = (queryParams: URLSearchParams): SearchParams => ({
 	academy: queryParams.get('academy') || '',
 	department: queryParams.get('department') || '',
 	courseType: queryParams.get('courseType') || '',
-	sortBy: queryParams.get('sortBy') || DEFAULT_SORT_BY
+	sortBy: normalizeSortBy(queryParams.get('sortBy') || undefined)
 })
 
 const CoursesPage: React.FC = () => {
