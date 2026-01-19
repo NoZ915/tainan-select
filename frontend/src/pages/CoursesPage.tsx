@@ -12,6 +12,38 @@ import CourseFilter from '../components/CourseFilter'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import CourseCard from '../components/CourseCard'
 
+const SORT_OPTIONS = [
+	{ label: '評價數 高→低', value: 'reviewDesc' },
+	{ label: '收藏數 高→低', value: 'interestDesc' },
+	{ label: '觀看數 高→低', value: 'viewDesc' }
+] as const
+
+type SortByValue = typeof SORT_OPTIONS[number]['value']
+type SortLabel = typeof SORT_OPTIONS[number]['label']
+
+const DEFAULT_SORT_BY: SortByValue = 'reviewDesc'
+const DEFAULT_LIMIT = 9
+
+const getSortLabel = (sortBy?: string): SortLabel =>
+	SORT_OPTIONS.find((option) => option.value === sortBy)?.label ?? SORT_OPTIONS[0].label
+
+const getSortByValue = (label: SortLabel) =>
+	SORT_OPTIONS.find((option) => option.label === label)?.value ?? DEFAULT_SORT_BY
+
+const isSortLabel = (value: string): value is SortLabel =>
+	SORT_OPTIONS.some((option) => option.label === value)
+
+const buildSearchParams = (queryParams: URLSearchParams): SearchParams => ({
+	page: parseInt(queryParams.get('page') || '1', 10),
+	limit: DEFAULT_LIMIT,
+	search: queryParams.get('search') || '',
+	category: queryParams.get('category') || 'all',
+	academy: queryParams.get('academy') || '',
+	department: queryParams.get('department') || '',
+	courseType: queryParams.get('courseType') || '',
+	sortBy: queryParams.get('sortBy') || DEFAULT_SORT_BY
+})
+
 const CoursesPage: React.FC = () => {
 	const isMobile = useIsMobile()
 	const { search } = useLocation()
@@ -19,40 +51,16 @@ const CoursesPage: React.FC = () => {
 	const navigate = useNavigate()
 
 	const queryParams = useMemo(() => new URLSearchParams(search), [search])
-	const initialSearch = queryParams.get('search') || ''
-	const initialCategory = queryParams.get('category') || 'all'
-	const initialAcademy = queryParams.get('academy') || ''
-	const initialDepartment = queryParams.get('department') || ''
-	const initialCourseType = queryParams.get('courseType') || ''
 	const currentPage = parseInt(pageParam || '1')
-	const limit = 9
 
 	const [page, setPage] = useState(currentPage)
-	const [searchParams, setSearchParams] = useState({
-		page: page,
-		limit: limit,
-		search: initialSearch,
-		category: initialCategory,
-		academy: initialAcademy,
-		department: initialDepartment,
-		courseType: initialCourseType,
-		sortBy: ''
-	})
+	const [searchParams, setSearchParams] = useState(() => buildSearchParams(queryParams))
 
 	useEffect(() => {
-		const updatedCombinedSearchParams = {
-			page: parseInt(queryParams.get('page') || '1', 10),
-			limit: 9,
-			search: queryParams.get('search') || '',
-			category: queryParams.get('category') || 'all',
-			academy: queryParams.get('academy') || '',
-			department: queryParams.get('department') || '',
-			courseType: queryParams.get('courseType') || '',
-			sortBy: ''
-		}
+		const updatedCombinedSearchParams = buildSearchParams(queryParams)
 		setPage(updatedCombinedSearchParams.page)
 		setSearchParams(updatedCombinedSearchParams)
-		setSortOption('評價數 高→低')
+		setSortOption(getSortLabel(updatedCombinedSearchParams.sortBy))
 	}, [queryParams])
 
 	const handleClickPage = (page: number) => {
@@ -69,27 +77,21 @@ const CoursesPage: React.FC = () => {
 		if (params.academy) newQueryParams.set('academy', params.academy)
 		if (params.department) newQueryParams.set('department', params.department)
 		if (params.courseType) newQueryParams.set('courseType', params.courseType)
+		if (params.sortBy) newQueryParams.set('sortBy', params.sortBy)
 
 		navigate(`?${newQueryParams.toString()}`)
 	}
 
 	// 排序功能
-	const [sortOption, setSortOption] = useState('評價數 高→低')
+	const [sortOption, setSortOption] = useState(() => getSortLabel(buildSearchParams(queryParams).sortBy))
 	const handleSortBy = (value: string | null) => {
-		if(!value) return
+		if (!value || !isSortLabel(value)) return
+		const sortBy = getSortByValue(value)
+		const updatedParams = { ...searchParams, sortBy, page: 1 }
 		setSortOption(value)
-
-		switch(value){
-			case '評價數 高→低':
-				setSearchParams({...searchParams, sortBy: 'reviewDesc'})
-				break
-			case '收藏數 高→低':
-				setSearchParams({...searchParams, sortBy: 'interestDesc'})
-				break
-			case '觀看數 高→低':
-				setSearchParams({...searchParams, sortBy: 'viewDesc'})
-				break
-		}
+		setPage(1)
+		setSearchParams(updatedParams)
+		updateURL(updatedParams)
 	}
 
 	const { data, isLoading, isPending, error } = useGetCourses(searchParams)
@@ -130,8 +132,7 @@ const CoursesPage: React.FC = () => {
 						clearable={false}
 						checkIconPosition='right'
 						placeholder='排序方式'
-						defaultValue='評價數 高→低'
-						data={['評價數 高→低', '收藏數 高→低', '觀看數 高→低']}
+						data={SORT_OPTIONS.map((option) => option.label)}
 					/>
 				</div>
 				<Grid gutter='md' className={style.gridContainer}>
