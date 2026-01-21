@@ -51,6 +51,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
             academy: '',
             department: '',
             courseType: '',
+            sortBy: searchParams.sortBy || 'reviewDesc',
         })
     }
     const handleClick = () => {
@@ -63,6 +64,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
             academy,
             department,
             courseType,
+            sortBy: searchParams.sortBy || 'reviewDesc',
         })
     }
 
