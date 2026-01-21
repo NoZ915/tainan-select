@@ -2,7 +2,7 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { getAllReviewsByUserId } from '../../apis/reviewAPI'
 import { QUERY_KEYS } from '../queryKeys'
 
-export const useGetAllReviewasByUserId = () => {
+export const useGetAllReviewsByUserId = () => {
   return useInfiniteQuery({
     queryKey: [QUERY_KEYS.INFINITY_REVIEWS],
     queryFn: getAllReviewsByUserId,
