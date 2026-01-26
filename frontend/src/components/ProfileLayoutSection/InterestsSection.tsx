@@ -15,7 +15,7 @@ const InterestsSection: React.FC = () => {
 		isLoading,
 	} = useGetAllInterests()
 
-	const interests = useMemo(() => data?.pages?.flat() ?? [], [data])
+	const interests = useMemo(() => data?.pages?.flatMap((page) => page.items) ?? [], [data])
 
 	return (
 		<Container className={styles.container}>
@@ -25,7 +25,7 @@ const InterestsSection: React.FC = () => {
 				</Group>
 			) : interests.length === 0 ? (
 				<Text c='dimmed' ta='center' mt='md'>
-            暫無收藏
+					尚無收藏
 				</Text>
 			) : (
 				<SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing='md' verticalSpacing='md'>
@@ -40,7 +40,7 @@ const InterestsSection: React.FC = () => {
 			{hasNextPage && (
 				<Group justify='center' mt='lg'>
 					<Button variant='light' onClick={() => fetchNextPage()} loading={isFetchingNextPage}>
-            載入更多
+						載入更多
 					</Button>
 				</Group>
 			)}

@@ -15,3 +15,8 @@ export interface ToggleInterestResult{
 export type AllInterestsResponse = Interest & {
     course: Course
 }
+
+export interface InterestsListResponse {
+    items: AllInterestsResponse[];
+    count: number;
+}

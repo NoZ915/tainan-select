@@ -15,7 +15,7 @@ const ReviewsSection: React.FC = () => {
 		isLoading,
 	} = useGetAllReviewsByUserId()
 
-	const reviews = useMemo(() => data?.pages?.flat() ?? [], [data])
+	const reviews = useMemo(() => data?.pages?.flatMap((page) => page.items) ?? [], [data])
 
 	return (
 		<Container className={styles.container}>
@@ -25,7 +25,7 @@ const ReviewsSection: React.FC = () => {
 				</Group>
 			) : reviews.length === 0 ? (
 				<Text c='dimmed' ta='center' mt='md'>
-            暫無評價
+					尚無評價
 				</Text>
 			) : (
 				<Grid gutter='md' className={styles.grid} grow>

@@ -38,10 +38,10 @@ const ProfilePage: React.FC = () => {
 		isLoading: isFavoritesLoading,
 	} = useGetAllInterests()
 
-	const userReviews = useMemo(() => reviewData?.pages?.flat() ?? [], [reviewData])
-	const favoriteCourses = useMemo(() => interestData?.pages?.flat() ?? [], [interestData])
-	const favoritesCount = favoriteCourses.length
-	const reviewsCount = userReviews.length
+	const userReviews = useMemo(() => reviewData?.pages?.flatMap((page) => page.items) ?? [], [reviewData])
+	const favoriteCourses = useMemo(() => interestData?.pages?.flatMap((page) => page.items) ?? [], [interestData])
+	const favoritesCount = interestData?.pages?.[0]?.count ?? favoriteCourses.length
+	const reviewsCount = reviewData?.pages?.[0]?.count ?? userReviews.length
 
 	const handleOpenEdit = () => {
 		setDraftName(displayName)
@@ -127,7 +127,7 @@ const ProfilePage: React.FC = () => {
 							</Group>
 						) : userReviews.length === 0 ? (
 							<Text c='dimmed' ta='center'>
-                  暫無收藏
+								尚無評價
 							</Text>
 						) : (
 							<Grid gutter='md'>
@@ -158,7 +158,7 @@ const ProfilePage: React.FC = () => {
 							</Group>
 						) : favoriteCourses.length === 0 ? (
 							<Text c='dimmed' ta='center'>
-								暫無收藏
+								尚無收藏
 							</Text>
 						) : (
 							<SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing='md' verticalSpacing='md'>
