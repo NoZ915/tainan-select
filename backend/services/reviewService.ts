@@ -2,7 +2,7 @@ import db from "../models";
 import CourseRepository from "../repositories/courseRepository";
 import ReviewRepository from "../repositories/reviewRepository";
 import StatsService from "./statsService";
-import { AllReviewsResponseByUser, CreateReviewInput, ReviewsResponse } from "../types/review";
+import { CreateReviewInput, ReviewsListResponse, ReviewsResponse } from "../types/review";
 
 class CourseService {
   async getAllReviewsByCourseId(
@@ -23,8 +23,12 @@ class CourseService {
     return { reviews, hasUserReviewedCourse };
   }
 
-  async getAllReviewsByUserId(user_id: number, limit: number, offset: number): Promise<AllReviewsResponseByUser[]> {
-    return await ReviewRepository.getAllReviewsByUserId(user_id, limit, offset);
+  async getAllReviewsByUserId(user_id: number, limit: number, offset: number): Promise<ReviewsListResponse> {
+    const [items, count] = await Promise.all([
+      ReviewRepository.getAllReviewsByUserId(user_id, limit, offset),
+      ReviewRepository.getAllReviewsCountByUserId(user_id)
+    ])
+    return { items, count }
   }
 
   async upsertReview(input: CreateReviewInput): Promise<void> {

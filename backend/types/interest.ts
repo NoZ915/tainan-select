@@ -10,3 +10,8 @@ export interface Interest{
 export type AllInterestsResponse = Interest & {
     course: CourseModel
 }
+
+export interface InterestsListResponse {
+    items: AllInterestsResponse[];
+    count: number;
+}

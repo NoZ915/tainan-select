@@ -88,6 +88,12 @@ class ReviewRepository {
     return reviewsWithOwnerFlag as unknown as AllReviewsResponseByUser[];
   }
 
+  async getAllReviewsCountByUserId(user_id: number): Promise<number> {
+    return await ReviewModel.count({
+      where: { user_id }
+    })
+  }
+
   async upsertReview(input: CreateReviewInput): Promise<void> {
     const transaction = await db.sequelize.transaction();
     const existingReview = await ReviewModel.findOne({
