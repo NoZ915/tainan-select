@@ -64,7 +64,7 @@ class ReviewRepository {
       where: { user_id },
       limit,
       offset,
-      order: [['created_at', 'DESC']],
+      order: [['updated_at', 'DESC']],
       include: [
         {
           model: UserModel,
