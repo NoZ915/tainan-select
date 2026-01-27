@@ -4,6 +4,7 @@ import { generateJwtToken } from "../utils/jwt";
 import { checkAuthStatus, logoutController, statusController } from "../controllers/authController";
 
 const router: Router = express.Router();
+const isProd = process.env.NODE_ENV === "production";
 
 // google oAuth + passport
 router.get(
@@ -26,8 +27,10 @@ router.get("/google/callback", (req, res, next) => {
     const jwtToken = generateJwtToken(user);
     res.cookie("token", jwtToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: "strict",
+      secure: isProd,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.redirect(`${process.env.FRONTEND_BASE_URL}/auth/google/callback`);
