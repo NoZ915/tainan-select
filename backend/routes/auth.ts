@@ -27,7 +27,9 @@ router.get("/google/callback", (req, res, next) => {
     res.cookie("token", jwtToken, {
       httpOnly: true,
       secure: false,
-      sameSite: "strict",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.redirect(`${process.env.FRONTEND_BASE_URL}/auth/google/callback`);
