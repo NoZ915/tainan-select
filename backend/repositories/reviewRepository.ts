@@ -64,7 +64,7 @@ class ReviewRepository {
       where: { user_id },
       limit,
       offset,
-      order: [['created_at', 'DESC']],
+      order: [['updated_at', 'DESC']],
       include: [
         {
           model: UserModel,
@@ -86,6 +86,12 @@ class ReviewRepository {
     });
 
     return reviewsWithOwnerFlag as unknown as AllReviewsResponseByUser[];
+  }
+
+  async getAllReviewsCountByUserId(user_id: number): Promise<number> {
+    return await ReviewModel.count({
+      where: { user_id }
+    })
   }
 
   async upsertReview(input: CreateReviewInput): Promise<void> {

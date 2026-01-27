@@ -34,3 +34,8 @@ export type LatestReviewsResponse = ReviewsResponse & {
 export type AllReviewsResponseByUser = ReviewsResponse & {
   course: CourseModel
 }
+
+export interface ReviewsListResponse {
+  items: AllReviewsResponseByUser[];
+  count: number;
+}

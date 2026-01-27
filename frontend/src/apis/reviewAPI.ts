@@ -1,4 +1,4 @@
-import { UpsertReviewInput, ReviewsResponse, LatestReviewsResponse, AllReviewsResponseByUser } from '../types/reviewType'
+import { UpsertReviewInput, ReviewsResponse, LatestReviewsResponse, ReviewsListResponse } from '../types/reviewType'
 import { axiosInstance } from './axiosInstance'
 
 export const getAllReviewsByCourseId = async (course_id: string): Promise<{ reviews: ReviewsResponse[], hasUserReviewedCourse: boolean }> => {
@@ -6,7 +6,7 @@ export const getAllReviewsByCourseId = async (course_id: string): Promise<{ revi
     return response.data
 }
 
-export const getAllReviewsByUserId = async ({ pageParam = 0 }): Promise<AllReviewsResponseByUser[]> => {
+export const getAllReviewsByUserId = async ({ pageParam = 0 }): Promise<ReviewsListResponse> => {
     const limit = 10
     const response = await axiosInstance.get('/reviews/getAllReviewsByUserId', {
         params: { limit, offset: pageParam }

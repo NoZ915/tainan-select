@@ -1,84 +1,51 @@
-import { useEffect } from 'react'
-import { useInView } from 'react-intersection-observer'
+import { useMemo } from 'react'
 
-import { Container, Grid, Loader, Text } from '@mantine/core'
+import { Button, Container, Grid, Group, Loader, Text } from '@mantine/core'
 import styles from '../../styles/components/ProfileLayoutSection/ReviewsSection.module.css'
 import ReviewCard from '../ReviewCard'
 
-import { useGetAllReviewasByUserId } from '../../hooks/reviews/useGetAllReviewsByUserId'
-import { useIsMobile } from '../../hooks/useIsMobile'
+import { useGetAllReviewsByUserId } from '../../hooks/reviews/useGetAllReviewsByUserId'
 
 const ReviewsSection: React.FC = () => {
-	const isMobile = useIsMobile()
-
 	const {
 		data,
 		fetchNextPage,
 		hasNextPage,
-		isFetchingNextPage
-	} = useGetAllReviewasByUserId()
+		isFetchingNextPage,
+		isLoading,
+	} = useGetAllReviewsByUserId()
 
-	const { ref, inView } = useInView()
-
-	useEffect(() => {
-		if (inView && hasNextPage) {
-			fetchNextPage()
-		}
-	}, [inView, fetchNextPage, hasNextPage])
-
-	if (isMobile) {
-		return (
-			<Container className={styles.container}>
-				{data?.pages?.every(page => page.length === 0) && (
-					<Text c='dimmed' ta='center' mt='md'>
-						暫無評價
-					</Text>
-				)}
-
-				<Grid grow>
-					{data?.pages?.map((page) =>
-						page.map((review) => (
-							<Grid.Col key={review.id}>
-								<ReviewCard review={review} course={{ course: review.course }} />
-							</Grid.Col>
-						))
-					)}
-				</Grid>
-
-				{/* 觀察點，準備載入下一頁 */}
-				<div ref={ref} style={{ height: 1 }} />
-				{isFetchingNextPage && <Loader />}
-			</Container>
-		)
-	}
+	const reviews = useMemo(() => data?.pages?.flatMap((page) => page.items) ?? [], [data])
 
 	return (
-		<Container mt='md' className={styles.container}>
-			<Text className={styles.title}>個人評價</Text>
-
-			{data?.pages?.every(page => page.length === 0) && (
+		<Container className={styles.container}>
+			{isLoading ? (
+				<Group justify='center'>
+					<Loader />
+				</Group>
+			) : reviews.length === 0 ? (
 				<Text c='dimmed' ta='center' mt='md'>
-					暫無評價
+					尚無評價
 				</Text>
-			)}
-
-			<Grid gutter='md' className={styles.grid} grow>
-				{data?.pages?.map((page) =>
-					page.map((review) => (
-						<Grid.Col key={review.id}>
+			) : (
+				<Grid gutter='md' className={styles.grid} grow>
+					{reviews.map((review) => (
+						<Grid.Col key={review.id} span={{ base: 12, md: 6 }}>
 							<ReviewCard review={review} course={{ course: review.course }} />
 						</Grid.Col>
-					))
-				)}
-			</Grid>
+					))}
+				</Grid>
+			)}
 
-			{/* 觀察點，準備載入下一頁 */}
-			<div ref={ref} style={{ height: 1 }} />
-			{isFetchingNextPage && <Loader />}
-
+			{hasNextPage && (
+				<Group justify='center' mt='lg'>
+					<Button variant='light' onClick={() => fetchNextPage()} loading={isFetchingNextPage}>
+						載入更多
+					</Button>
+				</Group>
+			)}
 		</Container>
 	)
 }
-
 
 export default ReviewsSection

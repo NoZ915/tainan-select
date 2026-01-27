@@ -25,6 +25,11 @@ export type AllReviewsResponseByUser = ReviewsResponse & {
   course: Course
 }
 
+export interface ReviewsListResponse {
+  items: AllReviewsResponseByUser[];
+  count: number;
+}
+
 export interface UpsertReviewInput {
   course_id: number;
   gain: number;

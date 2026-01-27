@@ -9,6 +9,7 @@ import style from '../styles/components/ReviewCard.module.css'
 
 import { ReviewsResponse } from '../types/reviewType'
 import { Course } from '../types/courseType'
+import { useAuthStore } from '../stores/authStore'
 
 import AddOrEditReviewModal from './AddOrEditReviewModal'
 import ConfirmModal from './ConfirmModal'
@@ -20,6 +21,8 @@ interface ReviewCardProp {
 }
 
 const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
+	const { user } = useAuthStore()
+  
 	const [isAddOrEditReviewModalOpen, setIsAddOrEditReviewModalOpen] = useState(false)
 	const [isDeleteReviewModalOpen, setIsDeleteReviewModalOpen] = useState(false)
 	const [selectedReview, setSelectedReview] = useState<ReviewsResponse | null>(null)
@@ -35,9 +38,10 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 	const { mutate, isPending } = useDeleteReview()
 	const handleConfirmDelete = (review: ReviewsResponse) => {
 		if (review) {
-			mutate(review.id)
+      mutate(review.id, {
+        onSuccess: () => setIsDeleteReviewModalOpen(false),
+      })
 		}
-		setIsDeleteReviewModalOpen(false)
 	}
 
 	const handleDeleteModal = (review: ReviewsResponse) => {
@@ -79,6 +83,12 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 		}
 	}, [isCommentExpanded, review.comment])
 
+  const reviewerName =
+    review.is_owner
+      ? (user?.name ?? review.UserModel?.name ?? '匿名')
+      : (review.UserModel?.name ?? '匿名')
+
+
 	return (
 		<Card className={style.card}>
 			<Card.Section className={style.cardSection}>
@@ -86,7 +96,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 					<Group className={style.userInfo}>
 						<Avatar variant='light' size='lg' color='brick-red.6' src='' />
 						<Box className={style.userMeta}>
-							<Text>{review.UserModel.name}</Text>
+							<Text>{reviewerName}</Text>
 							<Text size='xs' c='dimmed'>{new Date(review.updated_at).toLocaleString()}</Text>
 						</Box>
 					</Group>
@@ -130,7 +140,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 						confirmText='刪除'
 						cancelText='取消'
 						loading={isPending}
-						onConfirm={() => handleConfirmDelete(review)}
+          onConfirm={() => selectedReview && handleConfirmDelete(selectedReview)}
 					/>
 				}
 			</Card.Section>

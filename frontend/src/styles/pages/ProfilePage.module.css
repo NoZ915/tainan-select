@@ -1,5 +1,108 @@
 .container {
-	margin-top: 2rem;
 	max-width: 1200px;
 	text-align: left;
+}
+
+.headerCard {
+	border: 1px solid #e0e0e0;
+	border-radius: 16px;
+	padding: 24px;
+	background: linear-gradient(135deg, #fff6f0 0%, #ffffff 70%);
+}
+
+.headerTop {
+	display: flex;
+	gap: 20px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.avatar {
+	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.headerContent {
+	flex: 1;
+	min-width: 220px;
+}
+
+.nameRow {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.displayName {
+	font-size: 1.5rem;
+	font-weight: 700;
+}
+
+.statsRow {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	margin-top: 12px;
+}
+
+.statItem {
+	display: flex;
+	flex-direction: column;
+	min-width: 90px;
+}
+
+.statValue {
+	font-size: 1.25rem;
+	font-weight: 700;
+}
+
+.statLabel {
+	font-size: 0.85rem;
+	color: #6b6b6b;
+}
+
+.statDivider {
+	width: 1px;
+	height: 32px;
+	background: #e0e0e0;
+}
+
+.contentCard {
+	border: 1px solid #e0e0e0;
+	border-radius: 16px;
+	padding: 24px;
+	margin-top: 20px;
+	background: #ffffff;
+}
+
+.tabsList {
+	gap: 12px;
+	border-bottom: 1px solid #f0f0f0;
+}
+
+.favoriteCardItem {
+	text-align: center;
+}
+
+.editModal h2 {
+	font-size: 1.5rem;
+	font-weight: 700;
+}
+
+@media (max-width: 768px) {
+	.headerCard,
+	.contentCard {
+		padding: 18px;
+	}
+
+	.headerTop {
+		align-items: flex-start;
+	}
+
+	.statsRow {
+		gap: 12px;
+	}
+
+	.displayName {
+		font-size: 1.25rem;
+	}
 }
