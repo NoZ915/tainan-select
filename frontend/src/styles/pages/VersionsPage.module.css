@@ -1,0 +1,101 @@
+﻿.page {
+  padding-top: 20px;
+  padding-bottom: 28px;
+}
+
+.header {
+  margin-bottom: 8px;
+}
+
+.subtleText {
+  max-width: 680px;
+  margin-inline: auto;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  border: 2px solid black;
+  border-radius: 0;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.contentHeader {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.badgesBox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.titleBlock {
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.meta {
+  margin-top: 3px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.versionBadge {
+  align-self: flex-start;
+  border: 1px solid var(--mantine-color-brick-red-2);
+  background: var(--mantine-color-brick-red-0);
+  color: var(--mantine-color-brick-red-7);
+}
+
+.kindBadge {
+  text-transform: lowercase;
+  font-weight: 700;
+}
+
+.summary {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #1f2937;
+}
+
+@media (max-width: 640px) {
+  .item {
+    flex-direction: column;
+  }
+
+  .content {
+    padding: 14px 16px 16px;
+  }
+}

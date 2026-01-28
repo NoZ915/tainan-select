@@ -1,9 +1,10 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { FaAngleDown } from 'react-icons/fa'
 
 import { useIsMobile } from '../hooks/useIsMobile'
 
-import { Group, Text, Box, Container, Image, Burger, Drawer } from '@mantine/core'
+import { Group, Text, Box, Container, Image, Burger, Drawer, Menu, ActionIcon } from '@mantine/core'
 import styles from '../styles/components/Header.module.css'
 
 import AuthButton from './AuthButton'
@@ -20,10 +21,30 @@ const Header: React.FC = () => {
     { label: '常用', path: '/frequent' },
   ]
 
+  const aboutMenu = (
+    <Menu shadow='md' width={220} position='bottom-end' withinPortal zIndex={1300}>
+      <Menu.Target>
+        <ActionIcon
+          variant='subtle'
+          color='dark'
+          aria-label='更多資訊'
+          className={styles.secondaryIcon}
+        >
+          <FaAngleDown size={18} />
+        </ActionIcon>
+      </Menu.Target>
+      <Menu.Dropdown className={styles.menuDropdown}>
+        <Menu.Item component={Link} to='/versions'>
+          版本紀錄
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
+  )
+
   if (isMobile) {
     return (
       <header className={styles.header}>
-        <Box className={styles.navBox} >
+        <Box className={styles.navBox}>
           <Group gap='sm'>
             <Burger opened={opened} onClick={() => setOpened((openStatus) => !openStatus)} size='md' />
             <Link to='/'>
@@ -45,6 +66,14 @@ const Header: React.FC = () => {
               </Link>
             ))}
             <AuthButton className={styles.mobileAuthButton} onClick={() => setOpened(false)} />
+            <Text
+              component={Link}
+              to='/versions'
+              onClick={() => setOpened(false)}
+              className={styles.mobileSecondaryLink}
+            >
+              版本紀錄
+            </Text>
           </nav>
         </Drawer>
       </header>
@@ -71,7 +100,10 @@ const Header: React.FC = () => {
             ))}
           </Group>
         </Box>
-        <AuthButton className={styles.authButton} />
+        <Group gap='xs' className={styles.actionsGroup}>
+          <AuthButton className={styles.authButton} />
+          {aboutMenu}
+        </Group>
       </Container>
     </header>
   )

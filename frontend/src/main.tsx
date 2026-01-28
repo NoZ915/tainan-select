@@ -1,4 +1,4 @@
-import { createRoot } from 'react-dom/client'
+﻿import { createRoot } from 'react-dom/client'
 import { createHead, UnheadProvider } from '@unhead/react/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MantineProvider } from '@mantine/core'
@@ -20,6 +20,7 @@ import FrequentPage from './pages/FrequentPage.tsx'
 import OAuthCallbackPage from './pages/OAuthCallbackPage.tsx'
 import MailErrorPage from './pages/MailErrorPage.tsx'
 import ProfilePage from './pages/ProfilePage.tsx'
+import VersionsPage from './pages/VersionsPage.tsx'
 import ProtectedRoute from './pages/ProtectedRoute.tsx'
 
 const head = createHead()
@@ -31,25 +32,57 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       // 首頁 / 課程列表
-      { index: true, 
+      {
+        index: true,
         element: <CoursesPage />,
-        handle: { seo: { title: ({ search }: { search: string }) => buildCoursesListTitle(search) } }
+        handle: {
+          seo: {
+            title: ({ search }: { search: string }) => buildCoursesListTitle(search),
+          },
+        },
       },
-
+      
       // 其他頁面
-      { path: 'mailError', element: <MailErrorPage />, handle: { seo: { title: buildTitleStatic('信箱驗證失敗') } } },
-      { path: 'auth/google/callback', element: <OAuthCallbackPage />, handle: { seo: { title: buildTitleStatic('登入中') } } },
-
-      { path: 'course/:course_id', element: <CourseDetailPage />, handle: { seo: { title: buildTitleStatic('課程詳情') } } },
-
-      { path: 'dynamic', element: <DynamicPage />, handle: { seo: { title: buildTitleStatic('動態') } } },
-      { path: 'frequent', element: <FrequentPage />, handle: { seo: { title: buildTitleStatic('常用連結') } } },
+      {
+        path: 'mailError',
+        element: <MailErrorPage />,
+        handle: { seo: { title: buildTitleStatic('信箱驗證失敗') } },
+      },
+      {
+        path: 'auth/google/callback',
+        element: <OAuthCallbackPage />,
+        handle: { seo: { title: buildTitleStatic('登入中') } },
+      },
+      {
+        path: 'course/:course_id',
+        element: <CourseDetailPage />,
+        handle: { seo: { title: buildTitleStatic('課程詳細資訊') } },
+      },
+      {
+        path: 'dynamic',
+        element: <DynamicPage />,
+        handle: { seo: { title: buildTitleStatic('動態') } },
+      },
+      {
+        path: 'frequent',
+        element: <FrequentPage />,
+        handle: { seo: { title: buildTitleStatic('常用連結') } },
+      },
+      {
+        path: 'versions',
+        element: <VersionsPage />,
+        handle: { seo: { title: buildTitleStatic('版本更新紀錄') } },
+      },
 
       // 受保護的 route（未登入無法瀏覽）
       {
         element: <ProtectedRoute />,
         children: [
-          { path: 'profile', element: <ProfilePage />, handle: { seo: { title: buildTitleStatic('個人頁') } } },
+          {
+            path: 'profile',
+            element: <ProfilePage />,
+            handle: { seo: { title: buildTitleStatic('個人頁面') } },
+          },
         ],
       },
     ],
