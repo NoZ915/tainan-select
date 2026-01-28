@@ -66,12 +66,30 @@
 .authButton {
   display: flex;
   align-items: center;
-  margin-top: 10px;
+  margin-top: 0;
 }
 
 .authButton a {
   padding: 10px;
   font-weight: 700;
+}
+
+.actionsGroup {
+  align-items: center;
+  margin-top: 10px;
+}
+
+.secondaryIcon {
+  color: #4b5563;
+}
+
+.secondaryIcon:hover {
+  background-color: #33333314;
+  color: #1f2937;
+}
+
+.menuDropdown {
+  border: 2px solid black;
 }
 
 /* 手機端 */
@@ -105,4 +123,19 @@
 .mobileAuthButton a {
   padding: 10px;
   font-weight: 700;
+}
+
+.mobileSecondaryLink {
+  margin-top: auto;
+  padding: 12px 10px 4px;
+  text-decoration: none;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 600;
+  align-self: flex-start;
+}
+
+.mobileSecondaryLink:hover {
+  color: #4b5563;
+  text-decoration: underline;
 }
