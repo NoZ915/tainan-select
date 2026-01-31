@@ -31,6 +31,7 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
+    errorElement: <NotFoundPage />,
     children: [
       // 首頁 / 課程列表
       {
