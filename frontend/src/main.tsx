@@ -22,6 +22,7 @@ import MailErrorPage from './pages/MailErrorPage.tsx'
 import ProfilePage from './pages/ProfilePage.tsx'
 import VersionsPage from './pages/VersionsPage.tsx'
 import ProtectedRoute from './pages/ProtectedRoute.tsx'
+import NotFoundPage from './pages/NotFoundPage.tsx'
 
 const head = createHead()
 const queryClient = new QueryClient()
@@ -85,6 +86,7 @@ const router = createBrowserRouter([
           },
         ],
       },
+      { path: '*', element: <NotFoundPage />, handle: { seo: { title: buildTitleStatic('找不到頁面') } } },
     ],
   },
 ])
