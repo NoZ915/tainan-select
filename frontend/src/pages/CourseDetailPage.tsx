@@ -101,15 +101,17 @@ const CourseDetailPage: React.FC = () => {
           <div style={{ marginTop: '2rem' }}>
             <CourseReviewsPanel course={courseResponse} reviews={reviews} isLoading={isReviewsLoading} />
           </div>
-          <ActionIcon
-            size='xl'
-            radius='xl'
-            className={styles.actionIcon}
-            onClick={handleActionClick}
-            disabled={Boolean(course && reviews?.hasUserReviewedCourse)}
-          >
-            <FaPlus size={24} />
-          </ActionIcon>
+          {course && (
+            <ActionIcon
+              size='xl'
+              radius='xl'
+              className={styles.actionIcon}
+              onClick={handleActionClick}
+              disabled={Boolean(reviews?.hasUserReviewedCourse)}
+            >
+              <FaPlus size={24} />
+            </ActionIcon>
+          )}
         </Container>
 
         <LoginModal opened={loginModalOpened} onClose={() => setLoginModalOpened(false)} title='請先登入或註冊' />
@@ -134,20 +136,22 @@ const CourseDetailPage: React.FC = () => {
         <div style={{ flex: '2' }}>
           <CourseReviewsPanel course={courseResponse} reviews={reviews} isLoading={isReviewsLoading} />
         </div>
-        <Tooltip
-          label={course && reviews?.hasUserReviewedCourse ? '已經對這門課程發表過評價，請直接編輯評價' : '新增評價'}
-          position='top'
-        >
-          <ActionIcon
-            size='xl'
-            radius='xl'
-            className={styles.actionIcon}
-            onClick={handleActionClick}
-            disabled={Boolean(course && reviews?.hasUserReviewedCourse)} // 根據 hasUserReviewedCourse 禁用
+        {course && (
+          <Tooltip
+            label={reviews?.hasUserReviewedCourse ? '已評價過此課程' : '新增評價'}
+            position='top'
           >
-            <FaPlus size={24} />
-          </ActionIcon>
-        </Tooltip>
+            <ActionIcon
+              size='xl'
+              radius='xl'
+              className={styles.actionIcon}
+              onClick={handleActionClick}
+              disabled={Boolean(reviews?.hasUserReviewedCourse)} // 根據 hasUserReviewedCourse 禁用
+            >
+              <FaPlus size={24} />
+            </ActionIcon>
+          </Tooltip>
+        )}// 根據 hasUserReviewedCourse 禁用
       </Container>
 
       <LoginModal opened={loginModalOpened} onClose={() => setLoginModalOpened(false)} title='請先登入或註冊' />
