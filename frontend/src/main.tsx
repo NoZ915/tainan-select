@@ -3,7 +3,7 @@ import { createHead, UnheadProvider } from '@unhead/react/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MantineProvider } from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 
 import '@mantine/core/styles.css'
 import '@mantine/notifications/styles.css'
@@ -86,7 +86,8 @@ const router = createBrowserRouter([
           },
         ],
       },
-      { path: '*', element: <NotFoundPage />, handle: { seo: { title: buildTitleStatic('找不到頁面') } } },
+      { path: '404', element: <NotFoundPage />, handle: { seo: { title: buildTitleStatic('找不到頁面') } } },
+      { path: '*', element: <Navigate to="/404" replace /> },
     ],
   },
 ])
