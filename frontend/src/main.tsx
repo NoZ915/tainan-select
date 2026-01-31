@@ -88,7 +88,7 @@ const router = createBrowserRouter([
         ],
       },
       { path: '404', element: <NotFoundPage />, handle: { seo: { title: buildTitleStatic('找不到頁面') } } },
-      { path: '*', element: <Navigate to="/404" replace /> },
+      { path: '*', element: <Navigate to='/404' replace /> },
     ],
   },
 ])
