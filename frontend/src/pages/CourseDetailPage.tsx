@@ -146,12 +146,13 @@ const CourseDetailPage: React.FC = () => {
               radius='xl'
               className={styles.actionIcon}
               onClick={handleActionClick}
-              disabled={Boolean(reviews?.hasUserReviewedCourse)} // 根據 hasUserReviewedCourse 禁用
+              // 根據 hasUserReviewedCourse 禁用
+              disabled={Boolean(reviews?.hasUserReviewedCourse)} 
             >
               <FaPlus size={24} />
             </ActionIcon>
           </Tooltip>
-        )}// 根據 hasUserReviewedCourse 禁用
+        )}
       </Container>
 
       <LoginModal opened={loginModalOpened} onClose={() => setLoginModalOpened(false)} title='請先登入或註冊' />
