@@ -91,7 +91,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 
   const reviewerAvatar =
     review.is_owner
-      ? (user?.avatar ?? review.UserModel?.avatar ?? null)
+      ? (user ? (user.avatar ?? null) : (review.UserModel?.avatar ?? null))
       : (review.UserModel?.avatar ?? null)
   const avatarSrc = getAvatarSrc(reviewerAvatar)
 

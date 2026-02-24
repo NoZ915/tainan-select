@@ -14,7 +14,7 @@ const useUpdateUserBase = (successMessage: string) => {
     onSuccess: ({ name, avatar }) => {
       const latestUser = useAuthStore.getState().user
       if (latestUser) {
-        login({ ...latestUser, name, avatar: avatar ?? undefined })
+        login({ ...latestUser, name, avatar })
       }
 
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INFINITY_REVIEWS] })
