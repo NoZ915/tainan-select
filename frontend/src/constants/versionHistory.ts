@@ -11,6 +11,14 @@ export type VersionEntry = {
 // Keep this list in reverse-chronological order (newest first).
 export const VERSION_HISTORY: VersionEntry[] = [
   {
+    version: 'v1.10.0',
+    releasedAt: '2026-02-24',
+    kind: 'feat',
+    title: '個人頭像功能上線',
+    summary:
+      '個人頁現在可以選擇預設頭像，也能移除頭貼，浪費時間在這種沒用的地方 QQ 但網頁應該有更繽紛點...',
+  },
+  {
     version: 'v1.9.4',
     releasedAt: '2026-02-07',
     kind: 'enhancement',
