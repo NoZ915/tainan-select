@@ -19,7 +19,12 @@ export const updateUser: RequestHandler = async (req, res): Promise<void> => {
       return;
     }
 
-    if (avatar && typeof avatar === "string" && hasInvalidPath(avatar)) {
+    if (avatar !== undefined && avatar !== null && typeof avatar !== "string") {
+      res.status(400).json({ message: "Invalid avatar type" });
+      return;
+    }
+
+    if (typeof avatar === "string" && hasInvalidPath(avatar)) {
       res.status(400).json({ message: "Invalid avatar format" });
       return;
     }
