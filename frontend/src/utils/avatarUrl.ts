@@ -4,9 +4,9 @@ const getAvatarBaseUrl = (): string => {
     .replace(/\/api$/, '')
 }
 
-export const getAvatarSrc = (avatar?: string | null): string => {
+export const getAvatarSrc = (avatar?: string | null): string | null => {
   if (!avatar) {
-    return ''
+    return null
   }
 
   return `${getAvatarBaseUrl()}/avatars/${avatar}`
