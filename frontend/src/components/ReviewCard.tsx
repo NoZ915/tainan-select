@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 
 import { Link } from 'react-router-dom'
 import { ActionIcon, Avatar, Box, Card, Group, Menu, Rating, Text } from '@mantine/core'
@@ -14,6 +14,7 @@ import { useAuthStore } from '../stores/authStore'
 import AddOrEditReviewModal from './AddOrEditReviewModal'
 import ConfirmModal from './ConfirmModal'
 import { useDeleteReview } from '../hooks/reviews/useDeleteReview'
+import { getAvatarSrc } from '../utils/avatarUrl'
 
 interface ReviewCardProp {
 	review: ReviewsResponse,
@@ -88,13 +89,19 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
       ? (user?.name ?? review.UserModel?.name ?? '匿名')
       : (review.UserModel?.name ?? '匿名')
 
+  const reviewerAvatar =
+    review.is_owner
+      ? (user ? (user.avatar ?? null) : (review.UserModel?.avatar ?? null))
+      : (review.UserModel?.avatar ?? null)
+  const avatarSrc = getAvatarSrc(reviewerAvatar)
+
 
 	return (
 		<Card className={style.card}>
 			<Card.Section className={style.cardSection}>
 				<Group justify='space-between' className={style.headerRow}>
 					<Group className={style.userInfo}>
-						<Avatar variant='light' size='lg' color='brick-red.6' src='' />
+						<Avatar variant='light' size='lg' color='brick-red.6' src={avatarSrc} />
 						<Box className={style.userMeta}>
 							<Text>{reviewerName}</Text>
 							<Text size='xs' c='dimmed'>{new Date(review.updated_at).toLocaleString()}</Text>
@@ -136,11 +143,11 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 						opened={isDeleteReviewModalOpen}
 						onClose={() => setIsDeleteReviewModalOpen(false)}
 						title='刪除評論'
-						message='確定要刪除評論嗎？一經刪除將無法復原。'
+            message='確定要刪除評論嗎？一經刪除將無法復原。'
 						confirmText='刪除'
 						cancelText='取消'
 						loading={isPending}
-          onConfirm={() => selectedReview && handleConfirmDelete(selectedReview)}
+						onConfirm={() => selectedReview && handleConfirmDelete(selectedReview)}
 					/>
 				}
 			</Card.Section>

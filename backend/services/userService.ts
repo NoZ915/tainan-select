@@ -1,6 +1,7 @@
 import userRepository from "../repositories/userRepository";
 import StatsService from "./statsService";
 import { generateTainanCharacterName } from "../utils/tainanDiceMaster";
+import { isAvatarAvailable } from "../utils/avatarFiles";
 
 class UserService {
     async getUserByGoogleSub(google_sub: string) {
@@ -42,13 +43,43 @@ class UserService {
         }
     }
 
-    async updateUser(user_id: number, name: string): Promise<string> {
-        const existingUser = await userRepository.getUserByNameExceptId(name, user_id);
-        if (existingUser) {
-            throw new Error("NAME_ALREADY_EXISTS");
+    async updateUser(
+        user_id: number,
+        payload: { name?: string; avatar?: string | null }
+    ): Promise<{ name: string; avatar: string | null }> {
+        const { name, avatar } = payload;
+
+        if (name !== undefined) {
+            const existingUser = await userRepository.getUserByNameExceptId(name, user_id);
+            if (existingUser) {
+                throw new Error("NAME_ALREADY_EXISTS");
+            }
         }
-        await userRepository.updateUser(user_id, name);
-        return name;
+
+        if (avatar !== undefined && avatar !== null) {
+            const available = await isAvatarAvailable(avatar);
+            if (!available) {
+                throw new Error("AVATAR_NOT_FOUND");
+            }
+        }
+
+        const updates: { name?: string; avatar?: string | null } = {};
+        if (name !== undefined) {
+            updates.name = name;
+        }
+        if (avatar !== undefined) {
+            updates.avatar = avatar;
+        }
+
+        const user = await userRepository.updateUser(user_id, updates);
+        if (!user) {
+            throw new Error("USER_NOT_FOUND");
+        }
+
+        return {
+            name: user.name ?? "",
+            avatar: user.avatar ?? null,
+        };
     }
 }
 
