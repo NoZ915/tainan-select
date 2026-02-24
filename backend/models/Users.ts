@@ -13,7 +13,7 @@ class UserModel extends Model<
   declare google_sub: string;
   declare name?: string;
   declare detail?: string;
-  declare avatar?: string;
+  declare avatar?: string | null;
   declare whitelist_id?: number | null;
   declare created_at: Date;
   declare updated_at: Date;

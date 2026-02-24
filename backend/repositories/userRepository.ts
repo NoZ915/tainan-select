@@ -19,10 +19,16 @@ class UserRepository {
         });
     }
 
-    async updateUser(user_id: number, name: string): Promise<string> {
+    async updateUser(
+        user_id: number,
+        updates: { name?: string; avatar?: string | null }
+    ): Promise<UserModel | null> {
         const user = await UserModel.findOne({ where: { id: user_id } });
-        await user?.update({ name });
-        return user?.name ?? "";
+        if (!user) {
+            return null;
+        }
+        await user.update(updates);
+        return user;
     }
 
     async getAllUsersCount(): Promise<number> {
