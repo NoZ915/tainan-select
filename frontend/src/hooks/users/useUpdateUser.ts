@@ -5,16 +5,16 @@ import { updateUser } from '../../apis/userAPI'
 import { useAuthStore } from '../../stores/authStore'
 import { QUERY_KEYS } from '../queryKeys'
 
-export const useUpdateUser = () => {
+const useUpdateUserBase = (successMessage: string) => {
   const login = useAuthStore((state) => state.login)
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (name: string) => updateUser(name),
-    onSuccess: (name) => {
+    mutationFn: updateUser,
+    onSuccess: ({ name, avatar }) => {
       const latestUser = useAuthStore.getState().user
       if (latestUser) {
-        login({ ...latestUser, name })
+        login({ ...latestUser, name, avatar: avatar ?? undefined })
       }
 
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INFINITY_REVIEWS] })
@@ -22,7 +22,7 @@ export const useUpdateUser = () => {
 
       notifications.show({
         title: '更新成功',
-        message: '已更新個人名稱',
+        message: successMessage,
         color: 'green',
       })
     },
@@ -37,3 +37,7 @@ export const useUpdateUser = () => {
     },
   })
 }
+
+export const useUpdateUserName = () => useUpdateUserBase('已更新個人名稱')
+
+export const useUpdateUserAvatar = () => useUpdateUserBase('已更新頭像')
