@@ -44,6 +44,23 @@ class InterestRepository {
       where: { user_id }
     })
   }
+
+  async getAllInterestsByUserId(user_id: number): Promise<AllInterestsResponse[]> {
+    const interests = await InterestModel.findAll({
+      where: { user_id },
+      order: [["created_at", "DESC"]],
+      include: [
+        {
+          model: CourseModel,
+          as: "course",
+          required: true,
+          attributes: ["id", "semester", "course_name", "instructor"],
+        },
+      ],
+    });
+
+    return interests as unknown as AllInterestsResponse[];
+  }
 }
 
 export default new InterestRepository();

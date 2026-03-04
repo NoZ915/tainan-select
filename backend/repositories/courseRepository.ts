@@ -110,6 +110,16 @@ class CourseRepository {
     return academyList;
   }
 
+  async getAllSemesters(): Promise<string[]> {
+    const semesters = await CourseModel.findAll({
+      attributes: [[db.Sequelize.fn("DISTINCT", db.Sequelize.col("semester")), "semester"]],
+      raw: true,
+    });
+    return semesters
+      .map((item: { semester: string }) => item.semester)
+      .filter((semester): semester is string => Boolean(semester));
+  }
+
   // NOTE: 暫時移除此功能
   async getMostCuriousButUnreviewedCourses(): Promise<Course[]> {
     // 想了解程度 ÷ 評論數 = 被大量收藏或瀏覽、但評論數很少的課程
