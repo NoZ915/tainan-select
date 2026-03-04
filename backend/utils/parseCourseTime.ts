@@ -1,10 +1,10 @@
-const periodOrderMap: Record<string, number> = {
-  "1": 1, "2": 2, "3": 3, "4": 4, "5": 5,
-  "6": 6, "7": 7, "8": 8, "9": 9,
-  "A": 10, "B": 11, "C": 12, "D": 13, "E": 14, "F": 15, "G": 16
-};
+const PERIOD_ORDER = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G"] as const;
+const PERIOD_ORDER_MAP: Record<string, number> = PERIOD_ORDER.reduce<Record<string, number>>((acc, period, index) => {
+  acc[period] = index + 1;
+  return acc;
+}, {});
 
-const dayMap: Record<string, number> = {
+const DAY_MAP: Record<string, number> = {
   "一": 1,
   "二": 2,
   "三": 3,
@@ -15,10 +15,36 @@ const dayMap: Record<string, number> = {
 };
 
 interface CourseScheduleParsed {
-  day: number;         // 星期幾（數字 1~7 -> 存進DB用）
-  startPeriod: string; // 節次字串（可能是數字或字母）
-  span: number;        // 節數長度
+  day: number;
+  startPeriod: string;
+  span: number;
 }
+
+const PERIOD_SEPARATORS = new Set(["、", "，", ",", "/", "-", "~"]);
+
+const extractLeadingPeriodTokens = (sectionAfterMarker: string): string[] => {
+  const source = sectionAfterMarker.trim().toUpperCase();
+
+  // Require a valid period token at the beginning; this avoids notes like "第10週".
+  if (!/^[1-9A-G]/.test(source)) return [];
+
+  const tokens: string[] = [];
+  for (const ch of source) {
+    if (PERIOD_ORDER_MAP[ch]) {
+      tokens.push(ch);
+      continue;
+    }
+
+    if (PERIOD_SEPARATORS.has(ch)) {
+      continue;
+    }
+
+    // Stop at the first non-period/non-separator char (annotation boundary).
+    break;
+  }
+
+  return tokens.filter((token, index, arr) => index === 0 || token !== arr[index - 1]);
+};
 
 export const normalizeCourseTime = (courseTime?: string): string => {
   if (!courseTime) return "";
@@ -34,19 +60,10 @@ export const normalizeCourseTime = (courseTime?: string): string => {
       const dayMatch = chunk.match(/星期([一二三四五六日])/);
       if (!dayMatch) return "";
 
-      const sectionAfterPeriod = chunk.includes("節次") ? chunk.split("節次")[1] : "";
-      const firstToken = sectionAfterPeriod.match(/^([1-9A-G])/i)?.[1]?.toUpperCase();
-      const standaloneTokens =
-        (sectionAfterPeriod.match(/(^|[^A-Za-z])([1-9A-G])(?=[^A-Za-z]|$)/gi) || [])
-          .map((token) => token.replace(/[^1-9A-G]/gi, "").toUpperCase())
-          .filter(Boolean);
-      const mergedTokens = [...(firstToken ? [firstToken] : []), ...standaloneTokens];
-      const periodTokens = mergedTokens.filter((token, index, array) => {
-        if (index === 0) return true;
-        return token !== array[index - 1];
-      });
-
+      const sectionAfterMarker = chunk.includes("節次") ? chunk.split("節次")[1] : "";
+      const periodTokens = extractLeadingPeriodTokens(sectionAfterMarker);
       if (periodTokens.length === 0) return "";
+
       return `星期${dayMatch[1]}，節次${periodTokens.join("、")}`;
     })
     .filter(Boolean);
@@ -58,7 +75,6 @@ export const parseCourseTime = (courseTime?: string): CourseScheduleParsed[] => 
   const normalizedCourseTime = normalizeCourseTime(courseTime);
   if (!normalizedCourseTime) return [];
 
-  // 支援多天（用全形或半形分號分隔）
   const chunks = normalizedCourseTime
     .split(/[；;]/)
     .map((c) => c.trim())
@@ -67,27 +83,28 @@ export const parseCourseTime = (courseTime?: string): CourseScheduleParsed[] => 
   const schedules: CourseScheduleParsed[] = [];
 
   chunks.forEach((chunk) => {
-    // 格式：「星期X，節次6、7、A...」
-    const match = chunk.match(/^星期(.+?)，節次(.+)$/);
+    const match = chunk.match(/^星期([一二三四五六日])，節次([1-9A-G](?:、[1-9A-G])*)$/i);
     if (!match) return;
 
-    const dayStr = match[1]; // 例如 "四"
-    const day = dayMap[dayStr];
-    if (!day) return; // 避免無效的星期
-    const periodsStr = match[2];
-    const periods = periodsStr.split("、").map((p) => p.trim());
+    const day = DAY_MAP[match[1]];
+    if (!day) return;
 
-    if (periods.length > 0) {
-      const start = periodOrderMap[periods[0]];
-      const end = periodOrderMap[periods[periods.length - 1]];
-      const span = (end - start) + 1;
+    const periods = match[2]
+      .split("、")
+      .map((p) => p.trim().toUpperCase())
+      .filter((p) => Boolean(PERIOD_ORDER_MAP[p]));
 
-      schedules.push({
-        day,
-        startPeriod: periods[0],
-        span
-      });
-    }
+    if (periods.length === 0) return;
+
+    const start = PERIOD_ORDER_MAP[periods[0]];
+    const end = PERIOD_ORDER_MAP[periods[periods.length - 1]];
+    if (!start || !end || end < start) return;
+
+    schedules.push({
+      day,
+      startPeriod: periods[0],
+      span: (end - start) + 1,
+    });
   });
 
   return schedules;
