@@ -1,27 +1,28 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ActionIcon, Alert, Badge, Button, Group, Modal, Paper, Select, Stack, Table, Text, Tooltip } from '@mantine/core'
+import { ActionIcon, Alert, Badge, Group, Paper, Select, Stack, Table, Text, Tooltip } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useQueryClient } from '@tanstack/react-query'
 import { FaPlus } from 'react-icons/fa'
 import { FaTrashAlt } from 'react-icons/fa'
 
-import periodTimeMap from '../utils/periodTimeMap'
-import { useAuthStore } from '../stores/authStore'
-import { useGetSemesters } from '../hooks/semesters/useGetSemesters'
-import { useGetTimetable } from '../hooks/timetables/useGetTimetable'
-import { useRemoveTimetableCourse } from '../hooks/timetables/useRemoveTimetableCourse'
-import { useAddTimetableCourse } from '../hooks/timetables/useAddTimetableCourse'
-import { useGetTimetableInterestOptions } from '../hooks/timetables/useGetTimetableInterestOptions'
-import { useGetAllTimetableItems } from '../hooks/timetables/useGetAllTimetableItems'
-import { TimetableConflict, TimetableItem } from '../types/timetableType'
-import { addTimetableCourse, removeTimetableCourse } from '../apis/timetableAPI'
-import { ApiError } from '../apis/axiosInstance'
-import { QUERY_KEYS } from '../hooks/queryKeys'
+import periodTimeMap from '../../utils/periodTimeMap'
+import { useAuthStore } from '../../stores/authStore'
+import { useGetSemesters } from '../../hooks/semesters/useGetSemesters'
+import { useGetTimetable } from '../../hooks/timetables/useGetTimetable'
+import { useRemoveTimetableCourse } from '../../hooks/timetables/useRemoveTimetableCourse'
+import { useAddTimetableCourse } from '../../hooks/timetables/useAddTimetableCourse'
+import { useGetTimetableInterestOptions } from '../../hooks/timetables/useGetTimetableInterestOptions'
+import { useGetAllTimetableItems } from '../../hooks/timetables/useGetAllTimetableItems'
+import { TimetableConflict, TimetableItem } from '../../types/timetableType'
+import { addTimetableCourse, removeTimetableCourse } from '../../apis/timetableAPI'
+import { ApiError } from '../../apis/axiosInstance'
+import { QUERY_KEYS } from '../../hooks/queryKeys'
 
-import styles from '../styles/components/Timetable.module.css'
+import styles from '../../styles/components/Timetable.module.css'
+import SwapConflictModal from './SwapConflictModal'
 
-type Weekday = "一" | "二" | "三" | "四" | "五" | "六" | "日"
+type Weekday = '一' | '二' | '三' | '四' | '五' | '六' | '日'
 type PeriodKey = keyof typeof periodTimeMap
 
 type GridCell = {
@@ -34,13 +35,13 @@ type GridCell = {
 type TimetableGrid = Record<PeriodKey, Partial<Record<number, GridCell[]>>>
 
 const weekdays: { label: Weekday; value: number }[] = [
-  { label: "一", value: 1 },
-  { label: "二", value: 2 },
-  { label: "三", value: 3 },
-  { label: "四", value: 4 },
-  { label: "五", value: 5 },
-  { label: "六", value: 6 },
-  { label: "日", value: 7 },
+  { label: '一', value: 1 },
+  { label: '二', value: 2 },
+  { label: '三', value: 3 },
+  { label: '四', value: 4 },
+  { label: '五', value: 5 },
+  { label: '六', value: 6 },
+  { label: '日', value: 7 },
 ]
 
 const periodOrder = Object.keys(periodTimeMap) as PeriodKey[]
@@ -267,40 +268,18 @@ const Timetable: React.FC = () => {
 
   return (
     <Stack gap='md'>
-      <Modal
+      <SwapConflictModal
         opened={isSwapDialogOpened}
+        targetCourse={swapTargetCourse}
+        conflicts={swapConflicts}
+        addedCourseNameMap={addedCourseNameMap}
+        isSubmitting={isSwapSubmitting}
         onClose={() => {
           setIsSwapDialogOpened(false)
           setSwapContext(null)
         }}
-        title='偵測到衝堂，是否交換課程？'
-        centered
-        zIndex={1300}
-        radius='md'
-        padding='lg'
-      >
-        <Stack gap='xs'>
-          <Text size='sm'>
-            你要加入「{swapTargetCourse?.name ?? '-'}」時，會和下列已排課程衝堂：
-          </Text>
-          {Array.from(new Set(swapConflicts.map((item) => item.conflictWithCourseId))).map((conflictCourseId) => (
-            <Text key={conflictCourseId} size='sm' c='dimmed'>
-              - <Text component={Link} to={`/course/${conflictCourseId}`} span inherit>{addedCourseNameMap.get(conflictCourseId) ?? `課程 ${conflictCourseId}`}</Text>
-            </Text>
-          ))}
-          <Text size='sm'>
-            確定要移除衝堂課程並加入新課嗎？
-          </Text>
-          <Group justify='flex-end' mt='sm'>
-            <Button variant='light' onClick={() => setIsSwapDialogOpened(false)} disabled={isSwapSubmitting}>
-              取消
-            </Button>
-            <Button variant='filled' color='red' onClick={handleConfirmSwap} loading={isSwapSubmitting}>
-              交換課程
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
+        onConfirm={handleConfirmSwap}
+      />
 
       <Paper withBorder p='md' radius='md'>
         <div className={styles.toolbar}>
@@ -522,3 +501,4 @@ const Timetable: React.FC = () => {
 }
 
 export default Timetable
+

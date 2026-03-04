@@ -1,5 +1,5 @@
-import { Container } from '@mantine/core'
-import Timetable from '../components/Timetable'
+﻿import { Container } from '@mantine/core'
+import Timetable from '../components/TimetableSection/Timetable'
 
 const TimetablePage: React.FC = () => {
   return (
@@ -10,3 +10,4 @@ const TimetablePage: React.FC = () => {
 }
 
 export default TimetablePage
+
