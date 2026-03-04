@@ -17,7 +17,7 @@ import { useDeleteReview } from '../hooks/reviews/useDeleteReview'
 
 import { useGetReactionPresets } from '../hooks/reactions/useGetReactionPresets'
 import { useToggleReviewReaction } from '../hooks/reactions/useToggleReviewReaction'
-import { getAvatarSrc } from '../utils/avatarUrl'
+import { getAvatarSrc, getStaticAssetSrc } from '../utils/avatarUrl'
 
 interface ReviewCardProp {
 	review: ReviewsResponse,
@@ -277,7 +277,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 								disabled={!user || isTogglingReaction}
 							>
 								{preset?.type === 'image' && preset.imagePath ? (
-									<img src={preset.imagePath} alt={preset.label} className={style.reactionImage} />
+									<img src={getStaticAssetSrc(preset.imagePath) ?? undefined} alt={preset.label} className={style.reactionImage} />
 								) : (
 									<span className={style.reactionEmoji}>{getReactionDisplay(preset, key)}</span>
 								)}
@@ -309,7 +309,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 										disabled={isTogglingReaction}
 									>
 										{preset.type === 'image' && preset.imagePath ? (
-											<img src={preset.imagePath} alt={preset.label} className={style.reactionImage} />
+											<img src={getStaticAssetSrc(preset.imagePath) ?? undefined} alt={preset.label} className={style.reactionImage} />
 										) : (
 											<span className={style.reactionEmoji}>{getReactionDisplay(preset, preset.key)}</span>
 										)}
