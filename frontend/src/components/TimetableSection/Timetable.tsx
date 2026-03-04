@@ -1,7 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Alert, Paper, Stack, Text } from '@mantine/core'
-import { notifications } from '@mantine/notifications'
 import { useQueryClient } from '@tanstack/react-query'
 
 import periodTimeMap from '../../utils/periodTimeMap'
@@ -174,14 +173,7 @@ const Timetable: React.FC = () => {
         setSwapConflicts(errorData.conflicts)
         setSwapContext({ timetableId, semester: selectedSemester })
         setIsSwapDialogOpened(true)
-        return
       }
-
-      notifications.show({
-        title: '加入失敗',
-        message: typedError.message,
-        color: 'red',
-      })
     }
   }
 
