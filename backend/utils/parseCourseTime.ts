@@ -75,6 +75,7 @@ export const parseCourseTime = (courseTime?: string): CourseScheduleParsed[] => 
   const normalizedCourseTime = normalizeCourseTime(courseTime);
   if (!normalizedCourseTime) return [];
 
+  // 支援多天（用全形或半形分號分隔）
   const chunks = normalizedCourseTime
     .split(/[；;]/)
     .map((c) => c.trim())
@@ -82,6 +83,7 @@ export const parseCourseTime = (courseTime?: string): CourseScheduleParsed[] => 
 
   const schedules: CourseScheduleParsed[] = [];
 
+  // 格式：「星期X，節次6、7、A...」
   chunks.forEach((chunk) => {
     const match = chunk.match(/^星期([一二三四五六日])，節次([1-9A-G](?:、[1-9A-G])*)$/i);
     if (!match) return;
