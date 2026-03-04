@@ -14,7 +14,7 @@ import { useRemoveTimetableCourse } from '../../hooks/timetables/useRemoveTimeta
 import { useAddTimetableCourse } from '../../hooks/timetables/useAddTimetableCourse'
 import { useGetTimetableInterestOptions } from '../../hooks/timetables/useGetTimetableInterestOptions'
 import { useGetAllTimetableItems } from '../../hooks/timetables/useGetAllTimetableItems'
-import { TimetableConflict, TimetableItem } from '../../types/timetableType'
+import { AddedCourseItem, TimetableConflict, TimetableItem } from '../../types/timetableType'
 import { addTimetableCourse, removeTimetableCourse } from '../../apis/timetableAPI'
 import { ApiError } from '../../apis/axiosInstance'
 import { QUERY_KEYS } from '../../hooks/queryKeys'
@@ -43,6 +43,8 @@ const weekdays: { label: Weekday; value: number }[] = [
   { label: '六', value: 6 },
   { label: '日', value: 7 },
 ]
+const EMPTY_TIMETABLE_ITEMS: TimetableItem[] = []
+const EMPTY_ADDED_ITEMS: AddedCourseItem[] = []
 
 const periodOrder = Object.keys(periodTimeMap) as PeriodKey[]
 const periodIndexMap = periodOrder.reduce<Record<string, number>>((acc, period, index) => {
@@ -110,8 +112,8 @@ const Timetable: React.FC = () => {
   const [swapConflicts, setSwapConflicts] = useState<TimetableConflict[]>([])
   const [swapContext, setSwapContext] = useState<{ timetableId: number; semester: string } | null>(null)
 
-  const items = timetableData?.items ?? []
-  const allAddedItems = allAddedItemsData?.items ?? []
+  const items = timetableData?.items ?? EMPTY_TIMETABLE_ITEMS
+  const allAddedItems = allAddedItemsData?.items ?? EMPTY_ADDED_ITEMS
   const addedItemsInSelectedSemester = useMemo(() => {
     if (!selectedSemester) return []
     return allAddedItems.filter((item) => item.semester === selectedSemester)
