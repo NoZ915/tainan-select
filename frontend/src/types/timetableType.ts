@@ -72,3 +72,9 @@ export interface AddTimetableCourseResponse {
   }
   conflicts: TimetableConflict[]
 }
+
+export interface SwapTimetableCourseResponse {
+  added: boolean
+  alreadyExists: boolean
+  removedCourseIds: number[]
+}

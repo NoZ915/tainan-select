@@ -13,7 +13,7 @@ import { useAddTimetableCourse } from '../../hooks/timetables/useAddTimetableCou
 import { useGetTimetableInterestOptions } from '../../hooks/timetables/useGetTimetableInterestOptions'
 import { useGetAllTimetableItems } from '../../hooks/timetables/useGetAllTimetableItems'
 import { AddedCourseItem, TimetableConflict, TimetableItem } from '../../types/timetableType'
-import { addTimetableCourse, removeTimetableCourse } from '../../apis/timetableAPI'
+import { swapTimetableCourse } from '../../apis/timetableAPI'
 import { ApiError } from '../../apis/axiosInstance'
 import { QUERY_KEYS } from '../../hooks/queryKeys'
 
@@ -188,27 +188,29 @@ const Timetable: React.FC = () => {
   const handleConfirmSwap = async () => {
     if (!swapContext || !swapTargetCourse) return
 
-    const conflictCourseIds = Array.from(new Set(swapConflicts.map((item) => item.conflictWithCourseId)))
-
     try {
       setIsSwapSubmitting(true)
 
-      for (const conflictCourseId of conflictCourseIds) {
-        await removeTimetableCourse(swapContext.timetableId, conflictCourseId)
-      }
-
-      await addTimetableCourse(swapContext.timetableId, swapTargetCourse.id)
+      const result = await swapTimetableCourse(swapContext.timetableId, swapTargetCourse.id)
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TIMETABLE, swapContext.semester] }),
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TIMETABLE_ALL_ITEMS] }),
       ])
 
-      notifications.show({
-        title: '已完成交換',
-        message: `已移除 ${conflictCourseIds.length} 門衝堂課，並加入 ${swapTargetCourse.name}`,
-        color: 'green',
-      })
+      if (result.alreadyExists) {
+        notifications.show({
+          title: '課程已在課表中',
+          message: `${swapTargetCourse.name} 已存在，未調整原有課表。`,
+          color: 'blue',
+        })
+      } else {
+        notifications.show({
+          title: '已完成交換',
+          message: `已移除 ${result.removedCourseIds.length} 門衝堂課，並加入 ${swapTargetCourse.name}`,
+          color: 'green',
+        })
+      }
 
       setIsSwapDialogOpened(false)
       setSwapTargetCourse(null)

@@ -1,5 +1,11 @@
 import { axiosInstance } from './axiosInstance'
-import { AddTimetableCourseResponse, AddedCourseItem, BatchAddFromInterestsResponse, TimetableResponse } from '../types/timetableType'
+import {
+  AddTimetableCourseResponse,
+  AddedCourseItem,
+  BatchAddFromInterestsResponse,
+  SwapTimetableCourseResponse,
+  TimetableResponse
+} from '../types/timetableType'
 
 export const getTimetableBySemester = async (semester: string): Promise<TimetableResponse> => {
   const response = await axiosInstance.get('/timetables', {
@@ -25,4 +31,9 @@ export const addTimetableCourse = async (timetableId: number, courseId: number):
 
 export const removeTimetableCourse = async (timetableId: number, courseId: number): Promise<void> => {
   await axiosInstance.delete(`/timetables/${timetableId}/items/${courseId}`)
+}
+
+export const swapTimetableCourse = async (timetableId: number, courseId: number): Promise<SwapTimetableCourseResponse> => {
+  const response = await axiosInstance.post(`/timetables/${timetableId}/items/swap`, { courseId })
+  return response.data
 }
