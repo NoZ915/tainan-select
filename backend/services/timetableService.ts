@@ -204,8 +204,7 @@ class TimetableService {
       throw new TimetableServiceError(400, "semester 不能為空");
     }
 
-    const existing = await TimetableRepository.findByUserAndSemester(userId, trimmedSemester);
-    const timetable = existing ?? await TimetableRepository.create(userId, trimmedSemester);
+    const timetable = await TimetableRepository.findOrCreateByUserAndSemester(userId, trimmedSemester);
     return await this.buildTimetableResponse(timetable.id, timetable.semester);
   }
 
