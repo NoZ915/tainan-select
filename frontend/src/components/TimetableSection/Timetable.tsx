@@ -1,10 +1,8 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ActionIcon, Alert, Badge, Group, Paper, Select, Stack, Table, Text, Tooltip } from '@mantine/core'
+import { Alert, Paper, Stack, Text } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useQueryClient } from '@tanstack/react-query'
-import { FaPlus } from 'react-icons/fa'
-import { FaTrashAlt } from 'react-icons/fa'
 
 import periodTimeMap from '../../utils/periodTimeMap'
 import { useAuthStore } from '../../stores/authStore'
@@ -19,22 +17,15 @@ import { addTimetableCourse, removeTimetableCourse } from '../../apis/timetableA
 import { ApiError } from '../../apis/axiosInstance'
 import { QUERY_KEYS } from '../../hooks/queryKeys'
 
-import styles from '../../styles/components/Timetable.module.css'
 import SwapConflictModal from './SwapConflictModal'
+import TimetableHeader from './TimetableHeader'
+import TimetableCourseLists from './TimetableCourseLists'
+import TimetableGridTable from './TimetableGridTable'
+import { SelectableInterestCourse, TimetableGrid, Weekday, WeekdayOption } from './types'
 
-type Weekday = '一' | '二' | '三' | '四' | '五' | '六' | '日'
 type PeriodKey = keyof typeof periodTimeMap
 
-type GridCell = {
-  courseId: number
-  courseName: string
-  instructor: string
-  room?: string
-}
-
-type TimetableGrid = Record<PeriodKey, Partial<Record<number, GridCell[]>>>
-
-const weekdays: { label: Weekday; value: number }[] = [
+const weekdays: WeekdayOption[] = [
   { label: '一', value: 1 },
   { label: '二', value: 2 },
   { label: '三', value: 3 },
@@ -125,7 +116,7 @@ const Timetable: React.FC = () => {
     [items],
   )
   const existingCourseIdSet = useMemo(() => new Set(items.map((item) => item.course.id)), [items])
-  const selectableInterestCourses = useMemo(() => {
+  const selectableInterestCourses = useMemo<SelectableInterestCourse[]>(() => {
     if (!selectedSemester) return []
     return interestOptionsData
       .map((item) => item.course)
@@ -167,7 +158,7 @@ const Timetable: React.FC = () => {
     return map
   }, [allAddedItems])
 
-  const handleAddCourse = async (course: { id: number; course_name: string }) => {
+  const handleAddCourse = async (course: SelectableInterestCourse) => {
     if (!timetableId || !selectedSemester) return
     try {
       await addCourseMutation.mutateAsync({
@@ -284,133 +275,33 @@ const Timetable: React.FC = () => {
       />
 
       <Paper withBorder p='md' radius='md'>
-        <div className={styles.toolbar}>
-          <div className={styles.toolbarLeft}>
-            <Text fw={700}>學期課表</Text>
-            <Text c='dimmed' size='sm'>
-              課表只顯示選定學期，並限制只能加入同學期的收藏課程。
-            </Text>
-          </div>
-          <Group align='center' gap='sm'>
-            <Text size='sm' fw={600}>排課學期</Text>
-            <Select
-              className={styles.semesterSelect}
-              placeholder='選擇學期'
-              data={semesterOptions}
-              value={selectedSemester}
-              onChange={setSelectedSemester}
-              allowDeselect={false}
-              disabled={isSwapDialogOpened}
-              aria-label='排課學期'
-            />
-          </Group>
-        </div>
+        <TimetableHeader
+          semesterOptions={semesterOptions}
+          selectedSemester={selectedSemester}
+          onSemesterChange={setSelectedSemester}
+          isDisabled={isSwapDialogOpened}
+          itemsCount={items.length}
+          selectableCount={selectableInterestCourses.length}
+          missingTimeslotCount={missingTimeslotCountInCurrentSemester}
+        />
 
-        <Group mt='sm' gap='xs'>
-          <Badge variant='light' color='red'>
-            已排課程 {items.length}
-          </Badge>
-          <Badge variant='light' color='green'>
-            可加入收藏課 {selectableInterestCourses.length}
-          </Badge>
-          <Badge variant='light' color={missingTimeslotCountInCurrentSemester > 0 ? 'orange' : 'gray'}>
-            缺時段課程 {missingTimeslotCountInCurrentSemester}
-          </Badge>
-        </Group>
-
-        <div className={styles.listGrid}>
-          <div className={`${styles.listPanel} ${styles.favoritePanel}`}>
-            <Group justify='space-between' mb='xs'>
-              <Text fw={600}>本學期收藏（可加入）</Text>
-              <Badge variant='light' color='green'>{selectableInterestCourses.length}</Badge>
-            </Group>
-            {selectableInterestCourses.length === 0 ? (
-              <Text size='sm' c='dimmed'>這個學期沒有可加入的收藏課程，或都已加入課表。</Text>
-            ) : (
-              <Stack gap={0}>
-                {selectableInterestCourses.map((course) => (
-                  <div key={course.id} className={styles.listRow}>
-                    <Link to={`/course/${course.id}`} className={styles.courseInfoLink}>
-                      <div className={styles.courseInfoBlock}>
-                        <Text size='sm' fw={600} ta='left'>
-                          {course.course_name}
-                        </Text>
-                        <Text size='xs' c='dimmed' ta='left'>
-                          {[course.instructor, course.semester, course.course_room].filter(Boolean).join('・')}
-                        </Text>
-                        <Text size='xs' c='dimmed' ta='left'>{course.course_time}</Text>
-                      </div>
-                    </Link>
-                    <Tooltip label='加入課表'>
-                      <ActionIcon
-                        color='green'
-                        variant='light'
-                        loading={addCourseMutation.isPending}
-                        onClick={() => {
-                          void handleAddCourse(course)
-                        }}
-                      >
-                        <FaPlus size={14} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </div>
-                ))}
-              </Stack>
-            )}
-          </div>
-
-          <div className={`${styles.listPanel} ${styles.addedPanel}`}>
-            <Group justify='space-between' mb='xs'>
-              <Text fw={600}>已加入課程</Text>
-              <Badge variant='light' color='red'>{addedItemsInSelectedSemester.length}</Badge>
-            </Group>
-            {addedItemsInSelectedSemester.length === 0 ? (
-              <Text size='sm' c='dimmed'>目前此學期課表沒有課程。</Text>
-            ) : (
-              <Stack gap={0}>
-                {addedItemsInSelectedSemester.map((item) => (
-                  <div key={`${item.timetableId}-${item.course.id}`} className={styles.listRow}>
-                    <Link to={`/course/${item.course.id}`} className={styles.courseInfoLink}>
-                      <div className={styles.courseInfoBlock}>
-                        <Group gap='xs'>
-                          <Text size='sm' fw={600} ta='left'>
-                            {item.course.name}
-                          </Text>
-                          {!item.hasTimeslots && (
-                            <Badge size='xs' color='orange' variant='light'>
-                              缺時段
-                            </Badge>
-                          )}
-                        </Group>
-                        <Text size='xs' c='dimmed' ta='left'>
-                          {[item.course.instructor, item.semester, item.course.room].filter(Boolean).join('・')}
-                        </Text>
-                        <Text size='xs' c='dimmed' ta='left'>{item.course.courseTime}</Text>
-                      </div>
-                    </Link>
-                    <Tooltip label='從課表移除'>
-                      <ActionIcon
-                        color='red'
-                        variant='light'
-                        loading={removeCourseMutation.isPending}
-                        onClick={() => {
-                          if (!selectedSemester) return
-                          removeCourseMutation.mutate({
-                            timetableId: item.timetableId,
-                            courseId: item.course.id,
-                            semester: selectedSemester,
-                          })
-                        }}
-                      >
-                        <FaTrashAlt size={14} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </div>
-                ))}
-              </Stack>
-            )}
-          </div>
-        </div>
+        <TimetableCourseLists
+          selectableInterestCourses={selectableInterestCourses}
+          addedItemsInSelectedSemester={addedItemsInSelectedSemester}
+          isAdding={addCourseMutation.isPending}
+          isRemoving={removeCourseMutation.isPending}
+          onAddCourse={(course) => {
+            void handleAddCourse(course)
+          }}
+          onRemoveCourse={(item) => {
+            if (!selectedSemester) return
+            removeCourseMutation.mutate({
+              timetableId: item.timetableId,
+              courseId: item.course.id,
+              semester: selectedSemester,
+            })
+          }}
+        />
       </Paper>
 
       {conflicts.length > 0 && (
@@ -441,66 +332,13 @@ const Timetable: React.FC = () => {
         </Alert>
       )}
 
-      <Paper withBorder p='md' radius='md'>
-        <div className={styles.tableScroll}>
-          <Table striped highlightOnHover className={styles.timetableTable}>
-            <thead>
-              <tr>
-                <th>時間＼星期</th>
-                {weekdaysToRender.map((day) => (
-                  <th key={day.value}>星期{day.label}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {periodOrder.map((period) => (
-                <tr key={period}>
-                  <td className={styles.timeColumn}>
-                    <Text size='sm' fw={600}>
-                      第{period}節
-                    </Text>
-                    <Text size='xs' c='dimmed'>
-                      {periodTimeMap[period]}
-                    </Text>
-                  </td>
-                  {weekdaysToRender.map((day) => {
-                    const slotCourses = grid[period]?.[day.value] ?? []
-                    const hasConflict = slotCourses.length > 1
-                    return (
-                      <td key={`${period}-${day.value}`} className={hasConflict ? styles.conflictCell : styles.normalCell}>
-                        {slotCourses.length === 0 ? (
-                          <Text c='dimmed' size='xs'>-</Text>
-                        ) : (
-                          <Stack gap={4}>
-                            {slotCourses.map((course) => (
-                              <Link
-                                key={`${course.courseId}-${course.courseName}`}
-                                to={`/course/${course.courseId}`}
-                                className={styles.tableCourseLink}
-                              >
-                                <Text size='sm' fw={500}>
-                                  {course.courseName}
-                                </Text>
-                                <Text size='xs' c='dimmed'>
-                                  {[course.instructor, course.room].filter(Boolean).join('・')}
-                                </Text>
-                              </Link>
-                            ))}
-                          </Stack>
-                        )}
-                      </td>
-                    )
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </div>
-      </Paper>
-
+      <TimetableGridTable
+        periodOrder={periodOrder}
+        weekdaysToRender={weekdaysToRender}
+        grid={grid}
+      />
     </Stack>
   )
 }
 
 export default Timetable
-
