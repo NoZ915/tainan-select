@@ -21,6 +21,29 @@
 	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
+.avatarWrapper {
+	position: relative;
+	display: inline-flex;
+}
+
+.avatarEditButton {
+	position: absolute;
+	right: -10px;
+	bottom: -10px;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.avatarEditButton,
+.nameEditButton {
+	background-color: #fff4ef;
+	border: 1px solid #f2c0a7;
+}
+
+.avatarEditButton:hover,
+.nameEditButton:hover {
+	background-color: #fde6dc;
+}
+
 .headerContent {
 	flex: 1;
 	min-width: 220px;
@@ -86,6 +109,38 @@
 .editModal h2 {
 	font-size: 1.5rem;
 	font-weight: 700;
+}
+
+.avatarOption {
+	border: 1px solid transparent;
+	background: transparent;
+	padding: 6px;
+	border-radius: 999px;
+	cursor: pointer;
+	transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.avatarOptionDefault {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 68px;
+}
+
+.avatarOption:hover {
+	border-color: #f2c0a7;
+	transform: translateY(-2px);
+}
+
+.avatarOptionActive {
+	border-color: #d86b4b;
+	background: #fff4ef;
+}
+
+.avatarGrid {
+	margin-top: 12px;
+	justify-items: center;
+	justify-content: center;
 }
 
 @media (max-width: 768px) {

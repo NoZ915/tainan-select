@@ -14,7 +14,7 @@ const Footer: React.FC = () => {
             <Group gap='xs'>
               <ActionIcon
                 component='a'
-                href='https://www.instagram.com/nutnselect/profilecard/?igsh=MWQ4eWdhcTBrMnNuMA=='
+                href='https://www.instagram.com/nutnselect'
                 target='_blank'
                 rel='noopener noreferrer'
                 variant='subtle'
@@ -25,7 +25,7 @@ const Footer: React.FC = () => {
               </ActionIcon>
               <Text
                 component='a'
-                href='https://www.instagram.com/nutnselect/profilecard/?igsh=MWQ4eWdhcTBrMnNuMA=='
+                href='https://www.instagram.com/nutnselect'
                 target='_blank'
                 rel='noopener noreferrer'
                 size='sm'

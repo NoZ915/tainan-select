@@ -1,6 +1,8 @@
 import "dotenv/config";
 import cors from "cors";
 import express, { Express, Request, Response, NextFunction } from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 import passport from 'passport';
 import path from "path";
@@ -30,6 +32,12 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(passport.initialize());
 app.use("/reactions", express.static(path.join(__dirname, "public", "reactions")));
+
+// 頭貼
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const avatarDir = path.resolve(__dirname, "public", "avatars");
+app.use("/avatars", express.static(avatarDir));
 
 // routes
 app.use("/api/auth", authRoutes)

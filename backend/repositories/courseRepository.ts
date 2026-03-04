@@ -46,21 +46,29 @@ class CourseRepository {
 
     // 排序功能
     let order: any[] = [];
+    let primarySort: "reviewDesc" | "interestDesc" | "viewDesc" | "default" = "default";
     switch(search?.sortBy){
       case "reviewDesc":
         order.push(["review_count", "desc"]);
+        primarySort = "reviewDesc";
         break;
       case "interestDesc":
         order.push(["interests_count", "desc"]);
+        primarySort = "interestDesc";
         break;
       case "viewDesc":
         order.push(["view_count", "desc"]);
+        primarySort = "viewDesc";
         break;
       default:
         order.push(["review_count", "desc"]);
+        primarySort = "reviewDesc";
         break;
     }
-    order.push(["updated_at", "desc"]);
+    if (primarySort !== "interestDesc") {
+      order.push(["interests_count", "desc"]);
+    }
+    order.push(["created_at", "desc"]);
 
     const [courses, total] = await Promise.all([
       CourseModel.findAll({ where: whereCondition, limit, offset, order }),
