@@ -6,7 +6,8 @@ import * as cheerio from "cheerio";
 import db from "../models";
 import Course from "../models/Course";
 import { googleRequestCURL } from "./googleRequestCURL";
-import { parseCourseTime } from "../utils/parseCourseTime";
+import { normalizeCourseTime, parseCourseTime } from "../utils/parseCourseTime";
+import { normalizeCourseType } from "../utils/normalizeCourseType";
 import CourseScheduleModel from "../models/CourseSchedule";
 
 const courses: string[] = [];
@@ -161,9 +162,11 @@ async function runScraper(): Promise<void> {
           const coursePage$ = cheerio.load(res.data);
 
           // 抓取課程頁面中的資料
-          const courseTime = coursePage$("#Label10").text();
+          const rawCourseTime = coursePage$("#Label10").text();
+          const courseTime = normalizeCourseTime(rawCourseTime);
           const courseRoom = coursePage$("#Label11").text();
-          const courseType = coursePage$("#Label16").text();
+          const rawCourseType = coursePage$("#Label16").text();
+          const courseType = normalizeCourseType(rawCourseType);
 
           const existingCourse = await Course.findOne({
             where: {
