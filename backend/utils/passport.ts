@@ -1,6 +1,17 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import userService from "../services/userService";
+import whitelistService from "../services/whitelistService";
+
+function normalizeEmail(email: unknown) {
+  return String(email ?? "").trim().toLowerCase();
+}
+
+function isSchoolDomain(email: string) {
+  const allowed = String(process.env.ALLOWED_EMAIL_DOMAIN ?? "").trim().toLowerCase();
+  const emailDomain = email.split("@")[1] ?? "";
+  return emailDomain === allowed;
+}
 
 passport.use(
   new GoogleStrategy({
@@ -10,21 +21,31 @@ passport.use(
   },
     async (accessToken: string, refreshToken: string, profile: any, done: any) => {
       try {
-        const sub = profile._json.sub;
-        const email = profile._json.email;
+        const sub = profile?._json?.sub ?? profile?.id;
+        const email = normalizeEmail(profile?._json?.email);
 
-        if (!email?.endsWith(process.env.ALLOWED_EMAIL_DOMAIN)) {
-          return done(null, false, { message: 'Email domain not allowed' });
+        if (!sub) {
+          return done(null, false);
+        }
+
+        const schoolOk = isSchoolDomain(email);
+
+        let whitelistRow = null;
+        if (!schoolOk) {
+          whitelistRow = await whitelistService.getWhitelistByEmail(email);
+          if (!whitelistRow) {
+            return done(null, false);
+          }
         }
 
         let user = await userService.getUserByGoogleSub(sub);
         if (!user) {
-          user = await userService.createUser(sub);
+          user = await userService.createUser(sub, whitelistRow?.id ?? null);
         }
 
-        done(null, user);
+        return done(null, user);
       } catch (err) {
-        done(err, false);
+        return done(err, false);
       }
     })
 )

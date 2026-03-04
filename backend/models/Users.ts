@@ -13,7 +13,8 @@ class UserModel extends Model<
   declare google_sub: string;
   declare name?: string;
   declare detail?: string;
-  declare avatar?: string;
+  declare avatar?: string | null;
+  declare whitelist_id?: number | null;
   declare created_at: Date;
   declare updated_at: Date;
 }
@@ -38,12 +39,17 @@ UserModel.init(
     },
     name: {
       type: DataTypes.STRING(100),
+      unique: true,
     },
     detail: {
       type: DataTypes.TEXT,
     },
     avatar: {
       type: DataTypes.STRING(255),
+    },
+    whitelist_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     created_at: {
       type: DataTypes.DATE,

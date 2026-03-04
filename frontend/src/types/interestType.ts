@@ -1,4 +1,4 @@
-import { Course } from "./courseType"
+import { Course } from './courseType'
 
 export interface Interest{
     id: number,
@@ -14,4 +14,9 @@ export interface ToggleInterestResult{
 
 export type AllInterestsResponse = Interest & {
     course: Course
+}
+
+export interface InterestsListResponse {
+    items: AllInterestsResponse[];
+    count: number;
 }

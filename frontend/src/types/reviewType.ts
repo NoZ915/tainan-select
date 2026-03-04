@@ -1,4 +1,4 @@
-import { Course } from "./courseType";
+import { Course } from './courseType'
 
 export interface ReviewsResponse {
   id: number,
@@ -23,6 +23,11 @@ export type LatestReviewsResponse = ReviewsResponse & {
 }
 export type AllReviewsResponseByUser = ReviewsResponse & {
   course: Course
+}
+
+export interface ReviewsListResponse {
+  items: AllReviewsResponseByUser[];
+  count: number;
 }
 
 export interface UpsertReviewInput {

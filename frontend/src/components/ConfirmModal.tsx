@@ -1,4 +1,4 @@
-import { Button, Group, Modal, Text } from "@mantine/core";
+import { Button, Group, Modal, Text } from '@mantine/core'
 
 interface DeleteReviewModalProps {
   opened: boolean;
@@ -14,9 +14,9 @@ interface DeleteReviewModalProps {
 const ConfirmModal: React.FC<DeleteReviewModalProps> = ({ 
   opened,
   onClose,
-  title = "確認動作",
-  message = "確定要執行此動作嗎？",
-  confirmText = "確認",
+  title = '確認動作',
+  message = '確定要執行此動作嗎？',
+  confirmText = '確認',
   cancelText,
   onConfirm,
   loading = false,
@@ -25,17 +25,17 @@ const ConfirmModal: React.FC<DeleteReviewModalProps> = ({
   return (
     <Modal centered opened={opened} onClose={onClose} title={title} zIndex={1100}>
       <Text>{message}</Text>
-      <Group justify="flex-end" mt="md">
+      <Group justify='flex-end' mt='md'>
         {cancelText && 
-        <Button variant="light" onClick={onClose}>
+        <Button variant='light' onClick={onClose}>
           {cancelText}
         </Button>}
-        <Button variant="filled" color="red" onClick={onConfirm} loading={loading}>
+        <Button variant='filled' color='red' onClick={onConfirm} loading={loading}>
           {confirmText}
         </Button>
       </Group>
     </Modal>
-  );
+  )
 }
 
-export default ConfirmModal;
+export default ConfirmModal

@@ -1,6 +1,16 @@
-import { axiosInstance } from "./axiosInstance";
+import { axiosInstance } from './axiosInstance'
 
-export const updateUser = async (name: string): Promise<string> => {
-  const response = await axiosInstance.patch(`/users/updateUser`, { name });
-  return response.data;
+export interface UpdateUserPayload {
+  name?: string
+  avatar?: string | null
+}
+
+export interface UpdateUserResponse {
+  name: string
+  avatar: string | null
+}
+
+export const updateUser = async (payload: UpdateUserPayload): Promise<UpdateUserResponse> => {
+  const response = await axiosInstance.patch('/users/updateUser', payload)
+  return response.data
 }

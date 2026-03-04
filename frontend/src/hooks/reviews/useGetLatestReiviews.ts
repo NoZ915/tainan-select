@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query"
-import { QUERY_KEYS } from "../queryKeys"
-import { getLatestReviews } from "../../apis/reviewAPI"
+import { useQuery } from '@tanstack/react-query'
+import { QUERY_KEYS } from '../queryKeys'
+import { getLatestReviews } from '../../apis/reviewAPI'
 
 export const useGetLatestReviews = () => {
     return useQuery({

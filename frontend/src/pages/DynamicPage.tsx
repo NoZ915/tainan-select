@@ -1,14 +1,14 @@
-import { Container } from "@mantine/core";
-import LatestReviewsPanel from "../components/LatestReviewsPanel";
-import MostPopularCoursesPanel from "../components/MostPopularCoursesPanel";
+import { Container } from '@mantine/core'
+import LatestReviewsPanel from '../components/LatestReviewsPanel'
+import PlatformStatsPanel from '../components/PlatformStatsPanel'
 
 const DynamicPage: React.FC = () => {
     return(
-        <Container mt="0.5rem">
-            <MostPopularCoursesPanel />
+        <Container mt='0.5rem'>
+            <PlatformStatsPanel />
             <LatestReviewsPanel />
         </Container>
     )
 }
 
-export default DynamicPage;
+export default DynamicPage

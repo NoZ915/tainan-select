@@ -83,6 +83,7 @@ export const getCourse: RequestHandler = async (req, res): Promise<void> => {
   }
 };
 
+// NOTE: 暫時移除此功能
 export const getMostCuriousButUnreviewedCourses: RequestHandler = async (
   req,
   res

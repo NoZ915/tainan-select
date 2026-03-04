@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query"
-import { QUERY_KEYS } from "../queryKeys"
-import { getAcademies } from "../../apis/courseAPI"
+import { useQuery } from '@tanstack/react-query'
+import { QUERY_KEYS } from '../queryKeys'
+import { getAcademies } from '../../apis/courseAPI'
 
 export const useGetAcademies = () => {
     return useQuery({

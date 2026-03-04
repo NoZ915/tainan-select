@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query"
-import { QUERY_KEYS } from "../queryKeys"
-import { checkAuthStatus } from "../../apis/authAPI"
+import { useQuery } from '@tanstack/react-query'
+import { QUERY_KEYS } from '../queryKeys'
+import { checkAuthStatus } from '../../apis/authAPI'
 
 export const useCheckAuthStatus = () => {
     return useQuery({

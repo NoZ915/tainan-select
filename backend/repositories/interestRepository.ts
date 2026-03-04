@@ -38,6 +38,12 @@ class InterestRepository {
 
     return interests as unknown as AllInterestsResponse[];
   }
+
+  async getAllInterestsCount(user_id: number): Promise<number> {
+    return await InterestModel.count({
+      where: { user_id }
+    })
+  }
 }
 
 export default new InterestRepository();

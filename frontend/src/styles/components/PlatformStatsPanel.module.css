@@ -1,0 +1,63 @@
+.container {
+  margin: 0 auto;
+  max-width: 800px;
+  padding-inline: 0;
+  margin-bottom: 20px;
+}
+
+.statCard {
+  border: 2px solid black;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: statEnter 420ms ease-out forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes statEnter {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.iconPop {
+  animation: iconPop 520ms cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+  will-change: transform;
+}
+
+@keyframes iconPop {
+  0% {
+    transform: scale(0.92);
+  }
+
+  60% {
+    transform: scale(1.06);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.label {
+  font-size: 14px;
+}
+
+.value {
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+@media (max-width: 768px) {
+  .statCard {
+    padding: 10px;
+  }
+
+  .label {
+    font-size: 12px;
+  }
+
+  .value {
+    font-size: 20px;
+  }
+}

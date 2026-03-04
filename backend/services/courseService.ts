@@ -29,6 +29,7 @@ class CourseService {
     return await CourseRepository.getAllAcademies();
   }
 
+  // NOTE: 暫時移除此功能
   async getMostCuriousButUnreviewedCourses(): Promise<Course[]>{
     return await CourseRepository.getMostCuriousButUnreviewedCourses();
   }

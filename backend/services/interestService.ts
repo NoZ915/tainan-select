@@ -1,7 +1,7 @@
 import db from "../models";
 import CourseRepository from "../repositories/courseRepository";
 import InterestRepository from "../repositories/interestRepository";
-import { Interest } from "../types/interest";
+import { InterestsListResponse } from "../types/interest";
 
 interface ToggleInterestResult {
 	isInterest: boolean,
@@ -40,8 +40,12 @@ class InterestService {
 		}
 	}
 
-	async getAllInterests(user_id: number, limit: number, offset: number): Promise<Interest[]> {
-		return await InterestRepository.getAllInterests(user_id, limit, offset);
+	async getAllInterests(user_id: number, limit: number, offset: number): Promise<InterestsListResponse> {
+		const [items, count] = await Promise.all([
+			InterestRepository.getAllInterests(user_id, limit, offset),
+			InterestRepository.getAllInterestsCount(user_id)
+		])
+		return { items, count }
 	}
 }
 

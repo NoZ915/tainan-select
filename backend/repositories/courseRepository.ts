@@ -46,20 +46,29 @@ class CourseRepository {
 
     // 排序功能
     let order: any[] = [];
+    let primarySort: "reviewDesc" | "interestDesc" | "viewDesc" | "default" = "default";
     switch(search?.sortBy){
       case "reviewDesc":
         order.push(["review_count", "desc"]);
+        primarySort = "reviewDesc";
         break;
       case "interestDesc":
         order.push(["interests_count", "desc"]);
+        primarySort = "interestDesc";
         break;
       case "viewDesc":
         order.push(["view_count", "desc"]);
+        primarySort = "viewDesc";
         break;
       default:
         order.push(["review_count", "desc"]);
+        primarySort = "reviewDesc";
         break;
     }
+    if (primarySort !== "interestDesc") {
+      order.push(["interests_count", "desc"]);
+    }
+    order.push(["created_at", "desc"]);
 
     const [courses, total] = await Promise.all([
       CourseModel.findAll({ where: whereCondition, limit, offset, order }),
@@ -73,6 +82,10 @@ class CourseRepository {
       throw new Error("Invalid course ID");
     }
     return await CourseModel.findByPk(course_id);
+  }
+
+  async getAllCoursesCount(): Promise<number> {
+    return await CourseModel.count();
   }
 
   async getAllDepartments(): Promise<string[]> {
@@ -97,6 +110,7 @@ class CourseRepository {
     return academyList;
   }
 
+  // NOTE: 暫時移除此功能
   async getMostCuriousButUnreviewedCourses(): Promise<Course[]> {
     // 想了解程度 ÷ 評論數 = 被大量收藏或瀏覽、但評論數很少的課程
     const courses = await CourseModel.findAll({

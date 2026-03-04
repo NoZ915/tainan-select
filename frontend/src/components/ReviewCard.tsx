@@ -1,18 +1,20 @@
-import { useState } from "react";
+﻿import { useEffect, useRef, useState } from 'react'
 
-import { Link } from "react-router-dom";
-import { ActionIcon, Avatar, Box, Card, Group, Menu, Rating, Text } from "@mantine/core";
-import { BsThreeDots } from "react-icons/bs";
-import { FaEdit } from "react-icons/fa";
-import { RiDeleteBin6Fill } from "react-icons/ri";
-import style from "../styles/components/ReviewCard.module.css"
+import { Link } from 'react-router-dom'
+import { ActionIcon, Avatar, Box, Card, Group, Menu, Rating, Text } from '@mantine/core'
+import { BsThreeDots } from 'react-icons/bs'
+import { FaEdit } from 'react-icons/fa'
+import { RiDeleteBin6Fill } from 'react-icons/ri'
+import style from '../styles/components/ReviewCard.module.css'
 
-import { ReviewsResponse } from "../types/reviewType";
-import { Course } from "../types/courseType";
+import { ReviewsResponse } from '../types/reviewType'
+import { Course } from '../types/courseType'
+import { useAuthStore } from '../stores/authStore'
 
-import AddOrEditReviewModal from "./AddOrEditReviewModal";
-import ConfirmModal from "./ConfirmModal";
-import { useDeleteReview } from "../hooks/reviews/useDeleteReview";
+import AddOrEditReviewModal from './AddOrEditReviewModal'
+import ConfirmModal from './ConfirmModal'
+import { useDeleteReview } from '../hooks/reviews/useDeleteReview'
+import { getAvatarSrc } from '../utils/avatarUrl'
 
 interface ReviewCardProp {
 	review: ReviewsResponse,
@@ -20,43 +22,95 @@ interface ReviewCardProp {
 }
 
 const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
-	const [AddOrEditReviewModalOpened, setAddOrEditReviewModalOpened] = useState(false);
-	const [DeleteReviewModalOpened, setDeleteReviewModalOpened] = useState(false);
-	const [selectedReview, setSelectedReview] = useState<ReviewsResponse | null>(null);
+	const { user } = useAuthStore()
+  
+	const [isAddOrEditReviewModalOpen, setIsAddOrEditReviewModalOpen] = useState(false)
+	const [isDeleteReviewModalOpen, setIsDeleteReviewModalOpen] = useState(false)
+	const [selectedReview, setSelectedReview] = useState<ReviewsResponse | null>(null)
+	const [isCommentExpanded, setIsCommentExpanded] = useState(false)
+	const [isCommentTruncated, setIsCommentTruncated] = useState(false)
+	const commentElementRef = useRef<HTMLParagraphElement | null>(null)
 
 	const handleEdit = (review: ReviewsResponse) => {
-		setAddOrEditReviewModalOpened(true);
-		setSelectedReview(review);
+		setIsAddOrEditReviewModalOpen(true)
+		setSelectedReview(review)
 	}
 
-	const { mutate, isPending } = useDeleteReview();
+	const { mutate, isPending } = useDeleteReview()
 	const handleConfirmDelete = (review: ReviewsResponse) => {
 		if (review) {
-			mutate(review.id);
+      mutate(review.id, {
+        onSuccess: () => setIsDeleteReviewModalOpen(false),
+      })
 		}
-		setDeleteReviewModalOpened(false);
 	}
 
 	const handleDeleteModal = (review: ReviewsResponse) => {
-		setDeleteReviewModalOpened(true);
-		setSelectedReview(review);
+		setIsDeleteReviewModalOpen(true)
+		setSelectedReview(review)
 	}
+
+	useEffect(() => {
+		setIsCommentExpanded(false)
+	}, [review.comment])
+
+	useEffect(() => {
+		const el = commentElementRef.current
+		if (!el) {
+			return
+		}
+
+		const checkTruncate = () => {
+			if (isCommentExpanded) {
+				setIsCommentTruncated(false)
+				return
+			}
+			setIsCommentTruncated(el.scrollHeight > el.clientHeight + 1)
+		}
+
+		const scheduleCheck = () => {
+			requestAnimationFrame(checkTruncate)
+		}
+
+		scheduleCheck()
+
+		const resizeObserver = new ResizeObserver(scheduleCheck)
+		resizeObserver.observe(el)
+		window.addEventListener('resize', scheduleCheck)
+
+		return () => {
+			resizeObserver.disconnect()
+			window.removeEventListener('resize', scheduleCheck)
+		}
+	}, [isCommentExpanded, review.comment])
+
+  const reviewerName =
+    review.is_owner
+      ? (user?.name ?? review.UserModel?.name ?? '匿名')
+      : (review.UserModel?.name ?? '匿名')
+
+  const reviewerAvatar =
+    review.is_owner
+      ? (user ? (user.avatar ?? null) : (review.UserModel?.avatar ?? null))
+      : (review.UserModel?.avatar ?? null)
+  const avatarSrc = getAvatarSrc(reviewerAvatar)
+
 
 	return (
 		<Card className={style.card}>
 			<Card.Section className={style.cardSection}>
-				<Group justify="space-between">
-					<Group>
-						<Avatar variant="light" size="lg" color="brick-red.6" src="" />
-						<Box>
-							<Text>{review.UserModel.name}</Text>
-							<Text>{new Date(review.updated_at).toLocaleString()}</Text>
+				<Group justify='space-between' className={style.headerRow}>
+					<Group className={style.userInfo}>
+						<Avatar variant='light' size='lg' color='brick-red.6' src={avatarSrc} />
+						<Box className={style.userMeta}>
+							<Text>{reviewerName}</Text>
+							<Text size='xs' c='dimmed'>{new Date(review.updated_at).toLocaleString()}</Text>
 						</Box>
 					</Group>
 					{review.is_owner && (
 						<Menu>
 							<Menu.Target>
-								<ActionIcon variant="fullfill" size="lg" radius="xs">
+								<ActionIcon variant='subtle' size='lg' radius='md' className={style.menuButton}>
 									<BsThreeDots size={16} />
 								</ActionIcon>
 							</Menu.Target>
@@ -72,7 +126,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 								<Menu.Item
 									leftSection={<RiDeleteBin6Fill size={16} />}
 									classNames={{ itemLabel: style.itemLabel }}
-									color="red"
+									color='red'
 									onClick={() => handleDeleteModal(review)}
 								>
 									刪除
@@ -82,24 +136,24 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 					)}
 				</Group>
 				{course &&
-					<AddOrEditReviewModal opened={AddOrEditReviewModalOpened} onClose={() => setAddOrEditReviewModalOpened(false)} course={course} review={selectedReview} />
+					<AddOrEditReviewModal opened={isAddOrEditReviewModalOpen} onClose={() => setIsAddOrEditReviewModalOpen(false)} course={course} review={selectedReview} />
 				}
 				{course &&
 					<ConfirmModal
-						opened={DeleteReviewModalOpened}
-						onClose={() => setDeleteReviewModalOpened(false)}
-						title="刪除評論"
-						message="確定要刪除評論嗎？一經刪除將無法復原。"
-						confirmText="刪除"
-						cancelText="取消"
+						opened={isDeleteReviewModalOpen}
+						onClose={() => setIsDeleteReviewModalOpen(false)}
+						title='刪除評論'
+            message='確定要刪除評論嗎？一經刪除將無法復原。'
+						confirmText='刪除'
+						cancelText='取消'
 						loading={isPending}
-						onConfirm={() => handleConfirmDelete(review)}
+						onConfirm={() => selectedReview && handleConfirmDelete(selectedReview)}
 					/>
 				}
 			</Card.Section>
 
 			<Card.Section className={style.cardSection}>
-				<Text size="md" fw={900} className={style.courseName}>
+				<Text size='md' fw={900} className={style.courseName}>
 					<Link to={`/course/${course?.course.id}`} className={style.link}>
 						{course?.course.course_name} / {course?.course.instructor}
 					</Link>
@@ -107,23 +161,48 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 			</Card.Section>
 
 			<Card.Section className={style.cardSection}>
-				<Group>
-					<Text>收穫</Text>
-					<Rating value={review.gain} color="brick-red.6" size="md" fractions={2} readOnly></Rating>
+				<div className={style.ratingsBox}>
+					<Group className={style.ratings}>
+					<Group className={style.ratingItem}>
+						<Text>收穫</Text>
+						<Rating value={review.gain} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
+					</Group>
 
-					<Text>甜度</Text>
-					<Rating value={review.sweetness} color="brick-red.6" size="md" fractions={2} readOnly></Rating>
+					<Group className={style.ratingItem}>
+						<Text>甜度</Text>
+						<Rating value={review.sweetness} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
+					</Group>
 
-					<Text>涼度</Text>
-					<Rating value={review.coolness} color="brick-red.6" size="md" fractions={2} readOnly></Rating>
-				</Group>
+					<Group className={style.ratingItem}>
+						<Text>涼度</Text>
+						<Rating value={review.coolness} color='brick-red.6' size='md' fractions={2} readOnly></Rating>
+					</Group>
+					</Group>
+				</div>
 			</Card.Section>
 
 			<Card.Section className={style.cardSection}>
-				<Text className={style.commentText}>{review.comment}</Text>
+				<div className={style.commentBlock}>
+					<Text
+						ref={commentElementRef}
+						className={`${style.commentText}${isCommentExpanded ? '' : ` ${style.commentClamp}`}`}
+					>
+						{review.comment}
+					</Text>
+					{isCommentTruncated && !isCommentExpanded && (
+						<button type='button' className={style.readMore} onClick={() => setIsCommentExpanded(true)}>
+							顯示較多
+						</button>
+					)}
+					{isCommentExpanded && (
+						<button type='button' className={style.readMore} onClick={() => setIsCommentExpanded(false)}>
+							顯示較少
+						</button>
+					)}
+				</div>
 			</Card.Section>
 		</Card>
 	)
 }
 
-export default ReviewCard;
+export default ReviewCard

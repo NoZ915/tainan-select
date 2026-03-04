@@ -1,7 +1,8 @@
 import db from "../models";
 import CourseRepository from "../repositories/courseRepository";
 import ReviewRepository from "../repositories/reviewRepository";
-import { AllReviewsResponseByUser, CreateReviewInput, ReviewsResponse } from "../types/review";
+import StatsService from "./statsService";
+import { CreateReviewInput, ReviewsListResponse, ReviewsResponse } from "../types/review";
 
 class CourseService {
   async getAllReviewsByCourseId(
@@ -22,12 +23,17 @@ class CourseService {
     return { reviews, hasUserReviewedCourse };
   }
 
-  async getAllReviewsByUserId(user_id: number, limit: number, offset: number): Promise<AllReviewsResponseByUser[]> {
-    return await ReviewRepository.getAllReviewsByUserId(user_id, limit, offset);
+  async getAllReviewsByUserId(user_id: number, limit: number, offset: number): Promise<ReviewsListResponse> {
+    const [items, count] = await Promise.all([
+      ReviewRepository.getAllReviewsByUserId(user_id, limit, offset),
+      ReviewRepository.getAllReviewsCountByUserId(user_id)
+    ])
+    return { items, count }
   }
 
   async upsertReview(input: CreateReviewInput): Promise<void> {
     await ReviewRepository.upsertReview(input);
+    StatsService.clearCache();
   }
 
   // 一次動兩DB，所以加個transaction
@@ -48,6 +54,7 @@ class CourseService {
       );
 
       await transaction.commit();
+      StatsService.clearCache();
     } catch (err) {
       await transaction.rollback();
       throw err;

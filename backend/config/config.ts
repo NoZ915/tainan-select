@@ -8,6 +8,12 @@ interface DbConfig {
     host: string;
     port: number;
     dialect: "mysql";
+    pool?: {
+      max?: number;
+      min?: number;
+      idle?: number;
+      acquire?: number;
+    };
   };
 }
 
@@ -19,6 +25,12 @@ const config: DbConfig = {
     host: process.env.DB_HOST || "localhost",
     port: parseInt(process.env.DB_PORT || "3306"),
     dialect: "mysql",
+    pool: {
+      max: 3,
+      min: 0,
+      idle: 10000,
+      acquire: 30000,
+    },
   },
 };
 

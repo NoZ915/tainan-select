@@ -4,7 +4,7 @@ export interface User{
     google_sub: string;
     name?: string;
     detail?: string;
-    avatar?: string;
+    avatar?: string | null;
     created_at: Date;
     updated_at: Date;
 }

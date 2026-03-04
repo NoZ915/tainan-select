@@ -1,38 +1,38 @@
-import { useEffect, useRef } from "react";
-import { useGetAuthStatus } from "../hooks/auth/useGetAuthStatus";
-import { useLocation, useNavigate } from "react-router-dom";
-import { Container, Loader } from "@mantine/core";
+import { useEffect, useRef } from 'react'
+import { useGetAuthStatus } from '../hooks/auth/useGetAuthStatus'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { Container, Loader } from '@mantine/core'
 
 const OAuthCallbackPage: React.FC = () => {
-  const { data: user } = useGetAuthStatus();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const hasRedirected = useRef(false);
+  const { data: user } = useGetAuthStatus()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const hasRedirected = useRef(false)
 
   useEffect(() => {
-    if (hasRedirected.current) return;
+    if (hasRedirected.current) return
   
-    const searchParams = new URLSearchParams(location.search);
-    const error = searchParams.get("error");
+    const searchParams = new URLSearchParams(location.search)
+    const error = searchParams.get('error')
   
-    if (error === "invalid_email") {
-      hasRedirected.current = true;
-      localStorage.removeItem("redirect_path");
-      navigate("/mailError");
-      return;
+    if (error === 'invalid_email') {
+      hasRedirected.current = true
+      localStorage.removeItem('redirect_path')
+      navigate('/mailError')
+      return
     }
   
     if (user) {
-      hasRedirected.current = true;
-      const redirect_path = localStorage.getItem("redirect_path");
+      hasRedirected.current = true
+      const redirect_path = localStorage.getItem('redirect_path')
       if (redirect_path) {
-        localStorage.removeItem("redirect_path");
-        navigate(redirect_path);
+        localStorage.removeItem('redirect_path')
+        navigate(redirect_path)
       } else {
-        navigate("/");
+        navigate('/')
       }
     }
-  }, [location.search, navigate, user]);
+  }, [location.search, navigate, user])
   return (
     <Container>
       <Loader/>
@@ -41,4 +41,4 @@ const OAuthCallbackPage: React.FC = () => {
   )
 }
 
-export default OAuthCallbackPage;
+export default OAuthCallbackPage

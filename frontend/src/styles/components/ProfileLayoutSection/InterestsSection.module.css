@@ -10,7 +10,6 @@
   color: #000000;
 }
 
-.grid {
-  margin-top: 1rem;
-  text-align: center
+.cardItem {
+  text-align: center;
 }
