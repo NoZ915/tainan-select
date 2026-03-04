@@ -13,10 +13,6 @@ module.exports = {
       { key: 'mind_blown', label: 'Mind Blown', type: 'unicode', unicode: '\u{1F92F}', image_path: null, sort_order: 60, is_active: true, created_at: now, updated_at: now },
       { key: 'pray', label: 'Pray', type: 'unicode', unicode: '\u{1F64F}', image_path: null, sort_order: 70, is_active: true, created_at: now, updated_at: now },
       { key: 'eyes', label: 'Eyes', type: 'unicode', unicode: '\u{1F440}', image_path: null, sort_order: 80, is_active: true, created_at: now, updated_at: now },
-      { key: 'tn_bird', label: 'TN Bird', type: 'image', unicode: null, image_path: '/reactions/tn_bird.webp', sort_order: 90, is_active: true, created_at: now, updated_at: now },
-      { key: 'tn_beef_soup', label: 'TN Beef Soup', type: 'image', unicode: null, image_path: '/reactions/tn_beef_soup.webp', sort_order: 100, is_active: true, created_at: now, updated_at: now },
-      { key: 'tn_black_wheel', label: 'TN Black Wheel', type: 'image', unicode: null, image_path: '/reactions/tn_black_wheel.webp', sort_order: 110, is_active: true, created_at: now, updated_at: now },
-      { key: 'tn_temple', label: 'TN Temple', type: 'image', unicode: null, image_path: '/reactions/tn_temple.webp', sort_order: 120, is_active: true, created_at: now, updated_at: now },
     ]);
   },
 
@@ -32,10 +28,6 @@ module.exports = {
           'mind_blown',
           'pray',
           'eyes',
-          'tn_bird',
-          'tn_beef_soup',
-          'tn_black_wheel',
-          'tn_temple',
         ],
       },
     });
