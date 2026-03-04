@@ -16,8 +16,8 @@ class ReviewReactionRepository {
     );
   }
 
-  async removeReaction(review_id: number, user_id: number, preset_id: number, transaction: Transaction): Promise<void> {
-    await ReviewReactionModel.destroy({
+  async removeReaction(review_id: number, user_id: number, preset_id: number, transaction: Transaction): Promise<number> {
+    return await ReviewReactionModel.destroy({
       where: { review_id, user_id, preset_id },
       transaction
     });

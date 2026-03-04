@@ -31,20 +31,25 @@ class ReviewReactionService {
       if (!preset) {
         throw new Error("REACTION_PRESET_NOT_FOUND");
       }
-      if (!preset.is_active) {
-        throw new Error("REACTION_PRESET_INACTIVE");
-      }
 
       let action: "added" | "removed" = "added";
 
-      try {
-        await ReviewReactionRepository.addReaction(review_id, user_id, preset.id, transaction);
-      } catch (err) {
-        if (err instanceof UniqueConstraintError) {
-          await ReviewReactionRepository.removeReaction(review_id, user_id, preset.id, transaction);
-          action = "removed";
-        } else {
-          throw err;
+      if (!preset.is_active) {
+        const removedCount = await ReviewReactionRepository.removeReaction(review_id, user_id, preset.id, transaction);
+        if (removedCount === 0) {
+          throw new Error("REACTION_PRESET_INACTIVE");
+        }
+        action = "removed";
+      } else {
+        try {
+          await ReviewReactionRepository.addReaction(review_id, user_id, preset.id, transaction);
+        } catch (err) {
+          if (err instanceof UniqueConstraintError) {
+            await ReviewReactionRepository.removeReaction(review_id, user_id, preset.id, transaction);
+            action = "removed";
+          } else {
+            throw err;
+          }
         }
       }
 
