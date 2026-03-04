@@ -15,9 +15,9 @@ const DAY_MAP: Record<string, number> = {
 };
 
 interface CourseScheduleParsed {
-  day: number;
-  startPeriod: string;
-  span: number;
+  day: number;         // 星期幾（數字 1~7 -> 存進DB用）
+  startPeriod: string; // 節次字串（可能是數字或字母）
+  span: number;        // 節數長度
 }
 
 const PERIOD_SEPARATORS = new Set(["、", "，", ",", "/", "-", "~"]);
