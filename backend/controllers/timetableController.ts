@@ -1,4 +1,4 @@
-import { RequestHandler, Response } from "express";
+﻿import { RequestHandler, Response } from "express";
 import TimetableService, { TimetableServiceError } from "../services/timetableService";
 
 const handleTimetableError = (res: Response, err: unknown): void => {
@@ -87,6 +87,28 @@ export const batchAddTimetableFromInterests: RequestHandler = async (req, res): 
     }
 
     const result = await TimetableService.batchAddFromInterests(timetableId, user_id);
+    res.status(200).json(result);
+  } catch (err) {
+    handleTimetableError(res, err);
+  }
+};
+
+export const swapTimetableCourse: RequestHandler = async (req, res): Promise<void> => {
+  try {
+    const user_id = req.user?.id;
+    if (!user_id) {
+      res.status(401).json({ message: "未授權的使用者" });
+      return;
+    }
+
+    const timetableId = parseInt(req.params.timetableId);
+    const courseId = Number(req.body?.courseId);
+    if (Number.isNaN(timetableId) || Number.isNaN(courseId)) {
+      res.status(400).json({ message: "參數格式錯誤" });
+      return;
+    }
+
+    const result = await TimetableService.swapCourse(timetableId, user_id, courseId);
     res.status(200).json(result);
   } catch (err) {
     handleTimetableError(res, err);

@@ -1,27 +1,35 @@
 import TimetableItemModel from "../models/TimetableItem";
 import CourseModel from "../models/Course";
 import TimetableModel from "../models/Timetable";
+import { Transaction } from "sequelize";
 
 class TimetableItemRepository {
-  async findByTimetableAndCourse(timetable_id: number, course_id: number): Promise<TimetableItemModel | null> {
+  async findByTimetableAndCourse(
+    timetable_id: number,
+    course_id: number,
+    transaction?: Transaction
+  ): Promise<TimetableItemModel | null> {
     return await TimetableItemModel.findOne({
       where: { timetable_id, course_id },
+      transaction,
     });
   }
 
-  async addCourse(timetable_id: number, course_id: number): Promise<TimetableItemModel> {
-    return await TimetableItemModel.create({ timetable_id, course_id });
+  async addCourse(timetable_id: number, course_id: number, transaction?: Transaction): Promise<TimetableItemModel> {
+    return await TimetableItemModel.create({ timetable_id, course_id }, { transaction });
   }
 
-  async removeCourse(timetable_id: number, course_id: number): Promise<void> {
+  async removeCourse(timetable_id: number, course_id: number, transaction?: Transaction): Promise<void> {
     await TimetableItemModel.destroy({
       where: { timetable_id, course_id },
+      transaction,
     });
   }
 
-  async getAllByTimetableId(timetable_id: number): Promise<TimetableItemModel[]> {
+  async getAllByTimetableId(timetable_id: number, transaction?: Transaction): Promise<TimetableItemModel[]> {
     return await TimetableItemModel.findAll({
       where: { timetable_id },
+      transaction,
       include: [
         {
           model: CourseModel,
