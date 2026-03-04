@@ -11,6 +11,22 @@ export type VersionEntry = {
 // Keep this list in reverse-chronological order (newest first).
 export const VERSION_HISTORY: VersionEntry[] = [
   {
+    version: 'v2.1.0',
+    releasedAt: '2026-03-04',
+    kind: 'feat',
+    title: '學期課表功能上線',
+    summary:
+      '終於把學期課表做出來了！現在可以切學期排課、檢查衝堂、從收藏加課，也支援衝堂課程的一鍵交換。',
+  },
+  {
+    version: 'v2.0.0',
+    releasedAt: '2026-03-04',
+    kind: 'feat',
+    title: 'emoji 評論互動',
+    summary:
+      '評論新增 emoji 互動，之後再來做評論留言互動。',
+  },
+  {
     version: 'v1.10.0',
     releasedAt: '2026-02-24',
     kind: 'feat',
