@@ -1,11 +1,11 @@
-import e from "cors";
+import { Transaction } from "sequelize";
+import db from "../models";
 import CourseModel from "../models/Course";
 import ReviewModel from "../models/Review";
 import UserModel from "../models/Users";
 import { AllReviewsResponseByUser, CreateReviewInput, LatestReviewsResponse, ReviewsResponse } from "../types/review";
-import { Transaction } from "sequelize";
 import CourseRepository from "./courseRepository";
-import db from "../models";
+import ReviewReactionRepository from "./reviewReactionRepository";
 
 class ReviewRepository {
   async getAllReviewsCount(): Promise<number> {
@@ -26,6 +26,11 @@ class ReviewRepository {
         },
       ],
     });
+    const reactionSummaryMap = await ReviewReactionRepository.getReactionSummaryByReviewIds(
+      reviews.map((review) => review.id),
+      user_id
+    );
+
     // 目前使用者的評價優先顯示
     const ownerReviews = [];
     const otherReviews = [];
@@ -39,9 +44,10 @@ class ReviewRepository {
 
     const reviewsWithOwnerFlag = [...ownerReviews, ...otherReviews].map((review) => {
       const is_owner = review.user_id === user_id;
+      const reactions = reactionSummaryMap.get(review.id) || { counts: {}, myReactions: [] };
       const reviewJson = review.toJSON();
-      const { user_id: userId, ...reviewWithoutUserId } = reviewJson; // 把user_id移除，不要回傳到前端
-      return { ...reviewWithoutUserId, is_owner };
+      const { user_id: userId, ...reviewWithoutUserId } = reviewJson;
+      return { ...reviewWithoutUserId, is_owner, reactions };
     });
 
     return reviewsWithOwnerFlag as ReviewsResponse[];
@@ -59,12 +65,26 @@ class ReviewRepository {
     else return review;
   }
 
+  async getReviewByIdForReaction(review_id: number, transaction: Transaction): Promise<ReviewModel> {
+    const review = await ReviewModel.findByPk(review_id, {
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+    if (!review) throw new Error("Review not found");
+    return review;
+  }
+
+  async ensureReviewExists(review_id: number): Promise<void> {
+    const review = await ReviewModel.findByPk(review_id, { attributes: ["id"] });
+    if (!review) throw new Error("Review not found");
+  }
+
   async getAllReviewsByUserId(user_id: number, limit: number, offset: number): Promise<AllReviewsResponseByUser[]> {
     const reviews = await ReviewModel.findAll({
       where: { user_id },
       limit,
       offset,
-      order: [['updated_at', 'DESC']],
+      order: [["updated_at", "DESC"]],
       include: [
         {
           model: UserModel,
@@ -72,17 +92,22 @@ class ReviewRepository {
         },
         {
           model: CourseModel,
-          as: 'course',
+          as: "course",
           attributes: ["id", "course_name", "department", "academy", "instructor", "instructor_url", "course_room", "course_time", "course_url", "credit_hours", "semester", "created_at", "updated_at", "course_type", "interests_count", "view_count", "review_count"]
         }
       ]
     });
+    const reactionSummaryMap = await ReviewReactionRepository.getReactionSummaryByReviewIds(
+      reviews.map((review) => review.id),
+      user_id
+    );
 
     const reviewsWithOwnerFlag = reviews.map((review) => {
       const is_owner = review.user_id === user_id;
+      const reactions = reactionSummaryMap.get(review.id) || { counts: {}, myReactions: [] };
       const reviewJson = review.toJSON();
-      const { user_id: userId, ...reviewWithoutUserId } = reviewJson; // 把user_id移除，不要回傳到前端
-      return { ...reviewWithoutUserId, is_owner };
+      const { user_id: userId, ...reviewWithoutUserId } = reviewJson;
+      return { ...reviewWithoutUserId, is_owner, reactions };
     });
 
     return reviewsWithOwnerFlag as unknown as AllReviewsResponseByUser[];
@@ -91,7 +116,7 @@ class ReviewRepository {
   async getAllReviewsCountByUserId(user_id: number): Promise<number> {
     return await ReviewModel.count({
       where: { user_id }
-    })
+    });
   }
 
   async upsertReview(input: CreateReviewInput): Promise<void> {
@@ -103,36 +128,35 @@ class ReviewRepository {
 
     if (existingReview) {
       await existingReview.update(input);
-    } else {
-      try {
-        // 一次動兩DB，所以加個transaction
-        await ReviewModel.create(input, { transaction });
-        await CourseRepository.incrementCount(
-          input.course_id,
-          "review_count",
-          transaction
-        );
+      return;
+    }
 
-        await transaction.commit();
-      } catch (err) {
-        await transaction.rollback();
-        throw err;
-      }
+    try {
+      await ReviewModel.create(input, { transaction });
+      await CourseRepository.incrementCount(
+        input.course_id,
+        "review_count",
+        transaction
+      );
 
+      await transaction.commit();
+    } catch (err) {
+      await transaction.rollback();
+      throw err;
     }
   }
 
   async deleteReview(review_id: number, user_id: number, transaction: Transaction): Promise<void> {
     const review = await this.getReviewById(review_id, user_id, transaction);
     if (review) {
-      await review?.destroy();
+      await review.destroy();
     }
   }
 
   async getLatestReviews(user_id: number | undefined): Promise<LatestReviewsResponse[]> {
     const reviews = await ReviewModel.findAll({
       limit: 10,
-      order: [['updated_at', 'DESC']],
+      order: [["updated_at", "DESC"]],
       include: [
         {
           model: UserModel,
@@ -140,17 +164,22 @@ class ReviewRepository {
         },
         {
           model: CourseModel,
-          as: 'course',
+          as: "course",
           attributes: ["id", "course_name", "department", "academy", "instructor", "instructor_url", "course_room", "course_time", "course_url", "credit_hours", "semester", "created_at", "updated_at", "course_type", "interests_count", "view_count"],
         },
       ],
     });
+    const reactionSummaryMap = await ReviewReactionRepository.getReactionSummaryByReviewIds(
+      reviews.map((review) => review.id),
+      user_id
+    );
 
     const reviewsWithOwnerFlag = reviews.map((review) => {
-      const is_owner = review.user_id === user_id;
       const reviewJson = review.toJSON();
-      const { user_id: userId, ...reviewWithoutUserId } = reviewJson; // 把user_id移除，不要回傳到前端
-      return { ...reviewWithoutUserId, is_owner };
+      const { user_id: userId, ...reviewWithoutUserId } = reviewJson;
+      const is_owner = review.user_id === user_id;
+      const reactions = reactionSummaryMap.get(review.id) || { counts: {}, myReactions: [] };
+      return { ...reviewWithoutUserId, is_owner, reactions };
     });
 
     return reviewsWithOwnerFlag as LatestReviewsResponse[];
@@ -159,9 +188,10 @@ class ReviewRepository {
   async hasUserReviewedCourse(course_id: number, user_id: number | undefined): Promise<boolean> {
     const review = await ReviewModel.findOne({
       where: { course_id, user_id }
-    })
+    });
     return review !== null;
   }
+
 }
 
 export default new ReviewRepository();

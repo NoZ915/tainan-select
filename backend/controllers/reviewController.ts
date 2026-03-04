@@ -1,7 +1,11 @@
 import { RequestHandler } from "express";
 import ReviewService from "../services/reviewService";
+import ReviewReactionService from "../services/reviewReactionService";
 
-export const getAllReviewsByCourseId: RequestHandler = async (
+type CourseParams = { course_id: string };
+type ReviewParams = { review_id: string };
+
+export const getAllReviewsByCourseId: RequestHandler<CourseParams> = async (
   req,
   res
 ): Promise<void> => {
@@ -55,7 +59,7 @@ export const upsertReview: RequestHandler = async (req, res): Promise<void> => {
   }
 };
 
-export const deleteReview: RequestHandler = async (req, res): Promise<void> => {
+export const deleteReview: RequestHandler<ReviewParams> = async (req, res): Promise<void> => {
   try {
     if (!req.user) {
       res.status(401).json({ message: "Unauthorized" });
@@ -78,6 +82,61 @@ export const getLatestReviews: RequestHandler = async (req, res): Promise<void> 
     const latestReviews = await ReviewService.getLatestReviews(user_id);
     res.status(200).json(latestReviews);
   } catch (err) {
+    res.status(500).json({ message: err });
+  }
+}
+
+export const getReviewReactions: RequestHandler<ReviewParams> = async (req, res): Promise<void> => {
+  try {
+    const review_id = parseInt(req.params.review_id);
+    if (Number.isNaN(review_id)) {
+      res.status(400).json({ message: "Invalid review_id" });
+      return;
+    }
+
+    const user_id = req.user?.id;
+    const result = await ReviewReactionService.getReviewReactions(review_id, user_id);
+    res.status(200).json(result);
+  } catch (err) {
+    if (err instanceof Error && err.message === "Review not found") {
+      res.status(404).json({ message: err.message });
+      return;
+    }
+    res.status(500).json({ message: err });
+  }
+}
+
+export const toggleReviewReaction: RequestHandler<ReviewParams> = async (req, res): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+
+    const review_id = parseInt(req.params.review_id);
+    const { key } = req.body;
+    if (Number.isNaN(review_id)) {
+      res.status(400).json({ message: "Invalid review_id" });
+      return;
+    }
+    if (typeof key !== "string" || key.trim() === "") {
+      res.status(400).json({ message: "Invalid reaction key" });
+      return;
+    }
+
+    const result = await ReviewReactionService.toggleReaction(review_id, req.user.id, key.trim());
+    res.status(200).json(result);
+  } catch (err) {
+    if (err instanceof Error) {
+      if (err.message === "Review not found") {
+        res.status(404).json({ message: err.message });
+        return;
+      }
+      if (err.message === "REACTION_PRESET_NOT_FOUND" || err.message === "REACTION_PRESET_INACTIVE") {
+        res.status(400).json({ message: err.message });
+        return;
+      }
+    }
     res.status(500).json({ message: err });
   }
 }

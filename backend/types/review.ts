@@ -1,5 +1,6 @@
 import CourseModel from "../models/Course";
 import ReviewModel from "../models/Review";
+import { ReviewReactionSummary } from "./reaction";
 
 export interface CreateReviewInput {
   user_id: number;
@@ -18,6 +19,7 @@ export interface ReviewsResponse {
   coolness: number;
   comment?: string;
   favorites: number;
+  reactions: ReviewReactionSummary;
   created_at: Date;
   updated_at: Date;
   UserModel: {

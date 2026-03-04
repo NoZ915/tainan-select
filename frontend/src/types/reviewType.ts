@@ -1,4 +1,5 @@
 import { Course } from './courseType'
+import { ReviewReactionSummary } from './reactionType'
 
 export interface ReviewsResponse {
   id: number,
@@ -9,6 +10,7 @@ export interface ReviewsResponse {
   coolness: number;
   comment?: string;
   favorites: number;
+  reactions: ReviewReactionSummary;
   created_at: Date;
   updated_at: Date;
   UserModel: {

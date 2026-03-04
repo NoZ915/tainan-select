@@ -1,10 +1,10 @@
 import "dotenv/config";
 import cors from "cors";
 import express, { Express, Request, Response, NextFunction } from "express";
-import path from "path";
-import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 import passport from 'passport';
+import path from "path";
+import { fileURLToPath } from "url";
 import "./utils/passport";
 import db from "./models";
 
@@ -16,8 +16,11 @@ import usersRoutes from "./routes/users";
 import statsRoutes from "./routes/stats";
 import semestersRoutes from "./routes/semesters";
 import timetablesRoutes from "./routes/timetables";
+import reactionsRoutes from "./routes/reactions";
 
 const app: Express = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const corsOptions = {
   origin: process.env.FRONTEND_BASE_URL, // 設置允許的來源
   credentials: true, // 允許帶有憑證的請求
@@ -28,10 +31,9 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
 app.use(passport.initialize());
+app.use("/reactions", express.static(path.join(__dirname, "public", "reactions")));
 
 // 頭貼
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const avatarDir = path.resolve(__dirname, "public", "avatars");
 app.use("/avatars", express.static(avatarDir));
 
@@ -42,8 +44,6 @@ app.use("/api/reviews", reviewsRoutes);
 app.use("/api/interests", interestsRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/stats", statsRoutes);
-app.use("/api/semesters", semestersRoutes);
-app.use("/api/timetables", timetablesRoutes);
 
 const startServer = async (): Promise<void> => {
   try {
