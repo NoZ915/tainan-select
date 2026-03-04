@@ -257,7 +257,7 @@ class TimetableService {
     const candidate = allMap.get(candidateCourse.id) ?? { course: candidateCourse, timeslots: [] };
     const existingWithTimeslots = existingCourses.map((meta) => allMap.get(meta.id) ?? { course: meta, timeslots: [] });
 
-    // 蝻箸?畾菔???timeslots = []嚗???銵??斗嚗??箇瘜?頛?畾?
+    // 缺時段資料（timeslots = []）不參與衝堂判斷，因為無法比較時段
     const conflicts = this.findConflicts(candidate, existingWithTimeslots);
     if (conflicts.length > 0) {
       return {
