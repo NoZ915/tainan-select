@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Alert, Paper, Stack, Text } from '@mantine/core'
+import { notifications } from '@mantine/notifications'
 import { useQueryClient } from '@tanstack/react-query'
 
 import periodTimeMap from '../../utils/periodTimeMap'
@@ -336,3 +337,4 @@ const Timetable: React.FC = () => {
 }
 
 export default Timetable
+
