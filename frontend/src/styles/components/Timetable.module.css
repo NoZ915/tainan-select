@@ -1,0 +1,112 @@
+.semesterSelect {
+  min-width: 220px;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.toolbarLeft {
+  text-align: left;
+}
+
+.listGrid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.listPanel {
+  min-width: 0;
+  border-bottom: 4px solid transparent;
+  border-radius: 6px;
+  padding-bottom: 4px;
+}
+
+.favoritePanel {
+  border-bottom-color: #16a34a;
+}
+
+.addedPanel {
+  border-bottom-color: #dc2626;
+}
+
+.listRow {
+  padding: 12px 0;
+  border-bottom: 1px solid #ececec;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.tableScroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.timetableTable {
+  min-width: 760px;
+}
+
+.timetableTable th,
+.timetableTable td {
+  vertical-align: top;
+  text-align: center;
+}
+
+.timeColumn {
+  min-width: 104px;
+}
+
+.normalCell,
+.conflictCell {
+  min-width: 88px;
+}
+
+.conflictCell {
+  background: #fff5f5;
+}
+
+.courseInfoBlock {
+  text-align: left;
+  min-width: 0;
+}
+
+.courseInfoLink {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.tableCourseLink {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  text-align: center;
+}
+
+@media (min-width: 1024px) {
+  .tableScroll {
+    overflow-x: visible;
+  }
+}
+
+@media (max-width: 900px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .listGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}

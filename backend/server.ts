@@ -14,6 +14,8 @@ import reviewsRoutes from "./routes/reviews";
 import interestsRoutes from "./routes/interests";
 import usersRoutes from "./routes/users";
 import statsRoutes from "./routes/stats";
+import semestersRoutes from "./routes/semesters";
+import timetablesRoutes from "./routes/timetables";
 import reactionsRoutes from "./routes/reactions";
 
 const app: Express = express();
@@ -42,7 +44,6 @@ app.use("/api/reviews", reviewsRoutes);
 app.use("/api/interests", interestsRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/stats", statsRoutes);
-app.use("/api/reactions", reactionsRoutes);
 
 const startServer = async (): Promise<void> => {
   try {

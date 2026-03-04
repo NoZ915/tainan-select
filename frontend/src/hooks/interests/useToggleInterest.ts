@@ -19,6 +19,7 @@ export const useToggleInterest = () => {
 			queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.COURSE, courseIdKey] })
 			queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INTERESTS] })
 			queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INFINITY_INTERESTS] })
+			queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TIMETABLE_INTEREST_OPTIONS] })
 		},
 	})
 }

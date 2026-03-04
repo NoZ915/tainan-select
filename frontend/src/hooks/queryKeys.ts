@@ -14,6 +14,10 @@ export const QUERY_KEYS = {
   
   INTERESTS: 'interests',
   INFINITY_INTERESTS: 'infinity_interests',
+  SEMESTERS: 'semesters',
+  TIMETABLE: 'timetable',
+  TIMETABLE_ALL_ITEMS: 'timetable_all_items',
+  TIMETABLE_INTEREST_OPTIONS: 'timetable_interest_options',
   
   PLATFORM_STATS: 'platform_stats',
   
