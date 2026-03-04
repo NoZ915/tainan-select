@@ -9,6 +9,14 @@ type RawReactionRow = {
 };
 
 class ReviewReactionRepository {
+  async findReaction(review_id: number, user_id: number, preset_id: number, transaction: Transaction): Promise<ReviewReactionModel | null> {
+    return await ReviewReactionModel.findOne({
+      where: { review_id, user_id, preset_id },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+  }
+
   async addReaction(review_id: number, user_id: number, preset_id: number, transaction: Transaction): Promise<void> {
     await ReviewReactionModel.create(
       { review_id, user_id, preset_id },

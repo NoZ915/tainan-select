@@ -1,4 +1,3 @@
-import { UniqueConstraintError } from "sequelize";
 import db from "../models";
 import ReactionPresetRepository from "../repositories/reactionPresetRepository";
 import ReviewRepository from "../repositories/reviewRepository";
@@ -41,15 +40,12 @@ class ReviewReactionService {
         }
         action = "removed";
       } else {
-        try {
+        const existingReaction = await ReviewReactionRepository.findReaction(review_id, user_id, preset.id, transaction);
+        if (existingReaction) {
+          await ReviewReactionRepository.removeReaction(review_id, user_id, preset.id, transaction);
+          action = "removed";
+        } else {
           await ReviewReactionRepository.addReaction(review_id, user_id, preset.id, transaction);
-        } catch (err) {
-          if (err instanceof UniqueConstraintError) {
-            await ReviewReactionRepository.removeReaction(review_id, user_id, preset.id, transaction);
-            action = "removed";
-          } else {
-            throw err;
-          }
         }
       }
 

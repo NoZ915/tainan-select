@@ -66,7 +66,10 @@ class ReviewRepository {
   }
 
   async getReviewByIdForReaction(review_id: number, transaction: Transaction): Promise<ReviewModel> {
-    const review = await ReviewModel.findByPk(review_id, { transaction });
+    const review = await ReviewModel.findByPk(review_id, {
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
     if (!review) throw new Error("Review not found");
     return review;
   }
