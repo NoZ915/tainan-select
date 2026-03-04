@@ -1,6 +1,11 @@
 import axios from 'axios'
 import { useAuthStore } from '../stores/authStore'
 
+export type ApiError = Error & {
+  status?: number
+  data?: unknown
+}
+
 export const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true,
@@ -22,6 +27,9 @@ axiosInstance.interceptors.response.use(
     }
 
     const message = error.response?.data?.message || '發生錯誤，請稍後再試'
-    return Promise.reject(new Error(message))
+    const apiError = new Error(message) as ApiError
+    apiError.status = error.response?.status
+    apiError.data = error.response?.data
+    return Promise.reject(apiError)
   }
 )

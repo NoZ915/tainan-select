@@ -6,8 +6,12 @@ export const toggleInterest = async (course_id: number): Promise<ToggleInterestR
     return response.data
 }
 
-export const getAllInterests = async ({ pageParam = 0 }): Promise<InterestsListResponse> => {
-    const limit = 10
+type GetAllInterestsParams = {
+    pageParam?: number
+    limit?: number
+}
+
+export const getAllInterests = async ({ pageParam = 0, limit = 10 }: GetAllInterestsParams = {}): Promise<InterestsListResponse> => {
     const response = await axiosInstance.get('/interests/getAllInterests', {
         params: { limit, offset: pageParam },
     })

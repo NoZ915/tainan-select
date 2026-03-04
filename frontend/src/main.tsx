@@ -16,6 +16,7 @@ import App from './App.tsx'
 import CoursesPage from './pages/CoursesPage.tsx'
 import CourseDetailPage from './pages/CourseDetailPage.tsx'
 import DynamicPage from './pages/DynamicPage.tsx'
+import TimetablePage from './pages/TimetablePage.tsx'
 import FrequentPage from './pages/FrequentPage.tsx'
 import OAuthCallbackPage from './pages/OAuthCallbackPage.tsx'
 import MailErrorPage from './pages/MailErrorPage.tsx'
@@ -64,6 +65,11 @@ const router = createBrowserRouter([
         path: 'dynamic',
         element: <DynamicPage />,
         handle: { seo: { title: buildTitleStatic('動態') } },
+      },
+      {
+        path: 'timetable',
+        element: <TimetablePage />,
+        handle: { seo: { title: buildTitleStatic('課表') } },
       },
       {
         path: 'frequent',
