@@ -44,6 +44,9 @@ app.use("/api/reviews", reviewsRoutes);
 app.use("/api/interests", interestsRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/reactions", reactionsRoutes);
+app.use("/api/semesters", semestersRoutes);
+app.use("/api/timetables", timetablesRoutes);
 
 const startServer = async (): Promise<void> => {
   try {
