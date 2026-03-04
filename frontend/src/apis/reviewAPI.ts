@@ -1,4 +1,5 @@
 import { UpsertReviewInput, ReviewsResponse, LatestReviewsResponse, ReviewsListResponse } from '../types/reviewType'
+import { ReviewReactionsResponse, ToggleReviewReactionResponse } from '../types/reactionType'
 import { axiosInstance } from './axiosInstance'
 
 export const getAllReviewsByCourseId = async (course_id: string): Promise<{ reviews: ReviewsResponse[], hasUserReviewedCourse: boolean }> => {
@@ -26,5 +27,18 @@ export const deleteReview = async (review_id: number): Promise<void> => {
 
 export const getLatestReviews = async (): Promise<LatestReviewsResponse[]> => {
     const response = await axiosInstance.get('/reviews/getLatestReviews')
+    return response.data
+}
+
+export const getReviewReactions = async (review_id: number): Promise<ReviewReactionsResponse> => {
+    const response = await axiosInstance.get(`/reviews/${review_id}/reactions`)
+    return response.data
+}
+
+export const toggleReviewReaction = async (
+    review_id: number,
+    key: string
+): Promise<ToggleReviewReactionResponse> => {
+    const response = await axiosInstance.post(`/reviews/${review_id}/reactions/toggle`, { key })
     return response.data
 }

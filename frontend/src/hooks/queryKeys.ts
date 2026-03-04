@@ -10,6 +10,7 @@ export const QUERY_KEYS = {
   REVIEWS: 'reviews',
   INFINITY_REVIEWS: 'infinity_reviews',
   LATEST_REVIEWS: 'latest_reviews',
+  REACTION_PRESETS: 'reaction_presets',
   
   INTERESTS: 'interests',
   INFINITY_INTERESTS: 'infinity_interests',
