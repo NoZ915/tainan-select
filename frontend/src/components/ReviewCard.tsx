@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { Link } from 'react-router-dom'
 import { ActionIcon, Avatar, Box, Card, Group, Menu, Rating, Text } from '@mantine/core'
@@ -10,10 +10,13 @@ import style from '../styles/components/ReviewCard.module.css'
 import { ReviewsResponse } from '../types/reviewType'
 import { Course } from '../types/courseType'
 import { useAuthStore } from '../stores/authStore'
+import { ReactionPreset, ReviewReactionSummary } from '../types/reactionType'
 
 import AddOrEditReviewModal from './AddOrEditReviewModal'
 import ConfirmModal from './ConfirmModal'
 import { useDeleteReview } from '../hooks/reviews/useDeleteReview'
+import { useGetReactionPresets } from '../hooks/reactions/useGetReactionPresets'
+import { useToggleReviewReaction } from '../hooks/reactions/useToggleReviewReaction'
 
 interface ReviewCardProp {
 	review: ReviewsResponse,
@@ -29,6 +32,16 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 	const [isCommentExpanded, setIsCommentExpanded] = useState(false)
 	const [isCommentTruncated, setIsCommentTruncated] = useState(false)
 	const commentElementRef = useRef<HTMLParagraphElement | null>(null)
+	const [reactionSummary, setReactionSummary] = useState<ReviewReactionSummary>(review.reactions ?? { counts: {}, myReactions: [] })
+
+	const { data: presetsResponse } = useGetReactionPresets()
+	const presets = presetsResponse?.items ?? []
+	const presetByKey = useMemo(
+		() => new Map<string, ReactionPreset>(presets.map((preset) => [preset.key, preset])),
+		[presets]
+	)
+
+	const { mutate: toggleReaction, isPending: isTogglingReaction } = useToggleReviewReaction()
 
 	const handleEdit = (review: ReviewsResponse) => {
 		setIsAddOrEditReviewModalOpen(true)
@@ -49,9 +62,56 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 		setSelectedReview(review)
 	}
 
+	const getReactionDisplay = (preset: ReactionPreset | undefined, key: string): string => {
+		if (!preset) return key
+		if (preset.type === 'unicode') return preset.unicode ?? preset.label
+		return preset.label
+	}
+
+	const sortedReactionKeys = useMemo(() => {
+		const countKeys = Object.keys(reactionSummary.counts).filter((key) => (reactionSummary.counts[key] ?? 0) > 0)
+		const knownKeys = presets
+			.map((preset) => preset.key)
+			.filter((key) => countKeys.includes(key))
+		const unknownKeys = countKeys.filter((key) => !presetByKey.has(key)).sort()
+		return [...knownKeys, ...unknownKeys]
+	}, [reactionSummary.counts, presets, presetByKey])
+
+	const myReactionSet = useMemo(
+		() => new Set(reactionSummary.myReactions),
+		[reactionSummary.myReactions]
+	)
+
+	const handleToggleReaction = (key: string) => {
+		if (!user) {
+			return
+		}
+
+		toggleReaction(
+			{ review_id: review.id, key },
+			{
+				onSuccess: (result) => {
+					setReactionSummary((prev) => {
+						const nextMyReactions = result.action === 'added'
+							? Array.from(new Set([...prev.myReactions, key]))
+							: prev.myReactions.filter((reactionKey) => reactionKey !== key)
+						return {
+							counts: result.counts,
+							myReactions: nextMyReactions
+						}
+					})
+				}
+			}
+		)
+	}
+
 	useEffect(() => {
 		setIsCommentExpanded(false)
 	}, [review.comment])
+
+	useEffect(() => {
+		setReactionSummary(review.reactions ?? { counts: {}, myReactions: [] })
+	}, [review.reactions])
 
 	useEffect(() => {
 		const el = commentElementRef.current
@@ -192,6 +252,65 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 							顯示較少
 						</button>
 					)}
+				</div>
+			</Card.Section>
+
+			<Card.Section className={style.cardSection}>
+				<div className={style.reactionBar}>
+					{sortedReactionKeys.map((key) => {
+						const preset = presetByKey.get(key)
+						const isMine = myReactionSet.has(key)
+						const count = reactionSummary.counts[key] ?? 0
+						return (
+							<button
+								key={key}
+								type='button'
+								className={`${style.reactionChip}${isMine ? ` ${style.reactionChipActive}` : ''}`}
+								onClick={() => handleToggleReaction(key)}
+								disabled={!user || isTogglingReaction}
+							>
+								{preset?.type === 'image' && preset.imagePath ? (
+									<img src={preset.imagePath} alt={preset.label} className={style.reactionImage} />
+								) : (
+									<span className={style.reactionEmoji}>{getReactionDisplay(preset, key)}</span>
+								)}
+								<span className={style.reactionCount}>{count}</span>
+							</button>
+						)
+					})}
+
+					<Menu withinPortal position='bottom-start'>
+						<Menu.Target>
+							<button
+								type='button'
+								className={style.reactionAddButton}
+								disabled={!user || isTogglingReaction || presets.length === 0}
+							>
+								+
+							</button>
+						</Menu.Target>
+						<Menu.Dropdown className={style.dropdown}>
+							<div className={style.reactionPickerGrid}>
+								{presets.map((preset) => (
+									<button
+										key={preset.key}
+										type='button'
+										className={style.reactionPickerButton}
+										onClick={() => handleToggleReaction(preset.key)}
+										title={preset.label}
+										aria-label={preset.label}
+										disabled={isTogglingReaction}
+									>
+										{preset.type === 'image' && preset.imagePath ? (
+											<img src={preset.imagePath} alt={preset.label} className={style.reactionImage} />
+										) : (
+											<span className={style.reactionEmoji}>{getReactionDisplay(preset, preset.key)}</span>
+										)}
+									</button>
+								))}
+							</div>
+						</Menu.Dropdown>
+					</Menu>
 				</div>
 			</Card.Section>
 		</Card>

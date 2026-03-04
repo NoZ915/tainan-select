@@ -103,6 +103,113 @@
   gap: 0.5rem;
 }
 
+.reactionBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reactionChip {
+  border: 1px solid #d2d2d2;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #2e2e2e;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.22rem 0.6rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.reactionChip:hover {
+  background: #f6f6f6;
+  border-color: #b8b8b8;
+}
+
+.reactionChipActive {
+  background: #f4eee5;
+  border-color: #a88755;
+}
+
+.reactionChip:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.reactionEmoji {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.reactionCount {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.reactionAddButton {
+  border: 1px dashed #9f9f9f;
+  border-radius: 999px;
+  background: #fff;
+  color: #5b5b5b;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+}
+
+.reactionAddButton:hover {
+  background: #f7f7f7;
+}
+
+.reactionAddButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.reactionMenuItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.reactionPickerGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.35rem;
+  padding: 0.35rem;
+  min-width: 230px;
+}
+
+.reactionPickerButton {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #d5d5d5;
+  border-radius: 8px;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.reactionPickerButton:hover {
+  background: #f6f6f6;
+  border-color: #b8b8b8;
+}
+
+.reactionPickerButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.reactionImage {
+  width: 18px;
+  height: 18px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
 @media (max-width: 768px) {
   .ratings {
       flex-direction: column;
