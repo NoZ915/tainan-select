@@ -267,7 +267,22 @@ class TimetableService {
       };
     }
 
-    await TimetableItemRepository.addCourse(timetable.id, course.id);
+    try {
+      await TimetableItemRepository.addCourse(timetable.id, course.id);
+    } catch (error) {
+      if (error instanceof UniqueConstraintError) {
+        const duplicated = await TimetableItemRepository.findByTimetableAndCourse(timetable.id, course.id);
+        if (duplicated) {
+          return {
+            added: false,
+            alreadyExists: true,
+            conflicts: [],
+          };
+        }
+      }
+      throw error;
+    }
+
     return {
       added: true,
       alreadyExists: false,
