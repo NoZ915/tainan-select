@@ -29,7 +29,10 @@ const TimetableCourseLists: React.FC<TimetableCourseListsProps> = ({
           <Badge variant='light' color='green'>{selectableInterestCourses.length}</Badge>
         </Group>
         {selectableInterestCourses.length === 0 ? (
-          <Text size='sm' c='dimmed'>這個學期沒有可加入的收藏課程，或都已加入課表。</Text>
+          <Stack gap={2}>
+            <Text size='sm' fw={600}>目前沒有可加入課表的課程。</Text>
+            <Text size='sm' c='dimmed'>若想加入課表，請先到課程頁按「收藏」，收藏後才可加入課表。</Text>
+          </Stack>
         ) : (
           <Stack gap={0}>
             {selectableInterestCourses.map((course) => (
@@ -67,7 +70,10 @@ const TimetableCourseLists: React.FC<TimetableCourseListsProps> = ({
           <Badge variant='light' color='red'>{addedItemsInSelectedSemester.length}</Badge>
         </Group>
         {addedItemsInSelectedSemester.length === 0 ? (
-          <Text size='sm' c='dimmed'>目前此學期課表沒有課程。</Text>
+          <Stack gap={2}>
+            <Text size='sm' fw={600}>此學期課表目前沒有課程。</Text>
+            <Text size='sm' c='dimmed'>可從「本學期收藏（可加入）」清單，將收藏課程加入課表。</Text>
+          </Stack>
         ) : (
           <Stack gap={0}>
             {addedItemsInSelectedSemester.map((item) => (
