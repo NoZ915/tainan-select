@@ -3,9 +3,15 @@ import { axiosInstance } from './axiosInstance'
 
 export const getCourses = async (searchParams: SearchParams): Promise<CourseResponse> => {
   const filteredSearchParams = Object.fromEntries(
-    Object.entries(searchParams).filter(([, value]) => value !== '')
+    Object.entries(searchParams).filter(([, value]) => {
+      if (Array.isArray(value)) return value.length > 0
+      return value !== ''
+    })
   )
-  const queryParams = new URLSearchParams({ ...filteredSearchParams }).toString()
+  const normalizedSearchParams = Object.fromEntries(
+    Object.entries(filteredSearchParams).map(([key, value]) => [key, Array.isArray(value) ? value.join(',') : String(value)])
+  )
+  const queryParams = new URLSearchParams({ ...normalizedSearchParams }).toString()
   const response = await axiosInstance.get(`/courses?${queryParams}`)
   return response.data
 }

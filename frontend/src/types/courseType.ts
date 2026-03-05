@@ -44,5 +44,8 @@ export interface SearchParams {
   academy: string;
   department: string;
   courseType: string;
+  weekdays: string[];
+  periods: string[];
+  semesters: string[];
   sortBy?: string;
 }

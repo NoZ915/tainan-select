@@ -10,12 +10,28 @@ export const getAllCourses: RequestHandler = async (
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 15;
     const offset = (page - 1) * limit;
+    const weekdays = String(req.query.weekdays || "")
+      .split(",")
+      .map((item) => parseInt(item.trim(), 10))
+      .filter((value) => !Number.isNaN(value) && value >= 1 && value <= 7);
+    const periods = String(req.query.periods || "")
+      .split(",")
+      .map((item) => item.trim().toUpperCase())
+      .filter((value) => Boolean(value));
+    const semesters = String(req.query.semesters || "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter((value) => Boolean(value));
+
     const search = {
       search: String(req.query.search || ""),
       category: String(req.query.category || "all"),
       academy: String(req.query.academy || ""),
       department: String(req.query.department || ""),
       courseType: String(req.query.courseType || ""),
+      weekdays,
+      periods,
+      semesters,
       sortBy: String(req.query.sortBy || "")
     };
 
