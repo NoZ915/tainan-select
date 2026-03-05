@@ -11,6 +11,14 @@ export type VersionEntry = {
 // Keep this list in reverse-chronological order (newest first).
 export const VERSION_HISTORY: VersionEntry[] = [
   {
+    version: '2.1.1～2.1.4',
+    releasedAt: '2026-03-05',
+    kind: 'feat',
+    title: '課表與搜尋體驗整合升級',
+    summary:
+      '課表手機版更好讀、未登入可先預覽並直接登入；登入視窗新增白名單/隱私 Q&A；課程卡片直接顯示學期；搜尋新增星期/節次（含時間）/學期多選進階篩選。',
+  },
+  {
     version: 'v2.1.0',
     releasedAt: '2026-03-04',
     kind: 'feat',
