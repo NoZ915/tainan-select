@@ -1,10 +1,59 @@
 import { Op, Transaction } from "sequelize";
 import CourseModel from "../models/Course";
+import CourseScheduleModel from "../models/CourseSchedule";
 import { Course } from "../types/course";
 import { PaginationParams } from "../types/course";
 import db from "../models";
 
+const PERIOD_ORDER = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G"] as const;
+const PERIOD_INDEX_MAP = PERIOD_ORDER.reduce<Record<string, number>>((acc, period, index) => {
+  acc[period] = index;
+  return acc;
+}, {});
+
 class CourseRepository {
+  private getFilteredCourseIdsBySchedule = async (
+    weekdays: number[],
+    periods: string[]
+  ): Promise<number[] | null> => {
+    if (weekdays.length === 0 && periods.length === 0) return null;
+
+    const scheduleRows = await CourseScheduleModel.findAll({
+      attributes: ["course_id", "day", "start_period", "span"],
+      where: weekdays.length > 0 ? { day: { [Op.in]: weekdays } } : undefined,
+      raw: true,
+    });
+
+    const selectedPeriods = new Set(
+      periods
+        .map((period) => period.toUpperCase())
+        .filter((period) => Object.prototype.hasOwnProperty.call(PERIOD_INDEX_MAP, period))
+    );
+
+    const matchedCourseIds = new Set<number>();
+    scheduleRows.forEach((row) => {
+      const startIndex = PERIOD_INDEX_MAP[row.start_period as string];
+      if (typeof startIndex !== "number") return;
+
+      if (selectedPeriods.size === 0) {
+        matchedCourseIds.add(Number(row.course_id));
+        return;
+      }
+
+      const span = Math.max(Number(row.span) || 1, 1);
+      const endIndex = startIndex + span - 1;
+      for (let index = startIndex; index <= endIndex; index += 1) {
+        const period = PERIOD_ORDER[index];
+        if (period && selectedPeriods.has(period)) {
+          matchedCourseIds.add(Number(row.course_id));
+          return;
+        }
+      }
+    });
+
+    return [...matchedCourseIds];
+  };
+
   async getAllCourses({
     limit,
     offset,
@@ -43,6 +92,13 @@ class CourseRepository {
 
     if (search && search.academy) whereCondition.academy = search.academy;
     if (search && search.courseType) whereCondition.course_type = search.courseType;
+    if (search && search.semesters.length > 0) whereCondition.semester = { [Op.in]: search.semesters };
+
+    const filteredByScheduleIds = await this.getFilteredCourseIdsBySchedule(search?.weekdays ?? [], search?.periods ?? []);
+    if (filteredByScheduleIds) {
+      if (filteredByScheduleIds.length === 0) return { courses: [], total: 0 };
+      whereCondition.id = { [Op.in]: filteredByScheduleIds };
+    }
 
     // 排序功能
     let order: any[] = [];
