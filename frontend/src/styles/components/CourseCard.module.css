@@ -10,3 +10,18 @@
 .courseCardStats {
 	color: var(--mantine-color-brick-red-3);
 }
+
+.courseTitleRow {
+	margin-bottom: 2px;
+	justify-content: center;
+	width: 100%;
+}
+
+.semesterBadge {
+	flex-shrink: 0;
+}
+
+.courseTitle {
+	min-width: 0;
+	text-align: center;
+}
