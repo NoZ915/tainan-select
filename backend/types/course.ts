@@ -20,6 +20,9 @@ export interface CourseSearchParams {
   academy: string;
   department: string;
   courseType: string;
+  weekdays: number[];
+  periods: string[];
+  semesters: string[];
   sortBy?: string;
 }
 

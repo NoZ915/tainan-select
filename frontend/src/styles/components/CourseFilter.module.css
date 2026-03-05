@@ -37,6 +37,16 @@
   margin-bottom: 20px;
 }
 
+.advancedFilterAccordion {
+  margin-bottom: 20px;
+}
+
+.advancedFilterSummary {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b6b6b;
+}
+
 .searchInput,
 .selectInput {
   border: 2px solid black;
