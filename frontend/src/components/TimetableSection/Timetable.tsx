@@ -1,5 +1,4 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { Alert, Paper, Stack, Text } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useQueryClient } from '@tanstack/react-query'
@@ -16,6 +15,8 @@ import { AddedCourseItem, TimetableConflict, TimetableItem } from '../../types/t
 import { swapTimetableCourse } from '../../apis/timetableAPI'
 import { ApiError } from '../../apis/axiosInstance'
 import { QUERY_KEYS } from '../../hooks/queryKeys'
+import styles from '../../styles/components/Timetable.module.css'
+import AuthButton from '../AuthButton'
 
 import SwapConflictModal from './SwapConflictModal'
 import TimetableHeader from './TimetableHeader'
@@ -221,24 +222,7 @@ const Timetable: React.FC = () => {
     }
   }
 
-  if (!isAuthenticated) {
-    return (
-      <Paper withBorder p='lg' radius='md'>
-        <Text fw={600}>登入後即可使用收藏課表</Text>
-        <Text c='dimmed' size='sm'>
-          你可以先回到
-          {' '}
-          <Text component={Link} to='/' span inherit>
-            首頁
-          </Text>
-          {' '}
-          登入，再回來排課與檢查衝堂。
-        </Text>
-      </Paper>
-    )
-  }
-
-  if (isSemestersLoading || isTimetableLoading) {
+  if (isAuthenticated && (isSemestersLoading || isTimetableLoading)) {
     return (
       <Paper withBorder p='lg' radius='md'>
         <Text>課表載入中...</Text>
@@ -246,7 +230,7 @@ const Timetable: React.FC = () => {
     )
   }
 
-  if (semesterOptions.length === 0) {
+  if (isAuthenticated && semesterOptions.length === 0) {
     return (
       <Paper withBorder p='lg' radius='md'>
         <Text c='dimmed'>目前沒有可選學期。</Text>
@@ -255,7 +239,8 @@ const Timetable: React.FC = () => {
   }
 
   return (
-    <Stack gap='md'>
+    <div className={styles.timetableLockWrapper}>
+      <Stack gap='md' className={!isAuthenticated ? styles.timetableLockedContent : undefined}>
       <SwapConflictModal
         opened={isSwapDialogOpened}
         targetCourse={swapTargetCourse}
@@ -274,7 +259,7 @@ const Timetable: React.FC = () => {
           semesterOptions={semesterOptions}
           selectedSemester={selectedSemester}
           onSemesterChange={setSelectedSemester}
-          isDisabled={isSwapDialogOpened}
+          isDisabled={isSwapDialogOpened || !isAuthenticated}
           itemsCount={items.length}
           selectableCount={selectableInterestCourses.length}
           missingTimeslotCount={missingTimeslotCountInCurrentSemester}
@@ -322,7 +307,7 @@ const Timetable: React.FC = () => {
       {conflicts.length === 0 && missingTimeslotCountInCurrentSemester > 0 && (
         <Alert color='orange' title='缺少時段資料'>
           <Text size='sm'>
-            本學期有 {missingTimeslotCountInCurrentSemester} 門課缺少時段資料，這些課程不會顯示在課表格，也不參與衝堂判斷。
+            本學期有 {missingTimeslotCountInCurrentSemester} 門課資料較舊，平台尚未更新時段資料。這些課程不會顯示在課表格，也不參與衝堂判斷。
           </Text>
         </Alert>
       )}
@@ -332,9 +317,21 @@ const Timetable: React.FC = () => {
         weekdaysToRender={weekdaysToRender}
         grid={grid}
       />
-    </Stack>
+      </Stack>
+
+      {!isAuthenticated && (
+        <div className={styles.timetableLoginOverlay}>
+          <Paper withBorder radius='md' p='md'>
+            <Text fw={700}>登入後即可使用排課表功能</Text>
+            <Text c='dimmed' size='sm'>
+              登入後，即可使用排課、檢查衝堂，並依當前時段提示目前所在欄位，提醒上課時間。
+            </Text>
+            <AuthButton className={styles.timetableOverlayAuthButton} />
+          </Paper>
+        </div>
+      )}
+    </div>
   )
 }
 
 export default Timetable
-
