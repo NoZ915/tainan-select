@@ -15,7 +15,12 @@ const CourseCard: React.FC<CourseCardProp> = ({ course }) => {
 	return (
 		<Card padding='lg' className={style.courseCard}>
 			<Link to={`/course/${course.id}`} style={{ textDecoration: 'none', flexGrow: 1, color: 'black' }} >
-				<Text fw={500}>{course.course_name}</Text>
+				<Group gap='xs' align='center' wrap='nowrap' className={style.courseTitleRow}>
+					<Text fw={500} className={style.courseTitle}>{course.course_name}</Text>
+					<Badge className={style.semesterBadge} color='brick-red.6' variant='light' radius='sm'>
+						{course.semester}
+					</Badge>
+				</Group>
 				<Text fw={300} c='gray'>{course.instructor}</Text>
 
 				<Group justify='center'>
