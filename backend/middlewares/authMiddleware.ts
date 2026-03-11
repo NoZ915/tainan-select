@@ -50,6 +50,7 @@ export const getCookie: RequestHandler = (req, res, next): void => {
     
     next();
   } catch (err) {
-    res.json({ error: err });
+    req.user = undefined;
+    next();
   }
 };
