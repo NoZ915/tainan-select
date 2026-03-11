@@ -8,6 +8,7 @@ export const QUERY_KEYS = {
   CHECK_AUTH_STATUS: 'checkAuthStatus',
   
   REVIEWS: 'reviews',
+  REVIEW_COMMENTS: 'review_comments',
   INFINITY_REVIEWS: 'infinity_reviews',
   LATEST_REVIEWS: 'latest_reviews',
   REACTION_PRESETS: 'reaction_presets',
