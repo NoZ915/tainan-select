@@ -28,7 +28,6 @@ const CourseRelatedPostsPanel: React.FC<CourseRelatedPostsPanelProps> = ({ cours
               href={post.post_url}
               target='_blank'
               rel='noreferrer'
-              radius='md'
               withBorder
               className={styles.card}
             >

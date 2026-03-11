@@ -100,10 +100,10 @@ const CourseDetailPage: React.FC = () => {
             <CourseInfoPanel course={courseResponse} isLoading={isInfoLoading} />
           </div>
           <div style={{ marginTop: '2rem' }}>
-            <CourseRelatedPostsPanel course={courseResponse} isLoading={isInfoLoading} />
+            <CourseReviewsPanel course={courseResponse} reviews={reviews} isLoading={isReviewsLoading} />
           </div>
           <div style={{ marginTop: '2rem' }}>
-            <CourseReviewsPanel course={courseResponse} reviews={reviews} isLoading={isReviewsLoading} />
+            <CourseRelatedPostsPanel course={courseResponse} isLoading={isInfoLoading} />
           </div>
           {course && (
             <ActionIcon
@@ -138,9 +138,9 @@ const CourseDetailPage: React.FC = () => {
           <CourseInfoPanel course={courseResponse} isLoading={isInfoLoading} />
         </div>
         <div style={{ flex: '2' }}>
-          <CourseRelatedPostsPanel course={courseResponse} isLoading={isInfoLoading} />
+          <CourseReviewsPanel course={courseResponse} reviews={reviews} isLoading={isReviewsLoading} />
           <div style={{ marginTop: '2rem' }}>
-            <CourseReviewsPanel course={courseResponse} reviews={reviews} isLoading={isReviewsLoading} />
+            <CourseRelatedPostsPanel course={courseResponse} isLoading={isInfoLoading} />
           </div>
         </div>
         {course && (
