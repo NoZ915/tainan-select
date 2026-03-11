@@ -6,6 +6,7 @@ import UserModel from "../models/Users";
 import { AllReviewsResponseByUser, CreateReviewInput, LatestReviewsResponse, ReviewsResponse } from "../types/review";
 import CourseRepository from "./courseRepository";
 import ReviewReactionRepository from "./reviewReactionRepository";
+import ReviewCommentRepository from "./reviewCommentRepository";
 
 class ReviewRepository {
   async getAllReviewsCount(): Promise<number> {
@@ -30,6 +31,9 @@ class ReviewRepository {
       reviews.map((review) => review.id),
       user_id
     );
+    const commentCountMap = await ReviewCommentRepository.getCommentCountByReviewIds(
+      reviews.map((review) => review.id)
+    );
 
     // 目前使用者的評價優先顯示
     const ownerReviews = [];
@@ -47,7 +51,12 @@ class ReviewRepository {
       const reactions = reactionSummaryMap.get(review.id) || { counts: {}, myReactions: [] };
       const reviewJson = review.toJSON();
       const { user_id: userId, ...reviewWithoutUserId } = reviewJson;
-      return { ...reviewWithoutUserId, is_owner, reactions };
+      return {
+        ...reviewWithoutUserId,
+        is_owner,
+        reactions,
+        comment_count: commentCountMap.get(review.id) ?? 0,
+      };
     });
 
     return reviewsWithOwnerFlag as ReviewsResponse[];
@@ -101,13 +110,21 @@ class ReviewRepository {
       reviews.map((review) => review.id),
       user_id
     );
+    const commentCountMap = await ReviewCommentRepository.getCommentCountByReviewIds(
+      reviews.map((review) => review.id)
+    );
 
     const reviewsWithOwnerFlag = reviews.map((review) => {
       const is_owner = review.user_id === user_id;
       const reactions = reactionSummaryMap.get(review.id) || { counts: {}, myReactions: [] };
       const reviewJson = review.toJSON();
       const { user_id: userId, ...reviewWithoutUserId } = reviewJson;
-      return { ...reviewWithoutUserId, is_owner, reactions };
+      return {
+        ...reviewWithoutUserId,
+        is_owner,
+        reactions,
+        comment_count: commentCountMap.get(review.id) ?? 0,
+      };
     });
 
     return reviewsWithOwnerFlag as unknown as AllReviewsResponseByUser[];
@@ -173,6 +190,9 @@ class ReviewRepository {
       reviews.map((review) => review.id),
       user_id
     );
+    const commentCountMap = await ReviewCommentRepository.getCommentCountByReviewIds(
+      reviews.map((review) => review.id)
+    );
 
     const reviewsWithOwnerFlag = reviews.map((review) => {
       const reviewJson = review.toJSON();
@@ -181,8 +201,12 @@ class ReviewRepository {
       const reactions = reactionSummaryMap.get(review.id) || { counts: {}, myReactions: [] };
       return { ...reviewWithoutUserId, is_owner, reactions };
     });
+    const withCommentCount = reviewsWithOwnerFlag.map((review) => ({
+      ...review,
+      comment_count: commentCountMap.get(review.id) ?? 0,
+    }));
 
-    return reviewsWithOwnerFlag as LatestReviewsResponse[];
+    return withCommentCount as LatestReviewsResponse[];
   }
 
   async hasUserReviewedCourse(course_id: number, user_id: number | undefined): Promise<boolean> {

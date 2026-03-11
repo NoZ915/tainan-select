@@ -19,6 +19,7 @@ export interface ReviewsResponse {
   coolness: number;
   comment?: string;
   favorites: number;
+  comment_count: number;
   reactions: ReviewReactionSummary;
   created_at: Date;
   updated_at: Date;
@@ -27,6 +28,20 @@ export interface ReviewsResponse {
     avatar: string;
   },
   is_owner: boolean
+}
+
+export interface ReviewCommentResponse {
+  id: number;
+  review_id: number;
+  user_id: number;
+  content: string;
+  created_at: Date;
+  updated_at: Date;
+  UserModel: {
+    name: string;
+    avatar: string;
+  };
+  is_owner: boolean;
 }
 
 export type LatestReviewsResponse = ReviewsResponse & {
