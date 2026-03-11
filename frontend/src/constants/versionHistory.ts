@@ -11,6 +11,22 @@ export type VersionEntry = {
 // Keep this list in reverse-chronological order (newest first).
 export const VERSION_HISTORY: VersionEntry[] = [
   {
+    version: 'v3.0.1',
+    releasedAt: '2026-03-12',
+    kind: 'feat',
+    title: '評論留言功能上線',
+    summary:
+      '每則評論現在都可以留言、編輯與刪除',
+  },
+  {
+    version: 'v3.0.0',
+    releasedAt: '2026-03-12',
+    kind: 'feat',
+    title: 'Dcard 相關貼文與管理後台上線',
+    summary:
+      '課程頁新增相關貼文區塊，管理員後台可以匯入 Dcard 貼文、預覽自動配對課程、同步 Google 搜尋結果，也補上管理權限與匯入紀錄。',
+  },
+  {
     version: '2.1.1～2.1.4',
     releasedAt: '2026-03-05',
     kind: 'feat',
