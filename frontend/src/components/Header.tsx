@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { FaAngleDown } from 'react-icons/fa'
 
 import { useIsMobile } from '../hooks/useIsMobile'
+import { useGetAdminStatus } from '../hooks/admin/useGetAdminStatus'
 
 import { Group, Text, Box, Container, Image, Burger, Drawer, Menu, ActionIcon } from '@mantine/core'
 import styles from '../styles/components/Header.module.css'
@@ -13,6 +14,7 @@ const Header: React.FC = () => {
   const location = useLocation() // 用於獲取當前路徑
   const isMobile = useIsMobile()
   const [opened, setOpened] = useState(false)
+  const { data: adminStatus } = useGetAdminStatus()
 
   // 定義導航項目
   const navItems = [
@@ -34,7 +36,12 @@ const Header: React.FC = () => {
           <FaAngleDown size={18} />
         </ActionIcon>
       </Menu.Target>
-      <Menu.Dropdown className={styles.menuDropdown}>
+        <Menu.Dropdown className={styles.menuDropdown}>
+        {adminStatus?.isAdmin && (
+          <Menu.Item component={Link} to='/admin/related-posts'>
+            相關貼文後台
+          </Menu.Item>
+        )}
         <Menu.Item component={Link} to='/versions'>
           版本紀錄
         </Menu.Item>
@@ -75,6 +82,16 @@ const Header: React.FC = () => {
             >
               版本紀錄
             </Text>
+            {adminStatus?.isAdmin && (
+              <Text
+                component={Link}
+                to='/admin/related-posts'
+                onClick={() => setOpened(false)}
+                className={styles.mobileSecondaryLink}
+              >
+                相關貼文後台
+              </Text>
+            )}
           </nav>
         </Drawer>
       </header>

@@ -23,6 +23,8 @@ import MailErrorPage from './pages/MailErrorPage.tsx'
 import ProfilePage from './pages/ProfilePage.tsx'
 import VersionsPage from './pages/VersionsPage.tsx'
 import ProtectedRoute from './pages/ProtectedRoute.tsx'
+import AdminRoute from './pages/AdminRoute.tsx'
+import AdminRelatedPostsPage from './pages/AdminRelatedPostsPage.tsx'
 import NotFoundPage from './pages/NotFoundPage.tsx'
 
 const head = createHead()
@@ -90,6 +92,16 @@ const router = createBrowserRouter([
             path: 'profile',
             element: <ProfilePage />,
             handle: { seo: { title: buildTitleStatic('個人頁面') } },
+          },
+        ],
+      },
+      {
+        element: <AdminRoute />,
+        children: [
+          {
+            path: 'admin/related-posts',
+            element: <AdminRelatedPostsPage />,
+            handle: { seo: { title: buildTitleStatic('相關貼文後台') } },
           },
         ],
       },
