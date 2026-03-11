@@ -1,6 +1,13 @@
 import { load } from "cheerio";
 import { ManualRelatedPostImportItem } from "../types/admin";
 
+export class DcardImportValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "DcardImportValidationError";
+  }
+}
+
 type DcardJsonLdComment = {
   text?: string;
   datePublished?: string;
@@ -112,7 +119,14 @@ const normalizeItem = (item: Record<string, unknown>): ManualRelatedPostImportIt
 };
 
 const parseJsonInput = (input: string): ManualRelatedPostImportItem[] => {
-  const parsed = JSON.parse(input) as unknown;
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(input) as unknown;
+  } catch {
+    throw new DcardImportValidationError("JSON 格式錯誤，請確認貼上的內容是有效 JSON。");
+  }
+
   const items = Array.isArray(parsed) ? parsed : [parsed];
 
   return items
@@ -237,5 +251,5 @@ export const parseDcardSourceInput = (input: string): ManualRelatedPostImportIte
     return parseHtmlInput(trimmed);
   }
 
-  return [];
+  throw new DcardImportValidationError("無法辨識匯入格式，請貼上瀏覽器匯出 JSON 或完整 HTML。");
 };

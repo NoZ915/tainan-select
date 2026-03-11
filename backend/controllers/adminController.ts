@@ -1,6 +1,10 @@
 import { RequestHandler } from "express";
 import AdminRelatedPostService from "../services/adminRelatedPostService";
 import UserService from "../services/userService";
+import { DcardImportValidationError } from "../utils/dcardImportParser";
+
+const getErrorStatus = (error: unknown): number =>
+  error instanceof DcardImportValidationError ? 400 : 500;
 
 export const getAdminStatus: RequestHandler = async (req, res): Promise<void> => {
   if (!req.user) {
@@ -44,7 +48,7 @@ export const importDcardSource: RequestHandler = async (req, res): Promise<void>
     );
     res.status(200).json(result);
   } catch (error) {
-    res.status(500).json({ message: error instanceof Error ? error.message : "匯入 Dcard 資料失敗" });
+    res.status(getErrorStatus(error)).json({ message: error instanceof Error ? error.message : "匯入 Dcard 資料失敗" });
   }
 };
 
@@ -60,7 +64,7 @@ export const previewImportDcardSource: RequestHandler = async (req, res): Promis
     const result = await AdminRelatedPostService.previewDcardSource(input);
     res.status(200).json(result);
   } catch (error) {
-    res.status(500).json({ message: error instanceof Error ? error.message : "預覽 Dcard 資料失敗" });
+    res.status(getErrorStatus(error)).json({ message: error instanceof Error ? error.message : "預覽 Dcard 資料失敗" });
   }
 };
 
