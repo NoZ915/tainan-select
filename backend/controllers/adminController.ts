@@ -6,6 +6,13 @@ import { DcardImportValidationError } from "../utils/dcardImportParser";
 const getErrorStatus = (error: unknown): number =>
   error instanceof DcardImportValidationError ? 400 : 500;
 
+const parseBoundedNumber = (value: unknown, fallback: number, min: number, max: number): number => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+
+  return Math.min(Math.max(parsed, min), max);
+};
+
 export const getAdminStatus: RequestHandler = async (req, res): Promise<void> => {
   if (!req.user) {
     res.status(401).json({ message: "Unauthorized" });
@@ -70,8 +77,8 @@ export const previewImportDcardSource: RequestHandler = async (req, res): Promis
 
 export const syncRelatedPostsFromGoogle: RequestHandler = async (req, res): Promise<void> => {
   try {
-    const limit = Math.min(Math.max(Number(req.body?.limit ?? 30), 1), 200);
-    const maxResultsPerCourse = Math.min(Math.max(Number(req.body?.maxResultsPerCourse ?? 5), 1), 10);
+    const limit = parseBoundedNumber(req.body?.limit, 30, 1, 200);
+    const maxResultsPerCourse = parseBoundedNumber(req.body?.maxResultsPerCourse, 5, 1, 10);
     const onlyUnreviewed = Boolean(req.body?.onlyUnreviewed);
     const replaceExisting = Boolean(req.body?.replaceExisting);
     const semester =
