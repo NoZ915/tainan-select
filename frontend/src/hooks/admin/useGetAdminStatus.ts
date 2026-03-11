@@ -8,9 +8,9 @@ export const useGetAdminStatus = () => {
   const userId = useAuthStore((state) => state.user?.id)
 
   return useQuery({
-    queryKey: [QUERY_KEYS.ADMIN_STATUS, userId],
+    queryKey: [QUERY_KEYS.ADMIN_STATUS, userId ?? 'authenticated'],
     queryFn: getAdminStatus,
-    enabled: isAuthenticated && Boolean(userId),
+    enabled: isAuthenticated,
     retry: false,
     staleTime: 5 * 60 * 1000,
   })

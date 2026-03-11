@@ -11,8 +11,8 @@ export const useGetRelatedPostOverview = (params: {
   const userId = useAuthStore((state) => state.user?.id)
 
   return useQuery({
-    queryKey: [QUERY_KEYS.ADMIN_RELATED_POSTS_OVERVIEW, userId, params],
+    queryKey: [QUERY_KEYS.ADMIN_RELATED_POSTS_OVERVIEW, userId ?? 'authenticated', params],
     queryFn: () => getRelatedPostOverview(params),
-    enabled: isAuthenticated && Boolean(userId),
+    enabled: isAuthenticated,
   })
 }
