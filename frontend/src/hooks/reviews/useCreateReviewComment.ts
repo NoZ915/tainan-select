@@ -9,6 +9,9 @@ export const useCreateReviewComment = (review_id: number) => {
     mutationFn: (content: string) => createReviewComment(review_id, content),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.REVIEW_COMMENTS, review_id] })
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.REVIEWS] })
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INFINITY_REVIEWS] })
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LATEST_REVIEWS] })
     },
   })
 }

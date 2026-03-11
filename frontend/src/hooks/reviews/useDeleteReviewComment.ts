@@ -9,6 +9,9 @@ export const useDeleteReviewComment = (review_id: number) => {
     mutationFn: (comment_id: number) => deleteReviewComment(review_id, comment_id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.REVIEW_COMMENTS, review_id] })
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.REVIEWS] })
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INFINITY_REVIEWS] })
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LATEST_REVIEWS] })
     },
   })
 }
