@@ -6,8 +6,10 @@ export const QUERY_KEYS = {
   
   AUTH_STATUS: 'authStatus',
   CHECK_AUTH_STATUS: 'checkAuthStatus',
+  ADMIN_STATUS: 'admin_status',
   
   REVIEWS: 'reviews',
+  REVIEW_COMMENTS: 'review_comments',
   INFINITY_REVIEWS: 'infinity_reviews',
   LATEST_REVIEWS: 'latest_reviews',
   REACTION_PRESETS: 'reaction_presets',
@@ -20,6 +22,7 @@ export const QUERY_KEYS = {
   TIMETABLE_INTEREST_OPTIONS: 'timetable_interest_options',
   
   PLATFORM_STATS: 'platform_stats',
+  ADMIN_RELATED_POSTS_OVERVIEW: 'admin_related_posts_overview',
   
   // NOTE: 暫時移除此功能
   POPULAR_COURSES: 'popular_courses',

@@ -8,6 +8,7 @@ import { useGetAllReviewsByCourseId } from '../hooks/reviews/useGetAllReviewsByC
 
 import { ActionIcon, Container, Tooltip } from '@mantine/core'
 import CourseInfoPanel from '../components/CourseInfoPanel'
+import CourseRelatedPostsPanel from '../components/CourseRelatedPostsPanel'
 import CourseReviewsPanel from '../components/CourseReviewsPanel'
 import AddOrEditReviewModal from '../components/AddOrEditReviewModal'
 import LoginModal from '../components/LoginModal'
@@ -99,6 +100,9 @@ const CourseDetailPage: React.FC = () => {
             <CourseInfoPanel course={courseResponse} isLoading={isInfoLoading} />
           </div>
           <div style={{ marginTop: '2rem' }}>
+            <CourseRelatedPostsPanel course={courseResponse} isLoading={isInfoLoading} />
+          </div>
+          <div style={{ marginTop: '2rem' }}>
             <CourseReviewsPanel course={courseResponse} reviews={reviews} isLoading={isReviewsLoading} />
           </div>
           {course && (
@@ -134,7 +138,10 @@ const CourseDetailPage: React.FC = () => {
           <CourseInfoPanel course={courseResponse} isLoading={isInfoLoading} />
         </div>
         <div style={{ flex: '2' }}>
-          <CourseReviewsPanel course={courseResponse} reviews={reviews} isLoading={isReviewsLoading} />
+          <CourseRelatedPostsPanel course={courseResponse} isLoading={isInfoLoading} />
+          <div style={{ marginTop: '2rem' }}>
+            <CourseReviewsPanel course={courseResponse} reviews={reviews} isLoading={isReviewsLoading} />
+          </div>
         </div>
         {course && (
           <Tooltip

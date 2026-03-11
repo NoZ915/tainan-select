@@ -17,6 +17,7 @@ import statsRoutes from "./routes/stats";
 import semestersRoutes from "./routes/semesters";
 import timetablesRoutes from "./routes/timetables";
 import reactionsRoutes from "./routes/reactions";
+import adminRoutes from "./routes/admin";
 
 const app: Express = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -47,6 +48,7 @@ app.use("/api/stats", statsRoutes);
 app.use("/api/reactions", reactionsRoutes);
 app.use("/api/semesters", semestersRoutes);
 app.use("/api/timetables", timetablesRoutes);
+app.use("/api/admin", adminRoutes);
 
 const startServer = async (): Promise<void> => {
   try {

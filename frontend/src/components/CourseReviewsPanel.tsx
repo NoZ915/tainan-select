@@ -1,4 +1,4 @@
-import { Container, Loader } from '@mantine/core'
+import { Container, Loader, Text } from '@mantine/core'
 import styles from '../styles/components/CourseReviewsPanel.module.css'
 
 import { ReviewsResponse } from '../types/reviewType'
@@ -18,11 +18,17 @@ const CourseReviewsPanel: React.FC<CourseReviewsPanelProps> = ({ course, reviews
   }
 
   if (!reviews || !Array.isArray(reviews.reviews) || reviews.reviews.length === 0) {
-    return <>尚無評論</>
+    return (
+      <Container className={styles.container}>
+        <Text fw={900} className={styles.heading}>使用者評價</Text>
+        <Text c='dimmed'>尚無評論</Text>
+      </Container>
+    )
   }
 
   return (
     <Container className={styles.container}>
+      <Text fw={900} className={styles.heading}>使用者評價</Text>
       {reviews.reviews.map((review) => {
         return (
           <ReviewCard key={review.id} review={review} course={course} />

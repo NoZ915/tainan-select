@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 import formatCourseTime from '../utils/formatCourseTime.tsx'
 import { useIsMobile } from '../hooks/useIsMobile'
-import { Course } from '../types/courseType'
+import { CourseDetailResponse } from '../types/courseType'
 
 import { Badge, Flex, Group, Text } from '@mantine/core'
 import style from '../styles/components/CourseInfoPanel.module.css'
@@ -10,7 +10,7 @@ import style from '../styles/components/CourseInfoPanel.module.css'
 import InterestButton from './InterestButton'
 
 interface CourseInfoPanelProps {
-  course: { course: Course, hasUserAddInterest: boolean } | null | undefined;
+  course: CourseDetailResponse | null | undefined;
   isLoading: boolean;
 }
 

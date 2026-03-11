@@ -19,13 +19,15 @@ export const statusController: RequestHandler = async (
       res.status(404).json({ authenticated: false, message: "用戶未找到" });
       return;
     }
-    const { name, detail, avatar, created_at, updated_at } = user;
+    const { id, name, detail, avatar, is_admin, created_at, updated_at } = user;
     res.status(200).json({
       authenticated: true,
       user: {
+        id,
         name,
         detail,
         avatar,
+        is_admin,
         created_at,
         updated_at,
       },

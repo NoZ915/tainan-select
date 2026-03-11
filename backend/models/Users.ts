@@ -15,6 +15,7 @@ class UserModel extends Model<
   declare detail?: string;
   declare avatar?: string | null;
   declare whitelist_id?: number | null;
+  declare is_admin: boolean;
   declare created_at: Date;
   declare updated_at: Date;
 }
@@ -50,6 +51,11 @@ UserModel.init(
     whitelist_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
+    },
+    is_admin: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
     created_at: {
       type: DataTypes.DATE,
