@@ -1,7 +1,5 @@
 export interface User{
     id: number;
-    uuid: string;
-    google_sub: string;
     name?: string;
     detail?: string;
     avatar?: string | null;
