@@ -359,6 +359,13 @@ class AdminRelatedPostService {
     }
 
     await db.sequelize.transaction(async (transaction) => {
+      if (replaceExisting) {
+        await CourseRelatedPostRepository.deleteStaleBySourceAndCourseIds(
+          MANUAL_SOURCE,
+          [...affectedCourseIds],
+          transaction
+        );
+      }
       await CourseRelatedPostRepository.upsertMany(rows, transaction);
     });
 
@@ -367,7 +374,7 @@ class AdminRelatedPostService {
       importedRows: rows.length,
       matchedCourses: affectedCourseIds.size,
       unmatchedItems,
-      replaceExisting: false,
+      replaceExisting,
       imported_courses: [...importedCoursesById.values()].sort((a, b) => a.course_id - b.course_id),
     };
   }
