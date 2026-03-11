@@ -44,11 +44,10 @@ export interface UpsertReviewInput {
 export interface ReviewComment {
   id: number;
   review_id: number;
-  user_id: number;
   content: string;
   created_at: Date;
   updated_at: Date;
-  UserModel: {
+  UserModel?: {
     name: string;
     avatar: string;
   };

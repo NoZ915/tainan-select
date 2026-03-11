@@ -45,6 +45,12 @@ export const toggleReviewReaction = async (
 
 export const getReviewComments = async (review_id: number): Promise<ReviewComment[]> => {
     const response = await axiosInstance.get(`/reviews/${review_id}/comments`)
+    if (!Array.isArray(response.data)) {
+        const errorMessage = typeof response.data?.error === 'string'
+            ? response.data.error
+            : 'Invalid review comments response'
+        throw new Error(errorMessage)
+    }
     return response.data
 }
 

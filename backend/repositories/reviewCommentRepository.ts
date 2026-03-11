@@ -41,9 +41,12 @@ class ReviewCommentRepository {
     })
 
     return (comments as unknown as ReviewCommentWithUser[]).map((comment) => {
-      const commentJson = comment.toJSON() as Omit<ReviewCommentResponse, 'is_owner'>
+      const commentJson = comment.toJSON() as ReviewCommentModel['dataValues'] & {
+        UserModel?: ReviewCommentResponse['UserModel']
+      }
+      const { user_id: _userId, ...commentWithoutUserId } = commentJson
       return {
-        ...commentJson,
+        ...commentWithoutUserId,
         is_owner: user_id !== undefined && comment.user_id === user_id,
       }
     })

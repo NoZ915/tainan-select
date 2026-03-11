@@ -62,7 +62,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
     isLoading: isCommentsLoading,
     isError: isCommentsError,
   } = useGetReviewComments(review.id, isCommentsOpen)
-  const resolvedComments = comments ?? []
+  const resolvedComments = Array.isArray(comments) ? comments : []
   const { mutate: createComment, isPending: isCreatingComment } = useCreateReviewComment(review.id)
   const { mutate: deleteComment, isPending: isDeletingComment } = useDeleteReviewComment(review.id)
   const { mutate: updateComment, isPending: isUpdatingComment } = useUpdateReviewComment(review.id)
@@ -205,7 +205,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
   }, [review.comment_count])
 
   useEffect(() => {
-    if (isCommentsOpen && !isCommentsLoading && comments) {
+    if (isCommentsOpen && !isCommentsLoading && Array.isArray(comments)) {
       setCommentCount(comments.length)
     }
   }, [isCommentsOpen, isCommentsLoading, comments])
@@ -435,7 +435,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
               <div className={style.commentsLoading}>
                 <Loader size='sm' />
               </div>
-            ) : isCommentsError && !comments ? (
+            ) : isCommentsError && !Array.isArray(comments) ? (
               <Text size='sm' c='red'>載入留言失敗，請稍後再試。</Text>
             ) : resolvedComments.length === 0 ? (
               <Text size='sm' c='dimmed'>目前還沒有留言。</Text>
