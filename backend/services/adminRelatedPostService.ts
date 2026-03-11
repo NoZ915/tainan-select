@@ -1,5 +1,6 @@
 import axios from "axios";
 import pLimit from "p-limit";
+import { Transaction } from "sequelize";
 import db from "../models";
 import CourseModel from "../models/Course";
 import CourseRelatedPostModel from "../models/CourseRelatedPost";
@@ -26,7 +27,7 @@ import {
   RelatedPostCourseRow,
   scoreCourseTextMatch,
 } from "../utils/relatedPostMatcher";
-import { parseDcardSourceInput } from "../utils/dcardImportParser";
+import { DcardImportValidationError, parseDcardSourceInput } from "../utils/dcardImportParser";
 
 const MANUAL_SOURCE = "manual_import";
 const GOOGLE_SOURCE = "google_search";
@@ -273,7 +274,8 @@ class AdminRelatedPostService {
 
   async importManualPosts(
     items: ManualRelatedPostImportItem[],
-    replaceExisting: boolean
+    replaceExisting: boolean,
+    transaction?: Transaction
   ): Promise<ManualRelatedPostImportResult> {
     const courses = await this.getAllCourseRows();
     const syncedAt = new Date();
@@ -358,16 +360,24 @@ class AdminRelatedPostService {
       throw new Error("沒有可匯入的貼文。請確認 JSON 內容包含 title、post_url，且網址為 Dcard 文章頁。");
     }
 
-    await db.sequelize.transaction(async (transaction) => {
+    const persist = async (activeTransaction: Transaction) => {
       if (replaceExisting) {
         await CourseRelatedPostRepository.deleteStaleBySourceAndCourseIds(
           MANUAL_SOURCE,
           [...affectedCourseIds],
-          transaction
+          activeTransaction
         );
       }
-      await CourseRelatedPostRepository.upsertMany(rows, transaction);
-    });
+      await CourseRelatedPostRepository.upsertMany(rows, activeTransaction);
+    };
+
+    if (transaction) {
+      await persist(transaction);
+    } else {
+      await db.sequelize.transaction(async (newTransaction) => {
+        await persist(newTransaction);
+      });
+    }
 
     return {
       source: MANUAL_SOURCE,
@@ -388,20 +398,27 @@ class AdminRelatedPostService {
     const items = parseDcardSourceInput(input);
 
     if (items.length === 0) {
-      throw new Error("沒有解析出可匯入的 Dcard 文章。請貼上瀏覽器匯出 JSON 或完整文章 HTML。");
+      throw new DcardImportValidationError("沒有解析出可匯入的 Dcard 文章。請貼上瀏覽器匯出 JSON 或完整文章 HTML。");
     }
 
-    const result = await this.importManualPosts(items, replaceExisting);
+    const result = await db.sequelize.transaction(async (transaction) => {
+      const importResult = await this.importManualPosts(items, replaceExisting, transaction);
 
-    await RelatedPostImportRepository.create({
-      source_type: rawInput && rawInput.trim().startsWith("<") ? "dcard_html" : "dcard_json",
-      raw_payload: rawInput?.trim() || input,
-      parsed_payload: items,
-      import_result_summary: {
-        ...result,
-        parsed_items_count: items.length,
-      },
-      created_by: createdBy ?? null,
+      await RelatedPostImportRepository.create(
+        {
+          source_type: rawInput && rawInput.trim().startsWith("<") ? "dcard_html" : "dcard_json",
+          raw_payload: rawInput?.trim() || input,
+          parsed_payload: items,
+          import_result_summary: {
+            ...importResult,
+            parsed_items_count: items.length,
+          },
+          created_by: createdBy ?? null,
+        },
+        transaction
+      );
+
+      return importResult;
     });
 
     return result;
@@ -411,7 +428,7 @@ class AdminRelatedPostService {
     const items = parseDcardSourceInput(input);
 
     if (items.length === 0) {
-      throw new Error("沒有解析出可預覽的 Dcard 文章。請貼上瀏覽器匯出 JSON 或完整文章 HTML。");
+      throw new DcardImportValidationError("沒有解析出可預覽的 Dcard 文章。請貼上瀏覽器匯出 JSON 或完整文章 HTML。");
     }
 
     return await this.previewManualPosts(items);

@@ -19,10 +19,14 @@ export const getAdminStatus: RequestHandler = async (req, res): Promise<void> =>
     return;
   }
 
-  const user = await UserService.getUserById(req.user.id);
-  res.status(200).json({
-    isAdmin: Boolean(user?.is_admin),
-  });
+  try {
+    const user = await UserService.getUserById(req.user.id);
+    res.status(200).json({
+      isAdmin: Boolean(user?.is_admin),
+    });
+  } catch (error) {
+    res.status(500).json({ message: error instanceof Error ? error.message : "取得管理員狀態失敗" });
+  }
 };
 
 export const getRelatedPostOverview: RequestHandler = async (req, res): Promise<void> => {

@@ -1,5 +1,6 @@
 import RelatedPostImportModel from "../models/RelatedPostImport";
 import UserModel from "../models/Users";
+import { Transaction } from "sequelize";
 
 type CreateRelatedPostImportInput = {
   source_type: string;
@@ -10,8 +11,8 @@ type CreateRelatedPostImportInput = {
 };
 
 class RelatedPostImportRepository {
-  async create(input: CreateRelatedPostImportInput): Promise<RelatedPostImportModel> {
-    return await RelatedPostImportModel.create(input);
+  async create(input: CreateRelatedPostImportInput, transaction?: Transaction): Promise<RelatedPostImportModel> {
+    return await RelatedPostImportModel.create(input, { transaction });
   }
 
   async getRecent(limit = 10): Promise<RelatedPostImportModel[]> {

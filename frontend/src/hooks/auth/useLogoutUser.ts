@@ -14,6 +14,8 @@ export const useLogoutUser = () => {
             queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.REVIEWS] })
             queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.COURSE] })
             queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.AUTH_STATUS] })
+            queryClient.removeQueries({ queryKey: [QUERY_KEYS.ADMIN_STATUS] })
+            queryClient.removeQueries({ queryKey: [QUERY_KEYS.ADMIN_RELATED_POSTS_OVERVIEW] })
         },
         onError: () => console.error('登出失敗')
     })

@@ -129,12 +129,18 @@ const parseJsonInput = (input: string): ManualRelatedPostImportItem[] => {
 
   const items = Array.isArray(parsed) ? parsed : [parsed];
 
-  return items
+  const normalizedItems = items
     .map((item) => {
       if (!item || typeof item !== "object") return null;
       return normalizeItem(item as Record<string, unknown>);
     })
     .filter((item): item is ManualRelatedPostImportItem => item !== null);
+
+  if (normalizedItems.length === 0) {
+    throw new DcardImportValidationError("JSON 內容缺少有效的 title 或 post_url。");
+  }
+
+  return normalizedItems;
 };
 
 const parseHtmlInput = (input: string): ManualRelatedPostImportItem[] => {
