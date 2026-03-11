@@ -2,12 +2,16 @@ import { Op } from "sequelize";
 import UserModel from "../models/Users";
 
 class UserRepository {
+    async getUserById(id: number): Promise<UserModel | null> {
+        return await UserModel.findByPk(id);
+    }
+
     async getUserByGoogleSub(google_sub: string): Promise<UserModel | null> {
         return await UserModel.findOne({ where: { google_sub } });
     }
 
     async createUser(google_sub: string, name: string, whitelist_id: number | null = null) {
-        return await UserModel.create({ google_sub, name, whitelist_id });
+        return await UserModel.create({ google_sub, name, whitelist_id, is_admin: false });
     }
 
     async getUserByNameExceptId(name: string, user_id: number): Promise<UserModel | null> {

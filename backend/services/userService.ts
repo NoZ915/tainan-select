@@ -4,6 +4,10 @@ import { generateTainanCharacterName } from "../utils/tainanDiceMaster";
 import { isAvatarAvailable } from "../utils/avatarFiles";
 
 class UserService {
+    async getUserById(id: number) {
+        return await userRepository.getUserById(id);
+    }
+
     async getUserByGoogleSub(google_sub: string) {
         return await userRepository.getUserByGoogleSub(google_sub);
     }
