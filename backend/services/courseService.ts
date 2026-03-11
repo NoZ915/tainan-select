@@ -1,14 +1,15 @@
-import { Course } from "../types/course";
+import { Course, CourseDetailResponse } from "../types/course";
 import { PaginationParams } from "../types/course";
 import CourseRepository from "../repositories/courseRepository";
 import InterestRepository from "../repositories/interestRepository";
+import CourseRelatedPostService from "./courseRelatedPostService";
 
 class CourseService {
   async getAllCourses(params: PaginationParams): Promise<{ courses: Course[], total: number }> {
     return await CourseRepository.getAllCourses(params);
   }
 
-  async getCourse(user_id: number|undefined, course_id: number): Promise<{course: Course, hasUserAddInterest: boolean} | null>{
+  async getCourse(user_id: number|undefined, course_id: number): Promise<CourseDetailResponse | null>{
     const course = await CourseRepository.getCourse(course_id);
     let hasUserAddInterest = false;
 
@@ -18,7 +19,9 @@ class CourseService {
       if(interest !== null) hasUserAddInterest = true;
     };
 
-    return { course, hasUserAddInterest };
+    const related_posts = await CourseRelatedPostService.getByCourseId(course_id);
+
+    return { course, hasUserAddInterest, related_posts };
   }
 
   async getAllDepartments(): Promise<string[]>{
