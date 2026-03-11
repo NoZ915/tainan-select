@@ -5,11 +5,12 @@ import { useAuthStore } from '../../stores/authStore'
 
 export const useGetAdminStatus = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const userId = useAuthStore((state) => state.user?.id)
 
   return useQuery({
-    queryKey: [QUERY_KEYS.ADMIN_STATUS],
+    queryKey: [QUERY_KEYS.ADMIN_STATUS, userId],
     queryFn: getAdminStatus,
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && Boolean(userId),
     retry: false,
     staleTime: 5 * 60 * 1000,
   })
