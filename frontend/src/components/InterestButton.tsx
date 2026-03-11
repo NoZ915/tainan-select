@@ -3,13 +3,13 @@ import { FaHeart, FaRegHeart } from 'react-icons/fa'
 import { useToggleInterest } from '../hooks/interests/useToggleInterest'
 import { useAuthStore } from '../stores/authStore'
 
-import { Course } from '../types/courseType'
+import { CourseDetailResponse } from '../types/courseType'
 
 import styles from '../styles/components/InterestButton.module.css'
 import { Button, Text } from '@mantine/core'
 
 interface InterestButtonProps {
-	course: { course: Course, hasUserAddInterest: boolean } | null | undefined;
+	course: CourseDetailResponse | null | undefined;
 }
 
 const InterestButton: React.FC<InterestButtonProps> = ({course}) => {

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toggleInterest } from '../../apis/interestAPI'
+import { CourseDetailResponse } from '../../types/courseType'
 import { QUERY_KEYS } from '../queryKeys'
 
 export const useToggleInterest = () => {
@@ -9,7 +10,7 @@ export const useToggleInterest = () => {
 		mutationFn: (course_id: number) => toggleInterest(course_id),
 		onSuccess: (data, course_id) => {
 			const courseIdKey = String(course_id)
-			queryClient.setQueryData([QUERY_KEYS.COURSE, courseIdKey], (oldData: { course: { interests_count: number }, hasUserAddInterest: boolean } | undefined) => {
+			queryClient.setQueryData([QUERY_KEYS.COURSE, courseIdKey], (oldData: CourseDetailResponse | undefined) => {
 				if (!oldData) return oldData
 				return {
 					...oldData,

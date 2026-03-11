@@ -18,6 +18,46 @@ export interface Course {
   view_count: number;
 }
 
+export interface CourseRelatedPost {
+  id: number;
+  course_id?: number;
+  course_name?: string;
+  instructor?: string;
+  semester?: string;
+  source: string;
+  post_id: number;
+  forum_alias: string;
+  title: string;
+  excerpt: string | null;
+  preview_title?: string | null;
+  preview_description?: string | null;
+  preview_image_url?: string | null;
+  preview_site_name?: string | null;
+  content?: string | null;
+  comments_json?: RelatedPostComment[];
+  post_url: string;
+  created_at_source: Date;
+  matched_keywords: string[];
+  score: number;
+  synced_at: Date;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface RelatedPostComment {
+  author?: string | null;
+  text: string;
+  created_at?: string | null;
+  url?: string | null;
+  like_count?: number | null;
+}
+
+export interface CourseDetailResponse {
+  course: Course;
+  hasUserAddInterest: boolean;
+  related_posts: CourseRelatedPost[];
+}
+
 export interface Pagination {
   currentPage: number;
   totalPages: number;
@@ -34,7 +74,6 @@ export interface FilterOption {
   label: string;
   value: string;
 }
-
 
 export interface SearchParams {
   page: number;
