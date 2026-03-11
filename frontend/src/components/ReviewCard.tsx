@@ -371,6 +371,8 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
             <span>{commentCount}</span>
           </button>
 
+          <span className={style.reactionDivider} aria-hidden='true' />
+
           {sortedReactionKeys.map((key) => {
             const preset = presetByKey.get(key)
             const isMine = myReactionSet.has(key)
