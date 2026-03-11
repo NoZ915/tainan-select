@@ -31,7 +31,7 @@ import { DcardImportValidationError, parseDcardSourceInput } from "../utils/dcar
 
 const MANUAL_SOURCE = "manual_import";
 const GOOGLE_SOURCE = "google_search";
-const MAX_MANUAL_MATCHES = 5;
+const MAX_MANUAL_MATCHES = 15;
 const GOOGLE_SEARCH_CONCURRENCY = 3;
 
 type GoogleCustomSearchItem = {
