@@ -84,7 +84,20 @@ export const matchPostToCourses = (
 };
 
 export const parseDcardPostIdFromUrl = (url: string): number | null => {
-  const match = url.match(/\/p\/(\d+)/);
+  let parsedUrl: URL;
+
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    return null;
+  }
+
+  const hostname = parsedUrl.hostname.toLowerCase();
+  if (hostname !== "dcard.tw" && hostname !== "www.dcard.tw") {
+    return null;
+  }
+
+  const match = parsedUrl.pathname.match(/\/p\/(\d+)/);
   if (!match) return null;
 
   const postId = Number(match[1]);
