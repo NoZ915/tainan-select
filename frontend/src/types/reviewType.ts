@@ -10,6 +10,7 @@ export interface ReviewsResponse {
   coolness: number;
   comment?: string;
   favorites: number;
+  comment_count: number;
   reactions: ReviewReactionSummary;
   created_at: Date;
   updated_at: Date;
@@ -38,4 +39,17 @@ export interface UpsertReviewInput {
   sweetness: number;
   coolness: number;
   comment: string;
+}
+
+export interface ReviewComment {
+  id: number;
+  review_id: number;
+  content: string;
+  created_at: Date;
+  updated_at: Date;
+  UserModel?: {
+    name: string;
+    avatar: string;
+  };
+  is_owner: boolean;
 }

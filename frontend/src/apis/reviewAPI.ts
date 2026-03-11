@@ -1,4 +1,4 @@
-import { UpsertReviewInput, ReviewsResponse, LatestReviewsResponse, ReviewsListResponse } from '../types/reviewType'
+import { UpsertReviewInput, ReviewsResponse, LatestReviewsResponse, ReviewsListResponse, ReviewComment } from '../types/reviewType'
 import { ReviewReactionsResponse, ToggleReviewReactionResponse } from '../types/reactionType'
 import { axiosInstance } from './axiosInstance'
 
@@ -41,4 +41,27 @@ export const toggleReviewReaction = async (
 ): Promise<ToggleReviewReactionResponse> => {
     const response = await axiosInstance.post(`/reviews/${review_id}/reactions/toggle`, { key })
     return response.data
+}
+
+export const getReviewComments = async (review_id: number): Promise<ReviewComment[]> => {
+    const response = await axiosInstance.get(`/reviews/${review_id}/comments`)
+    if (!Array.isArray(response.data)) {
+        const errorMessage = typeof response.data?.error === 'string'
+            ? response.data.error
+            : 'Invalid review comments response'
+        throw new Error(errorMessage)
+    }
+    return response.data
+}
+
+export const createReviewComment = async (review_id: number, content: string): Promise<void> => {
+    await axiosInstance.post(`/reviews/${review_id}/comments`, { content })
+}
+
+export const deleteReviewComment = async (review_id: number, comment_id: number): Promise<void> => {
+    await axiosInstance.delete(`/reviews/${review_id}/comments/${comment_id}`)
+}
+
+export const updateReviewComment = async (review_id: number, comment_id: number, content: string): Promise<void> => {
+    await axiosInstance.patch(`/reviews/${review_id}/comments/${comment_id}`, { content })
 }

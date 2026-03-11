@@ -86,7 +86,6 @@
   border: 1px solid #e1dbd2;
   border-radius: 6px;
   padding: 0.75rem 0.75rem;
-  
   background-color: #f7f5f2;
 }
 
@@ -108,6 +107,13 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+}
+
+.reactionDivider {
+  width: 1px;
+  align-self: stretch;
+  min-height: 1.75rem;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.24) 50%, rgba(0, 0, 0, 0.08) 100%);
 }
 
 .reactionChip {
@@ -167,12 +173,6 @@
   opacity: 0.65;
 }
 
-.reactionMenuItem {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
 .reactionPickerGrid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -210,15 +210,123 @@
   border-radius: 4px;
 }
 
+.commentIconButton {
+  border: 1px solid #d2d2d2;
+  border-radius: 999px;
+  background: #fff;
+  color: #2e2e2e;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.22rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.commentIconButton:hover {
+  background: #f6f6f6;
+}
+
+.commentIconButtonActive {
+  border-color: #a88755;
+  background: #f4eee5;
+}
+
+.commentsPanel {
+  margin-top: 0.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.commentComposerRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.commentComposerMain {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.commentComposerTextarea {
+  flex: 1;
+}
+
+.commentsLoading {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0;
+}
+
+.commentsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.commentRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.commentBody {
+  flex: 1;
+  border: 1px solid #ececec;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.5rem 0.65rem;
+}
+
+.commentItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.commentItemContent {
+  margin-top: 0.25rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.commentEditBox {
+  margin-top: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.commentEditActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
 @media (max-width: 768px) {
   .ratings {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 
   .ratingItem {
-      width: 100%;
-      justify-content: space-between;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .commentComposerMain {
+    align-items: stretch;
+  }
+
+  .reactionDivider {
+    min-height: 1.5rem;
   }
 }
