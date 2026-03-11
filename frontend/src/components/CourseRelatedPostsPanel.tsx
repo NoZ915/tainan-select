@@ -1,4 +1,4 @@
-import { Anchor, Badge, Card, Container, Image, Stack, Text } from '@mantine/core'
+import { Badge, Card, Container, Image, Stack, Text } from '@mantine/core'
 import { CourseDetailResponse } from '../types/courseType'
 import styles from '../styles/components/CourseRelatedPostsPanel.module.css'
 
@@ -48,15 +48,9 @@ const CourseRelatedPostsPanel: React.FC<CourseRelatedPostsPanelProps> = ({ cours
                   <Text size='xs' c='dimmed' className={styles.meta}>
                     {(post.preview_site_name || 'Dcard')} · {new Date(post.created_at_source).toLocaleDateString()}
                   </Text>
-                  <Anchor
-                    href={post.post_url}
-                    target='_blank'
-                    rel='noreferrer'
-                    className={styles.link}
-                    onClick={(event) => event.stopPropagation()}
-                  >
+                  <Text className={styles.link}>
                     {post.preview_title || post.title}
-                  </Anchor>
+                  </Text>
                   {(post.preview_description || post.excerpt) && (
                     <Text size='sm' c='dimmed' className={styles.description}>
                       {post.preview_description || post.excerpt}
