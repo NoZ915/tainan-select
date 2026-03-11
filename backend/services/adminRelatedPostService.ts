@@ -44,6 +44,13 @@ class AdminRelatedPostService {
   private static readonly RECENT_POSTS_PAGE_SIZE = 10;
   private static readonly RECENT_IMPORTS_PAGE_SIZE = 10;
 
+  private buildImportMatchText(item: ManualRelatedPostImportItem): string {
+    return [item.title, item.excerpt, item.content]
+      .map((value) => (typeof value === "string" ? value.trim() : ""))
+      .filter((value) => value.length > 0)
+      .join(" ");
+  }
+
   private async getAllCourseRows(): Promise<RelatedPostCourseRow[]> {
     return (await CourseModel.findAll({
       attributes: ["id", "course_name", "instructor", "semester"],
@@ -209,6 +216,7 @@ class AdminRelatedPostService {
       const explicitCourseIds = Array.isArray(item.course_ids)
         ? item.course_ids.map((courseId) => Number(courseId)).filter((courseId) => Number.isInteger(courseId) && courseId > 0)
         : [];
+      const matchText = this.buildImportMatchText(item);
 
       const matches =
         explicitCourseIds.length > 0
@@ -217,7 +225,7 @@ class AdminRelatedPostService {
               .filter((course): course is RelatedPostCourseRow => Boolean(course))
               .map((course) => {
                 const scored = scoreCourseTextMatch(
-                  normalizeRelatedPostText(`${title} ${item.excerpt ?? ""}`),
+                  normalizeRelatedPostText(matchText),
                   course
                 );
                 return {
@@ -228,7 +236,7 @@ class AdminRelatedPostService {
                   matched_keywords: scored.matched_keywords.length > 0 ? scored.matched_keywords : [String(course.id)],
                 };
               })
-          : matchPostToCourses(title, item.excerpt, courses, MAX_MANUAL_MATCHES).map((match) => ({
+          : matchPostToCourses(title, [item.excerpt, item.content].filter(Boolean).join(" "), courses, MAX_MANUAL_MATCHES).map((match) => ({
               course_id: match.course.id,
               course_name: match.course.course_name,
               instructor: match.course.instructor,
@@ -302,6 +310,7 @@ class AdminRelatedPostService {
       const explicitCourseIds = Array.isArray(item.course_ids)
         ? item.course_ids.map((courseId) => Number(courseId)).filter((courseId) => Number.isInteger(courseId) && courseId > 0)
         : [];
+      const matchText = this.buildImportMatchText(item);
 
       const matches =
         explicitCourseIds.length > 0
@@ -310,7 +319,7 @@ class AdminRelatedPostService {
               .filter((course): course is RelatedPostCourseRow => Boolean(course))
               .map((course) => {
                 const scored = scoreCourseTextMatch(
-                  normalizeRelatedPostText(`${title} ${item.excerpt ?? ""}`),
+                  normalizeRelatedPostText(matchText),
                   course
                 );
                 return {
@@ -319,7 +328,7 @@ class AdminRelatedPostService {
                   matched_keywords: scored.matched_keywords.length > 0 ? scored.matched_keywords : [String(course.id)],
                 };
               })
-          : matchPostToCourses(title, item.excerpt, courses, MAX_MANUAL_MATCHES);
+          : matchPostToCourses(title, [item.excerpt, item.content].filter(Boolean).join(" "), courses, MAX_MANUAL_MATCHES);
 
       if (matches.length === 0) {
         unmatchedItems += 1;

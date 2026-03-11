@@ -12,32 +12,65 @@ export type RelatedPostMatch = {
 };
 
 const MIN_KEYWORD_LENGTH = 2;
+const COMMON_TITLES = ["老師", "教授", "助教", "博士"];
+
+type KeywordCandidate = {
+  value: string;
+  score: number;
+};
 
 export const normalizeRelatedPostText = (value: string): string =>
-  value.toLowerCase().replace(/\s+/g, "");
+  value.normalize("NFKC").toLowerCase().replace(/\s+/g, "");
 
 export const sanitizeRelatedPostText = (value?: string | null): string =>
   (value ?? "")
+    .normalize("NFKC")
     .replace(/\s+/g, " ")
-    .replace(/[【】「」『』（）()［］\[\]、，,。.!！?？:：;；"'`~\-_/\\|]/g, " ")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim();
 
-export const buildCourseKeywords = (course: RelatedPostCourseRow): string[] => {
-  const candidates = [
-    course.course_name,
-    course.instructor,
-    course.course_name.replace(/\s+/g, ""),
-    course.instructor.replace(/\s+/g, ""),
-  ];
+const buildNameFragments = (value: string): string[] => {
+  const sanitized = sanitizeRelatedPostText(value);
+  if (!sanitized) return [];
+
+  return sanitized
+    .split(/\s+/)
+    .flatMap((token) => {
+      const strippedTitleToken = COMMON_TITLES.reduce(
+        (current, title) => current.replace(new RegExp(title, "g"), " "),
+        token
+      );
+
+      return [token, strippedTitleToken]
+        .map((item) => item.trim())
+        .filter((item) => item.length >= MIN_KEYWORD_LENGTH);
+    });
+};
+
+const buildCourseKeywordCandidates = (course: RelatedPostCourseRow): KeywordCandidate[] => {
+  const courseName = normalizeRelatedPostText(sanitizeRelatedPostText(course.course_name));
+  const instructor = normalizeRelatedPostText(sanitizeRelatedPostText(course.instructor));
+  const courseNameFragments = buildNameFragments(course.course_name)
+    .map((item) => normalizeRelatedPostText(item))
+    .filter((item) => item.length >= MIN_KEYWORD_LENGTH);
+  const instructorFragments = buildNameFragments(course.instructor)
+    .map((item) => normalizeRelatedPostText(item))
+    .filter((item) => item.length >= MIN_KEYWORD_LENGTH);
 
   return [
-    ...new Set(
-      candidates
-        .map((item) => normalizeRelatedPostText(sanitizeRelatedPostText(item)))
-        .filter((item) => item.length >= MIN_KEYWORD_LENGTH)
-    ),
-  ];
+    { value: courseName, score: 8 },
+    { value: instructor, score: 7 },
+    ...courseNameFragments.map((value) => ({ value, score: 3 })),
+    ...instructorFragments.map((value) => ({ value, score: 4 })),
+  ].filter(
+    (candidate, index, candidates) =>
+      candidate.value.length >= MIN_KEYWORD_LENGTH &&
+      candidates.findIndex((item) => item.value === candidate.value) === index
+  );
 };
+
+export const buildCourseKeywords = (course: RelatedPostCourseRow): string[] =>
+  buildCourseKeywordCandidates(course).map((candidate) => candidate.value);
 
 export const scoreCourseTextMatch = (
   normalizedHaystack: string,
@@ -46,13 +79,10 @@ export const scoreCourseTextMatch = (
   const matchedKeywords = new Set<string>();
   let score = 0;
 
-  for (const keyword of buildCourseKeywords(course)) {
-    if (!normalizedHaystack.includes(keyword)) continue;
-    matchedKeywords.add(keyword);
-    score += keyword === normalizeRelatedPostText(course.course_name) ? 8 : 3;
-    if (keyword === normalizeRelatedPostText(course.instructor)) {
-      score += 4;
-    }
+  for (const keyword of buildCourseKeywordCandidates(course)) {
+    if (!normalizedHaystack.includes(keyword.value)) continue;
+    matchedKeywords.add(keyword.value);
+    score += keyword.score;
   }
 
   return {
