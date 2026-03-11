@@ -58,9 +58,11 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
 
   const { mutate: toggleReaction, isPending: isTogglingReaction } = useToggleReviewReaction()
   const {
-    data: comments = [],
+    data: comments,
     isLoading: isCommentsLoading,
+    isError: isCommentsError,
   } = useGetReviewComments(review.id, isCommentsOpen)
+  const resolvedComments = comments ?? []
   const { mutate: createComment, isPending: isCreatingComment } = useCreateReviewComment(review.id)
   const { mutate: deleteComment, isPending: isDeletingComment } = useDeleteReviewComment(review.id)
   const { mutate: updateComment, isPending: isUpdatingComment } = useUpdateReviewComment(review.id)
@@ -203,10 +205,10 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
   }, [review.comment_count])
 
   useEffect(() => {
-    if (isCommentsOpen && !isCommentsLoading) {
+    if (isCommentsOpen && !isCommentsLoading && comments) {
       setCommentCount(comments.length)
     }
-  }, [isCommentsOpen, isCommentsLoading, comments.length])
+  }, [isCommentsOpen, isCommentsLoading, comments])
 
   useEffect(() => {
     const el = commentElementRef.current
@@ -433,11 +435,13 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
               <div className={style.commentsLoading}>
                 <Loader size='sm' />
               </div>
-            ) : comments.length === 0 ? (
+            ) : isCommentsError && !comments ? (
+              <Text size='sm' c='red'>載入留言失敗，請稍後再試。</Text>
+            ) : resolvedComments.length === 0 ? (
               <Text size='sm' c='dimmed'>目前還沒有留言。</Text>
             ) : (
               <div className={style.commentsList}>
-                {comments.map((comment: ReviewComment) => {
+                {resolvedComments.map((comment: ReviewComment) => {
                   const isEditing = editingCommentId === comment.id
                   return (
                     <div key={comment.id} className={style.commentRow}>
