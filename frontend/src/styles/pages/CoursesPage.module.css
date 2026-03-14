@@ -1,11 +1,17 @@
 .selectContainer{
   margin-left: auto;
   margin-right: 0;
-  width: 140px;
+  width: 200px;
 }
 
 .gridContainer{
   margin-top: 12px;
+}
+
+.sortOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .courseCard {

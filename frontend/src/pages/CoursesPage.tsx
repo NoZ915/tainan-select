@@ -6,35 +6,64 @@ import { useGetCourses } from '../hooks/courses/useGetCourses'
 import { SearchParams, Course } from '../types/courseType'
 
 import { Grid, Text, Loader, Center, Pagination, Container, Select } from '@mantine/core'
+import type { ComboboxItem, OptionsFilter, SelectProps } from '@mantine/core'
 import style from '../styles/pages/CoursesPage.module.css'
 
 import CourseFilter from '../components/CourseFilter'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import CourseCard from '../components/CourseCard'
+import { FaCommentAlt, FaEye, FaHeart, FaNewspaper } from 'react-icons/fa'
 
 const SORT_OPTIONS = [
-	{ label: '評價數 高→低', value: 'reviewDesc' },
-	{ label: '收藏數 高→低', value: 'interestDesc' },
-	{ label: '觀看數 高→低', value: 'viewDesc' }
+	{ label: '評價數 高→低', value: 'reviewDesc', icon: FaCommentAlt },
+	{ label: '相關文章數 高→低', value: 'dcardPostDesc', icon: FaNewspaper },
+	{ label: '收藏數 高→低', value: 'interestDesc', icon: FaHeart },
+	{ label: '觀看數 高→低', value: 'viewDesc', icon: FaEye }
 ] as const
 
 type SortByValue = typeof SORT_OPTIONS[number]['value']
-type SortLabel = typeof SORT_OPTIONS[number]['label']
 
 const DEFAULT_SORT_BY: SortByValue = 'reviewDesc'
 const DEFAULT_LIMIT = 9
 
-const getSortLabel = (sortBy?: string): SortLabel =>
-	SORT_OPTIONS.find((option) => option.value === sortBy)?.label ?? SORT_OPTIONS[0].label
-
-const getSortByValue = (label: SortLabel) =>
-	SORT_OPTIONS.find((option) => option.label === label)?.value ?? DEFAULT_SORT_BY
-
-const isSortLabel = (value: string): value is SortLabel =>
-	SORT_OPTIONS.some((option) => option.label === value)
-
 const normalizeSortBy = (value?: string): SortByValue =>
 	SORT_OPTIONS.some((option) => option.value === value) ? (value as SortByValue) : DEFAULT_SORT_BY
+
+type SortSelectItem = ComboboxItem & {
+	icon: typeof FaCommentAlt
+}
+
+const sortSelectData: SortSelectItem[] = SORT_OPTIONS.map((option) => ({
+	label: option.label,
+	value: option.value,
+	icon: option.icon,
+}))
+
+const sortOptionMap = new Map(sortSelectData.map((option) => [option.value, option]))
+
+const renderSortOption: SelectProps['renderOption'] = ({ option }) => {
+	const matchedOption = sortOptionMap.get(option.value)
+	if (!matchedOption) return <span>{option.label}</span>
+
+	const Icon = matchedOption.icon
+
+	return (
+		<div className={style.sortOption}>
+			<Icon size={14} />
+			<span>{option.label}</span>
+		</div>
+	)
+}
+
+const filterSortOptions: OptionsFilter = ({ options, search }) => {
+	const normalizedSearch = search.trim().toLowerCase()
+	if (!normalizedSearch) return options
+
+	return options.filter((option) => {
+		if ('group' in option) return true
+		return option.label.toLowerCase().includes(normalizedSearch)
+	})
+}
 
 const buildSearchParams = (queryParams: URLSearchParams): SearchParams => ({
 	page: parseInt(queryParams.get('page') || '1', 10),
@@ -66,7 +95,7 @@ const CoursesPage: React.FC = () => {
 		const updatedCombinedSearchParams = buildSearchParams(queryParams)
 		setPage(updatedCombinedSearchParams.page)
 		setSearchParams(updatedCombinedSearchParams)
-		setSortOption(getSortLabel(updatedCombinedSearchParams.sortBy))
+		setSortOption(normalizeSortBy(updatedCombinedSearchParams.sortBy))
 	}, [queryParams])
 
 	const handleClickPage = (page: number) => {
@@ -92,16 +121,19 @@ const CoursesPage: React.FC = () => {
 	}
 
 	// 排序功能
-	const [sortOption, setSortOption] = useState(() => getSortLabel(buildSearchParams(queryParams).sortBy))
+	const [sortOption, setSortOption] = useState<SortByValue>(() => normalizeSortBy(buildSearchParams(queryParams).sortBy))
 	const handleSortBy = (value: string | null) => {
-		if (!value || !isSortLabel(value)) return
-		const sortBy = getSortByValue(value)
+		if (!value) return
+		const sortBy = normalizeSortBy(value)
 		const updatedParams = { ...searchParams, sortBy, page: 1 }
-		setSortOption(value)
+		setSortOption(sortBy)
 		setPage(1)
 		setSearchParams(updatedParams)
 		updateURL(updatedParams)
 	}
+
+	const selectedSortOption = sortOptionMap.get(sortOption) ?? sortSelectData[0]
+	const SelectedSortIcon = selectedSortOption.icon
 
 	const { data, isLoading, isPending, error } = useGetCourses(searchParams)
 
@@ -141,7 +173,10 @@ const CoursesPage: React.FC = () => {
 						clearable={false}
 						checkIconPosition='right'
 						placeholder='排序方式'
-						data={SORT_OPTIONS.map((option) => option.label)}
+						data={sortSelectData}
+						renderOption={renderSortOption}
+						filter={filterSortOptions}
+						leftSection={<SelectedSortIcon size={14} />}
 					/>
 				</div>
 				<Grid gutter='md' className={style.gridContainer}>
