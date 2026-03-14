@@ -14,5 +14,6 @@ export const useGetRelatedPostOverview = (params: {
     queryKey: [QUERY_KEYS.ADMIN_RELATED_POSTS_OVERVIEW, userId, params],
     queryFn: () => getRelatedPostOverview(params),
     enabled: isAuthenticated && Number.isInteger(userId),
+    placeholderData: (previousData) => previousData,
   })
 }
