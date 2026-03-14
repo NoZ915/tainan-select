@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import formatCourseTime from '../utils/formatCourseTime'
 import { Course } from '../types/courseType'
 
-import { FaCommentAlt, FaHeart, FaEye } from 'react-icons/fa'
+import { FaCommentAlt, FaHeart, FaEye, FaNewspaper } from 'react-icons/fa'
 import { Badge, Card, Group, Text } from '@mantine/core'
 import style from '../styles/components/CourseCard.module.css'
 
@@ -36,6 +36,10 @@ const CourseCard: React.FC<CourseCardProp> = ({ course }) => {
 					<Group gap='xs'>
 						<FaCommentAlt size={16} />
 						<Text size='sm'>{course.review_count}</Text>
+					</Group>
+					<Group gap='xs'>
+						<FaNewspaper size={16} />
+						<Text size='sm'>{course.dcard_related_post_count ?? 0}</Text>
 					</Group>
 					<Group gap='xs'>
 						<FaHeart size={16} />

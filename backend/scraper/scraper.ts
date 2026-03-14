@@ -219,7 +219,8 @@ async function runScraper(): Promise<void> {
               course_type: courseType,
               interests_count: 0,
               review_count: 0,
-              view_count: 0
+              view_count: 0,
+              dcard_related_post_count: 0,
             });
 
             const schedules = parseCourseTime(courseTime);

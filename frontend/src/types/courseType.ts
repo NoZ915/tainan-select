@@ -16,6 +16,7 @@ export interface Course {
   review_count: number;
   interests_count: number;
   view_count: number;
+  dcard_related_post_count?: number;
 }
 
 export interface CourseRelatedPost {

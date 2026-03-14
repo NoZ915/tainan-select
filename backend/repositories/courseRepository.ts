@@ -102,7 +102,7 @@ class CourseRepository {
 
     // 排序功能
     let order: any[] = [];
-    let primarySort: "reviewDesc" | "interestDesc" | "viewDesc" | "default" = "default";
+    let primarySort: "reviewDesc" | "interestDesc" | "viewDesc" | "dcardPostDesc" | "default" = "default";
     switch(search?.sortBy){
       case "reviewDesc":
         order.push(["review_count", "desc"]);
@@ -115,6 +115,10 @@ class CourseRepository {
       case "viewDesc":
         order.push(["view_count", "desc"]);
         primarySort = "viewDesc";
+        break;
+      case "dcardPostDesc":
+        order.push(["dcard_related_post_count", "desc"]);
+        primarySort = "dcardPostDesc";
         break;
       default:
         order.push(["review_count", "desc"]);
@@ -194,7 +198,7 @@ class CourseRepository {
 
   async decrementCount(
     course_id: number,
-    field: "interests_count" | "view_count" | "review_count",
+    field: "interests_count" | "view_count" | "review_count" | "dcard_related_post_count",
     transaction?: Transaction
   ): Promise<void> {
     await CourseModel.update(
@@ -205,12 +209,40 @@ class CourseRepository {
 
   async incrementCount(
     course_id: number,
-    field: "interests_count" | "view_count" | "review_count",
+    field: "interests_count" | "view_count" | "review_count" | "dcard_related_post_count",
     transaction?: Transaction
   ): Promise<void> {
     await CourseModel.update(
       { [field]: db.Sequelize.literal(`GREATEST(${field} + 1, 0)`) },
       { where: { id: course_id }, transaction }
+    );
+  }
+
+  async recalculateDcardRelatedPostCounts(courseIds: number[], transaction?: Transaction): Promise<void> {
+    const normalizedCourseIds = [...new Set(
+      courseIds
+        .map((courseId) => Number(courseId))
+        .filter((courseId) => Number.isInteger(courseId) && courseId > 0)
+    )];
+
+    if (normalizedCourseIds.length === 0) return;
+
+    await CourseModel.update(
+      {
+        dcard_related_post_count: db.Sequelize.literal(`(
+          SELECT COUNT(*)
+          FROM CourseRelatedPosts AS crp
+          WHERE crp.course_id = Courses.id
+            AND (
+              LOWER(COALESCE(crp.preview_site_name, '')) LIKE '%dcard%'
+              OR LOWER(COALESCE(crp.post_url, '')) LIKE '%dcard.tw%'
+            )
+        )`),
+      },
+      {
+        where: { id: { [Op.in]: normalizedCourseIds } },
+        transaction,
+      }
     );
   }
 }

@@ -8,6 +8,7 @@ import RelatedPostImportModel from "../models/RelatedPostImport";
 import CourseRelatedPostRepository, {
   CourseRelatedPostUpsertInput,
 } from "../repositories/courseRelatedPostRepository";
+import CourseRepository from "../repositories/courseRepository";
 import RelatedPostImportRepository from "../repositories/relatedPostImportRepository";
 import {
   AttachRelatedPostCoursesResult,
@@ -404,6 +405,7 @@ class AdminRelatedPostService {
         );
       }
       await CourseRelatedPostRepository.upsertMany(rows, activeTransaction);
+      await CourseRepository.recalculateDcardRelatedPostCounts([...affectedCourseIds], activeTransaction);
     };
 
     if (transaction) {
@@ -547,7 +549,10 @@ class AdminRelatedPostService {
     }
 
     if (rowsToCreate.length > 0) {
-      await CourseRelatedPostRepository.upsertMany(rowsToCreate);
+      await db.sequelize.transaction(async (transaction) => {
+        await CourseRelatedPostRepository.upsertMany(rowsToCreate, transaction);
+        await CourseRepository.recalculateDcardRelatedPostCounts(attachedCourseIds, transaction);
+      });
     }
 
     const skippedCourseIds = normalizedCourseIds.filter((courseId) => !attachedCourseIds.includes(courseId));
@@ -663,6 +668,10 @@ class AdminRelatedPostService {
         );
       }
       await CourseRelatedPostRepository.upsertMany(rows, transaction);
+      await CourseRepository.recalculateDcardRelatedPostCounts(
+        params.replaceExisting ? courses.map((course) => course.id) : [...affectedCourseIds],
+        transaction
+      );
     });
 
     return {
@@ -677,10 +686,19 @@ class AdminRelatedPostService {
   }
 
   async deleteRelatedPost(id: number): Promise<void> {
-    const deleted = await CourseRelatedPostRepository.deleteById(id);
-    if (deleted === 0) {
+    const row = await CourseRelatedPostRepository.getById(id);
+    if (!row) {
       throw new Error("找不到要刪除的相關貼文");
     }
+
+    await db.sequelize.transaction(async (transaction) => {
+      const deleted = await CourseRelatedPostRepository.deleteById(id);
+      if (deleted === 0) {
+        throw new Error("找不到要刪除的相關貼文");
+      }
+
+      await CourseRepository.recalculateDcardRelatedPostCounts([Number(row.course_id)], transaction);
+    });
   }
 
   async deleteRelatedPostImport(id: number): Promise<void> {
