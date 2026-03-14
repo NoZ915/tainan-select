@@ -1,6 +1,7 @@
 export type RelatedPostCourseRow = {
   id: number;
   course_name: string;
+  department: string;
   instructor: string;
   semester: string | null;
 };

@@ -64,6 +64,46 @@ const cleanLongText = (value: unknown): string | null => {
   return cleaned.length > 0 ? cleaned : null;
 };
 
+const normalizeKeywords = (value: unknown): string[] | undefined => {
+  if (typeof value === "string") {
+    const keywords = value
+      .split(",")
+      .map((keyword) => cleanText(keyword))
+      .filter((keyword): keyword is string => Boolean(keyword));
+
+    return keywords.length > 0 ? keywords : undefined;
+  }
+
+  if (!Array.isArray(value)) return undefined;
+
+  const keywords = value
+    .map((keyword) => cleanText(keyword))
+    .filter((keyword): keyword is string => Boolean(keyword));
+
+  return keywords.length > 0 ? keywords : undefined;
+};
+
+const normalizeCourseKeywordOverrides = (value: unknown): ManualRelatedPostImportItem["course_keyword_overrides"] => {
+  if (!Array.isArray(value)) return undefined;
+
+  const overrides = value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+
+      const row = item as Record<string, unknown>;
+      const courseId = Number(row.course_id);
+      if (!Number.isInteger(courseId) || courseId <= 0) return null;
+
+      return {
+        course_id: courseId,
+        manual_keywords: normalizeKeywords(row.manual_keywords),
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+
+  return overrides.length > 0 ? overrides : undefined;
+};
+
 const normalizeComments = (value: unknown): ManualRelatedPostImportItem["comments_json"] => {
   if (!Array.isArray(value)) return null;
 
@@ -109,6 +149,8 @@ const normalizeItem = (item: Record<string, unknown>): ManualRelatedPostImportIt
     created_at_source: cleanText(item.created_at_source) ?? cleanText(item.createdAt),
     forum_alias: cleanText(item.forum_alias) ?? cleanText(item.forumAlias),
     course_ids: courseIds && courseIds.length > 0 ? courseIds : undefined,
+    manual_keywords: normalizeKeywords(item.manual_keywords),
+    course_keyword_overrides: normalizeCourseKeywordOverrides(item.course_keyword_overrides),
     preview_title: cleanText(item.preview_title) ?? title,
     preview_description: cleanText(item.preview_description) ?? cleanText(item.excerpt),
     preview_image_url: cleanText(item.preview_image_url),

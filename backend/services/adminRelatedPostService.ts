@@ -14,6 +14,7 @@ import {
   GoogleRelatedPostSyncParams,
   GoogleRelatedPostSyncResult,
   ImportedCourseSummary,
+  ManualCourseKeywordOverride,
   ManualRelatedPostExistingPost,
   ManualRelatedPostImportItem,
   ManualRelatedPostPreviewResult,
@@ -35,6 +36,20 @@ const GOOGLE_SOURCE = "google_search";
 const MAX_MANUAL_MATCHES = 15;
 const GOOGLE_SEARCH_CONCURRENCY = 3;
 
+const normalizeManualKeywords = (keywords?: string[] | null): string[] =>
+  Array.isArray(keywords)
+    ? [...new Set(keywords.map((keyword) => keyword.trim()).filter((keyword) => keyword.length > 0))]
+    : [];
+
+const getCourseKeywordOverrideMap = (
+  overrides?: ManualCourseKeywordOverride[] | null
+): Map<number, string[]> =>
+  new Map(
+    (Array.isArray(overrides) ? overrides : [])
+      .map((override) => [override.course_id, normalizeManualKeywords(override.manual_keywords)] as const)
+      .filter(([, keywords]) => keywords.length > 0)
+  );
+
 type GoogleCustomSearchItem = {
   title?: string;
   link?: string;
@@ -54,7 +69,7 @@ class AdminRelatedPostService {
 
   private async getAllCourseRows(): Promise<RelatedPostCourseRow[]> {
     return (await CourseModel.findAll({
-      attributes: ["id", "course_name", "instructor", "semester"],
+      attributes: ["id", "course_name", "department", "instructor", "semester"],
       raw: true,
     })) as RelatedPostCourseRow[];
   }
@@ -217,6 +232,8 @@ class AdminRelatedPostService {
       const explicitCourseIds = Array.isArray(item.course_ids)
         ? item.course_ids.map((courseId) => Number(courseId)).filter((courseId) => Number.isInteger(courseId) && courseId > 0)
         : [];
+      const manualKeywords = normalizeManualKeywords(item.manual_keywords);
+      const courseKeywordOverrideMap = getCourseKeywordOverrideMap(item.course_keyword_overrides);
       const matchText = this.buildImportMatchText(item);
 
       const matches =
@@ -232,14 +249,18 @@ class AdminRelatedPostService {
                 return {
                   course_id: course.id,
                   course_name: course.course_name,
+                  department: course.department,
                   instructor: course.instructor,
                   score: Math.max(scored.score, 1),
-                  matched_keywords: scored.matched_keywords.length > 0 ? scored.matched_keywords : [String(course.id)],
+                  matched_keywords:
+                    courseKeywordOverrideMap.get(course.id) ??
+                    (manualKeywords.length > 0 ? manualKeywords : scored.matched_keywords),
                 };
               })
           : matchPostToCourses(title, [item.excerpt, item.content].filter(Boolean).join(" "), courses, MAX_MANUAL_MATCHES).map((match) => ({
               course_id: match.course.id,
               course_name: match.course.course_name,
+              department: match.course.department,
               instructor: match.course.instructor,
               score: match.score,
               matched_keywords: match.matched_keywords,
@@ -311,6 +332,8 @@ class AdminRelatedPostService {
       const explicitCourseIds = Array.isArray(item.course_ids)
         ? item.course_ids.map((courseId) => Number(courseId)).filter((courseId) => Number.isInteger(courseId) && courseId > 0)
         : [];
+      const manualKeywords = normalizeManualKeywords(item.manual_keywords);
+      const courseKeywordOverrideMap = getCourseKeywordOverrideMap(item.course_keyword_overrides);
       const matchText = this.buildImportMatchText(item);
 
       const matches =
@@ -326,7 +349,9 @@ class AdminRelatedPostService {
                 return {
                   course,
                   score: Math.max(scored.score, 1),
-                  matched_keywords: scored.matched_keywords.length > 0 ? scored.matched_keywords : [String(course.id)],
+                  matched_keywords:
+                    courseKeywordOverrideMap.get(course.id) ??
+                    (manualKeywords.length > 0 ? manualKeywords : scored.matched_keywords),
                 };
               })
           : matchPostToCourses(title, [item.excerpt, item.content].filter(Boolean).join(" "), courses, MAX_MANUAL_MATCHES);

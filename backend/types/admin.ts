@@ -38,6 +38,11 @@ export type ImportedCourseSummary = {
   semester: string | null;
 };
 
+export type ManualCourseKeywordOverride = {
+  course_id: number;
+  manual_keywords?: string[];
+};
+
 export type ManualRelatedPostImportItem = {
   title: string;
   post_url: string;
@@ -45,6 +50,8 @@ export type ManualRelatedPostImportItem = {
   created_at_source?: string | null;
   forum_alias?: string | null;
   course_ids?: number[];
+  manual_keywords?: string[];
+  course_keyword_overrides?: ManualCourseKeywordOverride[];
   preview_title?: string | null;
   preview_description?: string | null;
   preview_image_url?: string | null;
@@ -65,6 +72,7 @@ export type ManualRelatedPostImportResult = {
 export type ManualRelatedPostPreviewMatch = {
   course_id: number;
   course_name: string;
+  department: string;
   instructor: string;
   score: number;
   matched_keywords: string[];
