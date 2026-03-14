@@ -6,7 +6,6 @@ import {
   Button,
   Card,
   Checkbox,
-  Code,
   Container,
   Group,
   Loader,
@@ -78,6 +77,7 @@ const dcardExportSnippet = `(() => {
   return json
 })()`
 
+
 const AdminRelatedPostsPage: React.FC = () => {
   const [recentPostsPage, setRecentPostsPage] = useState(1)
   const [recentImportsPage, setRecentImportsPage] = useState(1)
@@ -96,6 +96,8 @@ const AdminRelatedPostsPage: React.FC = () => {
   const [previewModalOpened, setPreviewModalOpened] = useState(false)
   const [importPreviewResult, setImportPreviewResult] = useState<ManualImportPreviewResponse | null>(null)
   const [selectedPreviewCourseIds, setSelectedPreviewCourseIds] = useState<Record<number, number[]>>({})
+  const [previewCourseKeywordOverrides, setPreviewCourseKeywordOverrides] = useState<Record<number, string>>({})
+  const [previewCourseLookupKeyword, setPreviewCourseLookupKeyword] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<{
     id: number;
     title: string;
@@ -123,14 +125,13 @@ const AdminRelatedPostsPage: React.FC = () => {
   const [onlyUnreviewed, setOnlyUnreviewed] = useState(true)
   const [replaceGoogle, setReplaceGoogle] = useState(false)
   const [semester, setSemester] = useState('')
-  const [courseLookupKeyword, setCourseLookupKeyword] = useState('')
   const [attachCourseLookupKeyword, setAttachCourseLookupKeyword] = useState('')
   const [selectedAttachCourseIds, setSelectedAttachCourseIds] = useState<number[]>([])
 
-  const courseLookupSearchParams = useMemo(() => ({
+  const previewCourseLookupSearchParams = useMemo(() => ({
     page: 1,
     limit: 8,
-    search: courseLookupKeyword.trim(),
+    search: previewCourseLookupKeyword.trim(),
     category: 'all',
     academy: '',
     department: '',
@@ -139,12 +140,12 @@ const AdminRelatedPostsPage: React.FC = () => {
     periods: [],
     semesters: [],
     sortBy: 'viewDesc',
-  }), [courseLookupKeyword])
+  }), [previewCourseLookupKeyword])
 
   const {
-    data: courseLookupResult,
-    isLoading: isCourseLookupLoading,
-  } = useGetCourses(courseLookupSearchParams, courseLookupKeyword.trim().length >= 2)
+    data: previewCourseLookupResult,
+    isLoading: isPreviewCourseLookupLoading,
+  } = useGetCourses(previewCourseLookupSearchParams, previewCourseLookupKeyword.trim().length >= 2)
 
   const attachCourseLookupSearchParams = useMemo(() => ({
     page: 1,
@@ -213,6 +214,22 @@ const AdminRelatedPostsPage: React.FC = () => {
     })
   }
 
+  const handlePreviewCourseKeywordChange = (courseId: number, value: string) => {
+    setPreviewCourseKeywordOverrides((current) => ({
+      ...current,
+      [courseId]: value,
+    }))
+  }
+
+  const getPreviewCourseKeywordPreview = (courseId: number, fallbackKeywords: string[]) => {
+    const overrideKeywords = (previewCourseKeywordOverrides[courseId] ?? '')
+      .split(',')
+      .map((keyword) => keyword.trim())
+      .filter((keyword) => keyword.length > 0)
+
+    return overrideKeywords.length > 0 ? overrideKeywords : fallbackKeywords
+  }
+
   const handleConfirmImport = async () => {
     if (!importPreviewResult) return
 
@@ -225,6 +242,24 @@ const AdminRelatedPostsPage: React.FC = () => {
       acc.push({
         ...item.import_item,
         course_ids: selectedIds,
+        course_keyword_overrides: selectedIds.reduce<Array<{ course_id: number; manual_keywords?: string[] }>>(
+          (overrides, courseId) => {
+            const manualKeywords = (previewCourseKeywordOverrides[courseId] ?? '')
+              .split(',')
+              .map((keyword) => keyword.trim())
+              .filter((keyword) => keyword.length > 0)
+
+            if (manualKeywords.length > 0) {
+              overrides.push({
+                course_id: courseId,
+                manual_keywords: manualKeywords,
+              })
+            }
+
+            return overrides
+          },
+          []
+        ),
       })
 
       return acc
@@ -232,8 +267,8 @@ const AdminRelatedPostsPage: React.FC = () => {
 
     if (finalItems.length === 0) {
       notifications.show({
-        title: '沒有可匯入項目',
-        message: '請至少勾選一門課程後再匯入。',
+        title: '沒有可匯入的課程',
+        message: '請至少勾選一門課程，再進行匯入。',
         color: 'red',
       })
       return
@@ -247,17 +282,21 @@ const AdminRelatedPostsPage: React.FC = () => {
       })
 
       setPreviewModalOpened(false)
+      setPreviewCourseLookupKeyword('')
+      setPreviewCourseKeywordOverrides({})
       notifications.show({
         title: '匯入完成',
-        message: `寫入 ${result.importedRows} 筆，命中 ${result.matchedCourses} 門課，未命中 ${result.unmatchedItems} 筆。`,
+        message: `已匯入 ${result.importedRows} 筆，配對 ${result.matchedCourses} 門課，另有 ${result.unmatchedItems} 筆未寫入。`,
         color: 'green',
       })
+      return
     } catch (error) {
       notifications.show({
         title: '匯入失敗',
         message: error instanceof Error ? error.message : '匯入失敗',
         color: 'red',
       })
+      return
     }
   }
 
@@ -273,32 +312,18 @@ const AdminRelatedPostsPage: React.FC = () => {
           return acc
         }, {})
       )
+      setPreviewCourseLookupKeyword('')
       setPreviewModalOpened(true)
     } catch (error) {
       notifications.show({
         title: 'Dcard 預覽失敗',
-        message: error instanceof Error ? error.message : '請檢查貼上的內容',
+        message: error instanceof Error ? error.message : '請確認輸入內容格式是否正確',
         color: 'red',
       })
+      return
     }
   }
 
-  const handleCopyCourseId = async (courseId: number) => {
-    try {
-      await navigator.clipboard.writeText(String(courseId))
-      notifications.show({
-        title: '已複製',
-        message: `course_id ${courseId} 已複製到剪貼簿`,
-        color: 'green',
-      })
-    } catch {
-      notifications.show({
-        title: '複製失敗',
-        message: '請手動複製 course_id',
-        color: 'red',
-      })
-    }
-  }
 
   const handleCopySnippet = async () => {
     try {
@@ -453,7 +478,11 @@ const AdminRelatedPostsPage: React.FC = () => {
 
       <Modal
         opened={previewModalOpened}
-        onClose={() => setPreviewModalOpened(false)}
+        onClose={() => {
+          setPreviewModalOpened(false)
+          setPreviewCourseLookupKeyword('')
+          setPreviewCourseKeywordOverrides({})
+        }}
         title='匯入前確認課程'
         size='xl'
         zIndex={1100}
@@ -462,6 +491,52 @@ const AdminRelatedPostsPage: React.FC = () => {
           <Text size='sm' c='dimmed'>
             勾選這次要綁定的課程。只有勾選的課程會真的寫入 DB。
           </Text>
+          <Card withBorder>
+            <Stack gap='xs'>
+              <TextInput
+                label='搜尋更多課程'
+                placeholder='課名 / 老師 / 學期'
+                value={previewCourseLookupKeyword}
+                onChange={(event) => setPreviewCourseLookupKeyword(event.currentTarget.value)}
+              />
+              {previewCourseLookupKeyword.trim().length < 2 ? (
+                <Text size='sm' c='dimmed'>至少輸入 2 個字才能搜尋課程。</Text>
+              ) : isPreviewCourseLookupLoading ? (
+                <Group justify='center'><Loader size='sm' /></Group>
+              ) : (previewCourseLookupResult?.courses ?? []).length === 0 ? (
+                <Text size='sm' c='dimmed'>找不到符合的課程。</Text>
+              ) : (
+                <Stack gap='xs'>
+                  {(previewCourseLookupResult?.courses ?? []).map((course) => (
+                    <Card key={`preview-search-${course.id}`} withBorder>
+                      <Stack gap={6}>
+                        {(importPreviewResult?.items ?? []).map((item) => (
+                          <Checkbox
+                            key={`preview-search-${item.index}-${course.id}`}
+                            checked={(selectedPreviewCourseIds[item.index] ?? []).includes(course.id)}
+                            onChange={(event) =>
+                              handleTogglePreviewCourse(item.index, course.id, event.currentTarget.checked)
+                            }
+                            label={`第 ${item.index + 1} 筆：${course.course_name} / ${course.instructor} (ID: ${course.id}, score: 1)`}
+                            description={`${course.department || '未分類系所'} / ${getPreviewCourseKeywordPreview(course.id, []).join(', ') || '未設定匹配關鍵字'}`}
+                          />
+                        ))}
+                        <TextInput
+                          size='sm'
+                          label='匹配關鍵字'
+                          placeholder='可選填，使用逗號分隔，例如：教育心理學, 王老師'
+                          value={previewCourseKeywordOverrides[course.id] ?? ''}
+                          onChange={(event) =>
+                            handlePreviewCourseKeywordChange(course.id, event.currentTarget.value)
+                          }
+                        />
+                      </Stack>
+                    </Card>
+                  ))}
+                </Stack>
+              )}
+            </Stack>
+          </Card>
           <ScrollArea.Autosize mah={520}>
             <Stack gap='md'>
               {(importPreviewResult?.items ?? []).map((item) => (
@@ -486,11 +561,35 @@ const AdminRelatedPostsPage: React.FC = () => {
                     )}
                     {item.error ? (
                       <Text size='sm' c='red'>{item.error}</Text>
-                    ) : item.matches.length === 0 ? (
+                    ) : [
+                        ...item.matches,
+                        ...(previewCourseLookupResult?.courses ?? [])
+                          .filter((course) => !item.matches.some((match) => match.course_id === course.id))
+                          .map((course) => ({
+                            course_id: course.id,
+                            course_name: course.course_name,
+                            department: course.department,
+                            instructor: course.instructor,
+                            score: 1,
+                            matched_keywords: [],
+                          })),
+                      ].length === 0 ? (
                       <Text size='sm' c='dimmed'>沒有可勾選的課程</Text>
                     ) : (
                       <Stack gap={6}>
-                        {item.matches.map((match) => (
+                        {[
+                          ...item.matches,
+                          ...(previewCourseLookupResult?.courses ?? [])
+                            .filter((course) => !item.matches.some((match) => match.course_id === course.id))
+                            .map((course) => ({
+                              course_id: course.id,
+                              course_name: course.course_name,
+                              department: course.department,
+                              instructor: course.instructor,
+                              score: 1,
+                              matched_keywords: [],
+                            })),
+                        ].map((match) => (
                           <Checkbox
                             key={`${item.index}-${match.course_id}`}
                             checked={(selectedPreviewCourseIds[item.index] ?? []).includes(match.course_id)}
@@ -498,18 +597,28 @@ const AdminRelatedPostsPage: React.FC = () => {
                               handleTogglePreviewCourse(item.index, match.course_id, event.currentTarget.checked)
                             }
                             label={`${match.course_name} / ${match.instructor} (ID: ${match.course_id}, score: ${match.score})`}
-                            description={match.matched_keywords.join(', ')}
+                            description={`${match.department || '未分類系所'} / ${getPreviewCourseKeywordPreview(match.course_id, match.matched_keywords).join(', ') || '未設定匹配關鍵字'}`}
                           />
                         ))}
                       </Stack>
                     )}
+
                   </Stack>
                 </Card>
               ))}
             </Stack>
           </ScrollArea.Autosize>
           <Group justify='flex-end'>
-            <Button variant='default' onClick={() => setPreviewModalOpened(false)}>取消</Button>
+            <Button
+              variant='default'
+              onClick={() => {
+                setPreviewModalOpened(false)
+                setPreviewCourseLookupKeyword('')
+                setPreviewCourseKeywordOverrides({})
+              }}
+            >
+              取消
+            </Button>
             <Button onClick={() => void handleConfirmImport()} loading={dcardSourceMutation.isPending}>
               確認匯入
             </Button>
@@ -658,63 +767,6 @@ const AdminRelatedPostsPage: React.FC = () => {
           </Stack>
         </Card>
 
-        <Card withBorder className={styles.card}>
-          <Stack>
-            <Title order={4}>course_id 查詢輔助</Title>
-            <TextInput
-              label='輸入課名或老師名'
-              placeholder='例如 教育心理學 / 王老師'
-              value={courseLookupKeyword}
-              onChange={(event) => setCourseLookupKeyword(event.currentTarget.value)}
-            />
-            <Text size='sm' c='dimmed'>
-              如果你想手動指定 <Code>course_ids</Code>，先在這裡查，右側按鈕可以直接複製 id。
-            </Text>
-            {courseLookupKeyword.trim().length < 2 ? (
-              <Text size='sm' c='dimmed'>至少輸入 2 個字開始查詢。</Text>
-            ) : isCourseLookupLoading ? (
-              <Group justify='center'><Loader size='sm' /></Group>
-            ) : (
-              <Table striped highlightOnHover>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>ID</Table.Th>
-                    <Table.Th>課名</Table.Th>
-                    <Table.Th>老師</Table.Th>
-                    <Table.Th>學期</Table.Th>
-                    <Table.Th></Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {(courseLookupResult?.courses ?? []).map((course) => (
-                    <Table.Tr key={course.id}>
-                      <Table.Td>{course.id}</Table.Td>
-                      <Table.Td>{course.course_name}</Table.Td>
-                      <Table.Td>{course.instructor}</Table.Td>
-                      <Table.Td>{course.semester}</Table.Td>
-                      <Table.Td className={styles.copyCell}>
-                        <ActionIcon
-                          variant='light'
-                          aria-label={`copy-${course.id}`}
-                          onClick={() => void handleCopyCourseId(course.id)}
-                        >
-                          <FiCopy size={16} />
-                        </ActionIcon>
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
-                  {(courseLookupResult?.courses ?? []).length === 0 && (
-                    <Table.Tr>
-                      <Table.Td colSpan={5}>
-                        <Text size='sm' c='dimmed'>找不到符合的課程</Text>
-                      </Table.Td>
-                    </Table.Tr>
-                  )}
-                </Table.Tbody>
-              </Table>
-            )}
-          </Stack>
-        </Card>
 
         <Card withBorder className={styles.card}>
           <Stack>
