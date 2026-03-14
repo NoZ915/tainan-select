@@ -1,6 +1,3 @@
-// sequelize-cli 需要 config/config.js，臨時建立
-// 執行 npx sequelize-cli db:migrate 會需要
-
 require("dotenv").config();
 
 module.exports = {
