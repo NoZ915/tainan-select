@@ -134,6 +134,7 @@ export interface GoogleSyncResponse {
 
 export interface AttachRelatedPostCoursesPayload {
   course_ids: number[];
+  course_keyword_overrides?: ManualCourseKeywordOverride[];
 }
 
 export interface AttachRelatedPostCoursesResponse {

@@ -127,6 +127,7 @@ const AdminRelatedPostsPage: React.FC = () => {
   const [semester, setSemester] = useState('')
   const [attachCourseLookupKeyword, setAttachCourseLookupKeyword] = useState('')
   const [selectedAttachCourseIds, setSelectedAttachCourseIds] = useState<number[]>([])
+  const [attachCourseKeywordOverrides, setAttachCourseKeywordOverrides] = useState<Record<number, string>>({})
 
   const previewCourseLookupSearchParams = useMemo(() => ({
     page: 1,
@@ -183,6 +184,7 @@ const AdminRelatedPostsPage: React.FC = () => {
     setAttachTarget(post)
     setAttachCourseLookupKeyword('')
     setSelectedAttachCourseIds([])
+    setAttachCourseKeywordOverrides({})
   }
 
   const handleToggleAttachCourse = (courseId: number, checked: boolean) => {
@@ -196,6 +198,13 @@ const AdminRelatedPostsPage: React.FC = () => {
 
       return [...next]
     })
+  }
+
+  const handleAttachCourseKeywordChange = (courseId: number, value: string) => {
+    setAttachCourseKeywordOverrides((current) => ({
+      ...current,
+      [courseId]: value,
+    }))
   }
 
   const handleTogglePreviewCourse = (itemIndex: number, courseId: number, checked: boolean) => {
@@ -382,6 +391,21 @@ const AdminRelatedPostsPage: React.FC = () => {
       const result = await attachRelatedPostMutation.mutateAsync({
         id: attachTarget.id,
         course_ids: selectedAttachCourseIds,
+        course_keyword_overrides: selectedAttachCourseIds.reduce<
+          Array<{ course_id: number; manual_keywords?: string[] }>
+        >((overrides, courseId) => {
+          const manualKeywords = (attachCourseKeywordOverrides[courseId] ?? '')
+            .split(',')
+            .map((keyword) => keyword.trim())
+            .filter((keyword) => keyword.length > 0)
+
+          overrides.push({
+            course_id: courseId,
+            manual_keywords: manualKeywords,
+          })
+
+          return overrides
+        }, []),
       })
 
       notifications.show({
@@ -393,6 +417,7 @@ const AdminRelatedPostsPage: React.FC = () => {
       setAttachTarget(null)
       setAttachCourseLookupKeyword('')
       setSelectedAttachCourseIds([])
+      setAttachCourseKeywordOverrides({})
     } catch (error) {
       notifications.show({
         title: 'Attach failed',
@@ -628,7 +653,10 @@ const AdminRelatedPostsPage: React.FC = () => {
 
       <Modal
         opened={attachTarget !== null}
-        onClose={() => setAttachTarget(null)}
+        onClose={() => {
+          setAttachTarget(null)
+          setAttachCourseKeywordOverrides({})
+        }}
         title='將既有文章補掛到課程'
         size='lg'
         zIndex={1100}
@@ -654,7 +682,7 @@ const AdminRelatedPostsPage: React.FC = () => {
           />
 
           <Text size='sm' c='dimmed'>
-            搜尋現有課程後，可勾選一個或多個 course ID，將這篇文章補掛到對應課程。
+            搜尋現有課程後，可勾選一個或多個 course ID，並可為每門課選填匹配關鍵字。沒填寫就會送空。
           </Text>
 
           {attachCourseLookupKeyword.trim().length < 2 ? (
@@ -668,8 +696,11 @@ const AdminRelatedPostsPage: React.FC = () => {
                   <Table.Th></Table.Th>
                   <Table.Th>ID</Table.Th>
                   <Table.Th>課程</Table.Th>
+                  <Table.Th>系所</Table.Th>
                   <Table.Th>老師</Table.Th>
                   <Table.Th>學期</Table.Th>
+                  <Table.Th>匹配關鍵字</Table.Th>
+                  <Table.Th></Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -684,13 +715,36 @@ const AdminRelatedPostsPage: React.FC = () => {
                     </Table.Td>
                     <Table.Td>{course.id}</Table.Td>
                     <Table.Td>{course.course_name}</Table.Td>
+                    <Table.Td>{course.department || '-'}</Table.Td>
                     <Table.Td>{course.instructor}</Table.Td>
                     <Table.Td>{course.semester}</Table.Td>
+                    <Table.Td>
+                      <TextInput
+                        size='xs'
+                        placeholder='可選填，逗號分隔'
+                        value={attachCourseKeywordOverrides[course.id] ?? ''}
+                        onChange={(event) =>
+                          handleAttachCourseKeywordChange(course.id, event.currentTarget.value)
+                        }
+                      />
+                    </Table.Td>
+                    <Table.Td>
+                      <ActionIcon
+                        component='a'
+                        href={`/course/${course.id}`}
+                        target='_blank'
+                        rel='noreferrer'
+                        variant='light'
+                        aria-label={`open-attach-course-${course.id}`}
+                      >
+                        <FiExternalLink size={16} />
+                      </ActionIcon>
+                    </Table.Td>
                   </Table.Tr>
                 ))}
                 {(attachCourseLookupResult?.courses ?? []).length === 0 && (
                   <Table.Tr>
-                    <Table.Td colSpan={5}>
+                    <Table.Td colSpan={8}>
                       <Text size='sm' c='dimmed'>找不到符合的課程。</Text>
                     </Table.Td>
                   </Table.Tr>
@@ -704,7 +758,15 @@ const AdminRelatedPostsPage: React.FC = () => {
               已選擇：{selectedAttachCourseIds.length}
             </Text>
             <Group>
-              <Button variant='default' onClick={() => setAttachTarget(null)}>取消</Button>
+              <Button
+                variant='default'
+                onClick={() => {
+                  setAttachTarget(null)
+                  setAttachCourseKeywordOverrides({})
+                }}
+              >
+                取消
+              </Button>
               <Button onClick={() => void handleAttachRelatedPost()} loading={attachRelatedPostMutation.isPending}>
                 補掛課程
               </Button>

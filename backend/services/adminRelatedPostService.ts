@@ -471,7 +471,8 @@ class AdminRelatedPostService {
 
   async attachRelatedPostToCourses(
     relatedPostId: number,
-    courseIds: number[]
+    courseIds: number[],
+    courseKeywordOverrides: ManualCourseKeywordOverride[] = []
   ): Promise<AttachRelatedPostCoursesResult> {
     const normalizedCourseIds = [...new Set(
       courseIds
@@ -505,6 +506,7 @@ class AdminRelatedPostService {
       normalizedCourseIds
     );
     const existingCourseIdSet = new Set(existingRows.map((row) => Number(row.course_id)));
+    const courseKeywordOverrideMap = getCourseKeywordOverrideMap(courseKeywordOverrides);
 
     const rowsToCreate: CourseRelatedPostUpsertInput[] = [];
     const importedCourses: ImportedCourseSummary[] = [];
@@ -523,10 +525,6 @@ class AdminRelatedPostService {
         semester: course.semester ?? null,
       });
 
-      const nextMatchedKeywords = Array.from(
-        new Set([...(Array.isArray(sourceRow.matched_keywords) ? sourceRow.matched_keywords : []), "manual_course_bind"])
-      );
-
       rowsToCreate.push({
         course_id: course.id,
         source: sourceRow.source,
@@ -542,7 +540,7 @@ class AdminRelatedPostService {
         comments_json: Array.isArray(sourceRow.comments_json) ? sourceRow.comments_json : null,
         post_url: sourceRow.post_url,
         created_at_source: sourceRow.created_at_source,
-        matched_keywords: nextMatchedKeywords,
+        matched_keywords: courseKeywordOverrideMap.get(course.id) ?? [],
         score: Math.max(Number(sourceRow.score) || 0, 1),
         synced_at: new Date(),
       });

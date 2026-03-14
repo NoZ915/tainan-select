@@ -1,5 +1,6 @@
 import { RequestHandler } from "express";
 import AdminRelatedPostService from "../services/adminRelatedPostService";
+import { ManualCourseKeywordOverride } from "../types/admin";
 import UserService from "../services/userService";
 import { DcardImportValidationError } from "../utils/dcardImportParser";
 
@@ -112,7 +113,10 @@ export const attachRelatedPostToCourses: RequestHandler = async (req, res): Prom
     }
 
     const courseIds = Array.isArray(req.body?.course_ids) ? req.body.course_ids : [];
-    const result = await AdminRelatedPostService.attachRelatedPostToCourses(id, courseIds);
+    const courseKeywordOverrides = Array.isArray(req.body?.course_keyword_overrides)
+      ? req.body.course_keyword_overrides as ManualCourseKeywordOverride[]
+      : [];
+    const result = await AdminRelatedPostService.attachRelatedPostToCourses(id, courseIds, courseKeywordOverrides);
     res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ message: error instanceof Error ? error.message : "Failed to attach related post courses" });
