@@ -10,6 +10,7 @@ import CourseRelatedPostRepository, {
 } from "../repositories/courseRelatedPostRepository";
 import RelatedPostImportRepository from "../repositories/relatedPostImportRepository";
 import {
+  AttachRelatedPostCoursesResult,
   GoogleRelatedPostSyncParams,
   GoogleRelatedPostSyncResult,
   ImportedCourseSummary,
@@ -441,6 +442,103 @@ class AdminRelatedPostService {
     }
 
     return await this.previewManualPosts(items);
+  }
+
+  async attachRelatedPostToCourses(
+    relatedPostId: number,
+    courseIds: number[]
+  ): Promise<AttachRelatedPostCoursesResult> {
+    const normalizedCourseIds = [...new Set(
+      courseIds
+        .map((courseId) => Number(courseId))
+        .filter((courseId) => Number.isInteger(courseId) && courseId > 0)
+    )];
+
+    if (normalizedCourseIds.length === 0) {
+      throw new Error("course_ids is required");
+    }
+
+    const sourceRow = await CourseRelatedPostRepository.getById(relatedPostId);
+    if (!sourceRow) {
+      throw new Error("Related post not found");
+    }
+
+    const courses = await CourseModel.findAll({
+      attributes: ["id", "course_name", "instructor", "semester"],
+      where: {
+        id: normalizedCourseIds,
+      },
+      raw: true,
+    }) as RelatedPostCourseRow[];
+
+    if (courses.length === 0) {
+      throw new Error("No valid courses found");
+    }
+
+    const existingRows = await CourseRelatedPostRepository.findByPostIdAndCourseIds(
+      Number(sourceRow.post_id),
+      normalizedCourseIds
+    );
+    const existingCourseIdSet = new Set(existingRows.map((row) => Number(row.course_id)));
+
+    const rowsToCreate: CourseRelatedPostUpsertInput[] = [];
+    const importedCourses: ImportedCourseSummary[] = [];
+    const attachedCourseIds: number[] = [];
+
+    for (const course of courses) {
+      if (existingCourseIdSet.has(course.id)) {
+        continue;
+      }
+
+      attachedCourseIds.push(course.id);
+      importedCourses.push({
+        course_id: course.id,
+        course_name: course.course_name,
+        instructor: course.instructor,
+        semester: course.semester ?? null,
+      });
+
+      const nextMatchedKeywords = Array.from(
+        new Set([...(Array.isArray(sourceRow.matched_keywords) ? sourceRow.matched_keywords : []), "manual_course_bind"])
+      );
+
+      rowsToCreate.push({
+        course_id: course.id,
+        source: sourceRow.source,
+        post_id: Number(sourceRow.post_id),
+        forum_alias: sourceRow.forum_alias,
+        title: sourceRow.title,
+        excerpt: sourceRow.excerpt,
+        preview_title: sourceRow.preview_title,
+        preview_description: sourceRow.preview_description,
+        preview_image_url: sourceRow.preview_image_url,
+        preview_site_name: sourceRow.preview_site_name,
+        content: sourceRow.content,
+        comments_json: Array.isArray(sourceRow.comments_json) ? sourceRow.comments_json : null,
+        post_url: sourceRow.post_url,
+        created_at_source: sourceRow.created_at_source,
+        matched_keywords: nextMatchedKeywords,
+        score: Math.max(Number(sourceRow.score) || 0, 1),
+        synced_at: new Date(),
+      });
+    }
+
+    if (rowsToCreate.length > 0) {
+      await CourseRelatedPostRepository.upsertMany(rowsToCreate);
+    }
+
+    const skippedCourseIds = normalizedCourseIds.filter((courseId) => !attachedCourseIds.includes(courseId));
+
+    return {
+      related_post_id: relatedPostId,
+      post_id: Number(sourceRow.post_id),
+      requestedCourses: normalizedCourseIds.length,
+      attachedCourses: attachedCourseIds.length,
+      skippedCourses: skippedCourseIds.length,
+      attached_course_ids: attachedCourseIds,
+      skipped_course_ids: skippedCourseIds,
+      imported_courses: importedCourses.sort((a, b) => a.course_id - b.course_id),
+    };
   }
 
   async syncGoogleResults(params: GoogleRelatedPostSyncParams): Promise<GoogleRelatedPostSyncResult> {

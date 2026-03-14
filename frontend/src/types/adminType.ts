@@ -123,3 +123,18 @@ export interface GoogleSyncResponse {
   noResultCourses: number;
   replaceExisting: boolean;
 }
+
+export interface AttachRelatedPostCoursesPayload {
+  course_ids: number[];
+}
+
+export interface AttachRelatedPostCoursesResponse {
+  related_post_id: number;
+  post_id: number;
+  requestedCourses: number;
+  attachedCourses: number;
+  skippedCourses: number;
+  attached_course_ids: number[];
+  skipped_course_ids: number[];
+  imported_courses: ImportedCourseSummary[];
+}

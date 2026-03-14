@@ -165,6 +165,39 @@ class CourseRelatedPostRepository {
     });
   }
 
+  async getById(id: number): Promise<CourseRelatedPostModel | null> {
+    return await CourseRelatedPostModel.findByPk(id, {
+      include: [
+        {
+          model: CourseModel,
+          as: "course",
+          attributes: ["id", "course_name", "instructor", "semester"],
+        },
+      ],
+    });
+  }
+
+  async findByPostIdAndCourseIds(post_id: number, courseIds: number[]): Promise<CourseRelatedPostModel[]> {
+    if (courseIds.length === 0) return [];
+
+    return await CourseRelatedPostModel.findAll({
+      where: {
+        post_id,
+        course_id: {
+          [Op.in]: courseIds,
+        },
+      },
+      include: [
+        {
+          model: CourseModel,
+          as: "course",
+          attributes: ["id", "course_name", "instructor", "semester"],
+        },
+      ],
+      order: [["id", "ASC"]],
+    });
+  }
+
   async deleteById(id: number): Promise<number> {
     return await CourseRelatedPostModel.destroy({
       where: { id },

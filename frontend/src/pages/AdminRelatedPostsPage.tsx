@@ -22,7 +22,8 @@ import {
   Title,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { FiCopy, FiExternalLink, FiTrash2 } from 'react-icons/fi'
+import { FiCopy, FiExternalLink, FiLink2, FiTrash2 } from 'react-icons/fi'
+import { useAttachRelatedPostToCourses } from '../hooks/admin/useAttachRelatedPostToCourses'
 import { useGetRelatedPostOverview } from '../hooks/admin/useGetRelatedPostOverview'
 import { useImportDcardSource } from '../hooks/admin/useImportDcardSource'
 import { useDeleteRelatedPost } from '../hooks/admin/useDeleteRelatedPost'
@@ -89,6 +90,7 @@ const AdminRelatedPostsPage: React.FC = () => {
   const deleteRelatedPostImportMutation = useDeleteRelatedPostImport()
   const previewDcardSourceMutation = usePreviewImportDcardSource()
   const googleSyncMutation = useSyncRelatedPostsFromGoogle()
+  const attachRelatedPostMutation = useAttachRelatedPostToCourses()
 
   const [dcardSourceInput, setDcardSourceInput] = useState('')
   const [previewModalOpened, setPreviewModalOpened] = useState(false)
@@ -107,12 +109,23 @@ const AdminRelatedPostsPage: React.FC = () => {
     created_by_name?: string | null;
     created_at: Date;
   } | null>(null)
+  const [attachTarget, setAttachTarget] = useState<{
+    id: number;
+    post_id: number;
+    title: string;
+    post_url: string;
+    course_name?: string;
+    instructor?: string;
+    semester?: string;
+  } | null>(null)
   const [googleLimit, setGoogleLimit] = useState<number>(30)
   const [googleMaxResults, setGoogleMaxResults] = useState<number>(5)
   const [onlyUnreviewed, setOnlyUnreviewed] = useState(true)
   const [replaceGoogle, setReplaceGoogle] = useState(false)
   const [semester, setSemester] = useState('')
   const [courseLookupKeyword, setCourseLookupKeyword] = useState('')
+  const [attachCourseLookupKeyword, setAttachCourseLookupKeyword] = useState('')
+  const [selectedAttachCourseIds, setSelectedAttachCourseIds] = useState<number[]>([])
 
   const courseLookupSearchParams = useMemo(() => ({
     page: 1,
@@ -133,10 +146,56 @@ const AdminRelatedPostsPage: React.FC = () => {
     isLoading: isCourseLookupLoading,
   } = useGetCourses(courseLookupSearchParams, courseLookupKeyword.trim().length >= 2)
 
+  const attachCourseLookupSearchParams = useMemo(() => ({
+    page: 1,
+    limit: 8,
+    search: attachCourseLookupKeyword.trim(),
+    category: 'all',
+    academy: '',
+    department: '',
+    courseType: '',
+    weekdays: [],
+    periods: [],
+    semesters: [],
+    sortBy: 'viewDesc',
+  }), [attachCourseLookupKeyword])
+
+  const {
+    data: attachCourseLookupResult,
+    isLoading: isAttachCourseLookupLoading,
+  } = useGetCourses(attachCourseLookupSearchParams, attachCourseLookupKeyword.trim().length >= 2)
+
   const countsMap = useMemo(
     () => new Map((overview?.counts ?? []).map((item) => [item.source, item.count])),
     [overview?.counts]
   )
+
+  const handleOpenAttachModal = (post: {
+    id: number;
+    post_id: number;
+    title: string;
+    post_url: string;
+    course_name?: string;
+    instructor?: string;
+    semester?: string;
+  }) => {
+    setAttachTarget(post)
+    setAttachCourseLookupKeyword('')
+    setSelectedAttachCourseIds([])
+  }
+
+  const handleToggleAttachCourse = (courseId: number, checked: boolean) => {
+    setSelectedAttachCourseIds((current) => {
+      const next = new Set(current)
+      if (checked) {
+        next.add(courseId)
+      } else {
+        next.delete(courseId)
+      }
+
+      return [...next]
+    })
+  }
 
   const handleTogglePreviewCourse = (itemIndex: number, courseId: number, checked: boolean) => {
     setSelectedPreviewCourseIds((current) => {
@@ -282,6 +341,42 @@ const AdminRelatedPostsPage: React.FC = () => {
     }
   }
 
+  const handleAttachRelatedPost = async () => {
+    if (!attachTarget) return
+
+    if (selectedAttachCourseIds.length === 0) {
+      notifications.show({
+        title: 'No courses selected',
+        message: 'Select at least one course to attach.',
+        color: 'red',
+      })
+      return
+    }
+
+    try {
+      const result = await attachRelatedPostMutation.mutateAsync({
+        id: attachTarget.id,
+        course_ids: selectedAttachCourseIds,
+      })
+
+      notifications.show({
+        title: 'Courses attached',
+        message: `Attached ${result.attachedCourses} course(s), skipped ${result.skippedCourses}.`,
+        color: 'green',
+      })
+
+      setAttachTarget(null)
+      setAttachCourseLookupKeyword('')
+      setSelectedAttachCourseIds([])
+    } catch (error) {
+      notifications.show({
+        title: 'Attach failed',
+        message: error instanceof Error ? error.message : 'Failed to attach courses.',
+        color: 'red',
+      })
+    }
+  }
+
   const handleDeleteRelatedPost = async (id: number) => {
     try {
       await deleteRelatedPostMutation.mutateAsync(id)
@@ -418,6 +513,93 @@ const AdminRelatedPostsPage: React.FC = () => {
             <Button onClick={() => void handleConfirmImport()} loading={dcardSourceMutation.isPending}>
               確認匯入
             </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal
+        opened={attachTarget !== null}
+        onClose={() => setAttachTarget(null)}
+        title='將既有文章補掛到課程'
+        size='lg'
+        zIndex={1100}
+      >
+        <Stack>
+          {attachTarget && (
+            <Card withBorder className={styles.subCard}>
+              <Stack gap={6}>
+                <Text fw={700}>{attachTarget.title}</Text>
+                <Text size='sm' c='dimmed'>{attachTarget.post_url}</Text>
+                <Text size='sm' c='dimmed'>
+                  目前課程：{[attachTarget.course_name, attachTarget.instructor, attachTarget.semester].filter(Boolean).join(' / ') || '-'}
+                </Text>
+              </Stack>
+            </Card>
+          )}
+
+          <TextInput
+            label='搜尋課程'
+            placeholder='課名 / 老師 / 學期'
+            value={attachCourseLookupKeyword}
+            onChange={(event) => setAttachCourseLookupKeyword(event.currentTarget.value)}
+          />
+
+          <Text size='sm' c='dimmed'>
+            搜尋現有課程後，可勾選一個或多個 course ID，將這篇文章補掛到對應課程。
+          </Text>
+
+          {attachCourseLookupKeyword.trim().length < 2 ? (
+            <Text size='sm' c='dimmed'>至少輸入 2 個字才能開始搜尋。</Text>
+          ) : isAttachCourseLookupLoading ? (
+            <Group justify='center'><Loader size='sm' /></Group>
+          ) : (
+            <Table striped highlightOnHover>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th></Table.Th>
+                  <Table.Th>ID</Table.Th>
+                  <Table.Th>課程</Table.Th>
+                  <Table.Th>老師</Table.Th>
+                  <Table.Th>學期</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {(attachCourseLookupResult?.courses ?? []).map((course) => (
+                  <Table.Tr key={`attach-${course.id}`}>
+                    <Table.Td>
+                      <Checkbox
+                        checked={selectedAttachCourseIds.includes(course.id)}
+                        onChange={(event) => handleToggleAttachCourse(course.id, event.currentTarget.checked)}
+                        aria-label={`attach-course-${course.id}`}
+                      />
+                    </Table.Td>
+                    <Table.Td>{course.id}</Table.Td>
+                    <Table.Td>{course.course_name}</Table.Td>
+                    <Table.Td>{course.instructor}</Table.Td>
+                    <Table.Td>{course.semester}</Table.Td>
+                  </Table.Tr>
+                ))}
+                {(attachCourseLookupResult?.courses ?? []).length === 0 && (
+                  <Table.Tr>
+                    <Table.Td colSpan={5}>
+                      <Text size='sm' c='dimmed'>找不到符合的課程。</Text>
+                    </Table.Td>
+                  </Table.Tr>
+                )}
+              </Table.Tbody>
+            </Table>
+          )}
+
+          <Group justify='space-between'>
+            <Text size='sm' c='dimmed'>
+              已選擇：{selectedAttachCourseIds.length}
+            </Text>
+            <Group>
+              <Button variant='default' onClick={() => setAttachTarget(null)}>取消</Button>
+              <Button onClick={() => void handleAttachRelatedPost()} loading={attachRelatedPostMutation.isPending}>
+                補掛課程
+              </Button>
+            </Group>
           </Group>
         </Stack>
       </Modal>
@@ -621,6 +803,23 @@ const AdminRelatedPostsPage: React.FC = () => {
                             <FiExternalLink size={16} />
                           </ActionIcon>
                         )}
+                        <ActionIcon
+                          variant='light'
+                          aria-label={`attach-related-post-${post.id}`}
+                          onClick={() =>
+                            handleOpenAttachModal({
+                              id: post.id,
+                              post_id: post.post_id,
+                              title: post.title,
+                              post_url: post.post_url,
+                              course_name: post.course_name,
+                              instructor: post.instructor,
+                              semester: post.semester,
+                            })
+                          }
+                        >
+                          <FiLink2 size={16} />
+                        </ActionIcon>
                         <ActionIcon
                           color='red'
                           variant='light'

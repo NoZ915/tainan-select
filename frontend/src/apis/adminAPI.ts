@@ -1,5 +1,7 @@
 import {
   AdminStatusResponse,
+  AttachRelatedPostCoursesPayload,
+  AttachRelatedPostCoursesResponse,
   DcardSourceImportPayload,
   GoogleSyncPayload,
   GoogleSyncResponse,
@@ -42,6 +44,14 @@ export const syncRelatedPostsFromGoogle = async (
   payload: GoogleSyncPayload
 ): Promise<GoogleSyncResponse> => {
   const response = await axiosInstance.post('/admin/related-posts/google-sync', payload)
+  return response.data
+}
+
+export const attachRelatedPostToCourses = async (
+  id: number,
+  payload: AttachRelatedPostCoursesPayload
+): Promise<AttachRelatedPostCoursesResponse> => {
+  const response = await axiosInstance.post(`/admin/related-posts/${id}/attach-courses`, payload)
   return response.data
 }
 

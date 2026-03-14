@@ -103,6 +103,22 @@ export const syncRelatedPostsFromGoogle: RequestHandler = async (req, res): Prom
   }
 };
 
+export const attachRelatedPostToCourses: RequestHandler = async (req, res): Promise<void> => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ message: "id is invalid" });
+      return;
+    }
+
+    const courseIds = Array.isArray(req.body?.course_ids) ? req.body.course_ids : [];
+    const result = await AdminRelatedPostService.attachRelatedPostToCourses(id, courseIds);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ message: error instanceof Error ? error.message : "Failed to attach related post courses" });
+  }
+};
+
 export const deleteRelatedPost: RequestHandler = async (req, res): Promise<void> => {
   try {
     const id = Number(req.params.id);

@@ -113,3 +113,14 @@ export type GoogleRelatedPostSyncResult = {
   noResultCourses: number;
   replaceExisting: boolean;
 };
+
+export type AttachRelatedPostCoursesResult = {
+  related_post_id: number;
+  post_id: number;
+  requestedCourses: number;
+  attachedCourses: number;
+  skippedCourses: number;
+  attached_course_ids: number[];
+  skipped_course_ids: number[];
+  imported_courses: ImportedCourseSummary[];
+};
