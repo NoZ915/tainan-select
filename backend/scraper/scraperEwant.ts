@@ -6,8 +6,8 @@ import * as cheerio from "cheerio";
 import { Op } from "sequelize";
 import db from "../models";
 import CourseModel from "../models/Course";
+import { EWANT_ACS } from "./googleRequestCURL";
 
-// ewant api 回來的 data type
 type GetCourseItem = {
   Result: string;
   Message: string;
@@ -15,33 +15,23 @@ type GetCourseItem = {
   Sec: string;
   SelCourNo: string;
   CourNo: string;
-
   CourName: string;
   CourEngName: string;
-
   ClassName1: string;
-
   TeaNo1: string;
   TeaName1: string;
   TeaName: string;
   TeaEmail: string;
   AlPt: string;
-
   Credit: string;
   TotHour: string;
-
-  Week: string;
-  Section: string;
-
   Room: string;
   ComptRoom: string;
-
   Method: string;
   EMI: string;
   Dist: string;
   Coord: string;
   Remark: string;
-
   MaxSel: string;
   MinSel: string;
   NowSel: string;
@@ -53,24 +43,22 @@ const API_URL = `${BASE_URL}/Course/api/Query/GetCourse`;
 const EWANT_SEARCH_URL =
   "https://www.ewant.org/admin/tool/mooccourse/allcourses.php?filter=4&schoolid=0&categoryid=0&course_filter=3&search=";
 
-// 要爬的條件：114-2 / 其他 / 校外遠距(EWANT)
 const PAYLOAD = {
-  acs: "1142", // acadamic semester 學期：1142 = 114-2
+  acs: EWANT_ACS,
   kw: "",
   dc: "",
   gr: "",
   ch: "",
-  ot: "DIS_1", // 類別：校外遠距(EWANT)
+  ot: "DIS_1",
   ge: "A",
   ta: "ZZS101",
   we: "",
-  ki: "6", // 單位：其他
+  ki: "6",
   ll: "zh-TW",
 };
 
 const DEPARTMENT_LABEL = "校外遠距(EWANT)";
 
-// 處理爬蟲被擋的問題
 const httpsAgent = new https.Agent({
   keepAlive: true,
   maxSockets: 20,
@@ -87,7 +75,7 @@ const detailClient = axios.create({
   },
 });
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function isRetryableNetworkError(err: any) {
   const code = err?.code;
@@ -106,11 +94,11 @@ function isRetryableNetworkError(err: any) {
 
 async function postWithRetry<T>(
   url: string,
-  data: any,
+  data: unknown,
   headers: Record<string, string>,
   retries = 3
 ) {
-  for (let attempt = 1; attempt <= retries; attempt++) {
+  for (let attempt = 1; attempt <= retries; attempt += 1) {
     try {
       return await detailClient.post<T>(url, data, { headers });
     } catch (err: any) {
@@ -119,10 +107,10 @@ async function postWithRetry<T>(
       await sleep(backoff);
     }
   }
+
   throw new Error("unreachable");
 }
 
-// 初始化 DB
 async function initializeDatabase(): Promise<void> {
   try {
     await db.sequelize.authenticate();
@@ -135,17 +123,28 @@ async function initializeDatabase(): Promise<void> {
 
 function pickCookieHeader(setCookie?: string[] | string): string {
   if (!setCookie) return "";
-  const array = Array.isArray(setCookie) ? setCookie : [setCookie];
-  return array
+
+  const cookies = Array.isArray(setCookie) ? setCookie : [setCookie];
+  return cookies
     .map((cookie) => cookie.split(";")[0])
     .filter(Boolean)
     .join("; ");
 }
 
 function formatSemesterFromAcs(acs: string) {
-  // "1142" -> "114-2"
   if (!acs || acs.length < 4) return acs;
   return `${acs.slice(0, 3)}-${acs.slice(3)}`;
+}
+
+function formatSemesterFromApi(item: GetCourseItem) {
+  const year = (item.sYear || "").replace(/\D/g, "");
+  const sec = (item.Sec || "").replace(/\D/g, "");
+
+  if (year.length >= 3 && sec) {
+    return `${year.slice(0, 3)}-${sec}`;
+  }
+
+  return "";
 }
 
 function buildInstructorName(item: GetCourseItem) {
@@ -155,20 +154,19 @@ function buildInstructorName(item: GetCourseItem) {
 }
 
 function buildInstructorUrl(item: GetCourseItem) {
-  // 依你貼的前端 getTea() 邏輯
-  const teano = (item.TeaNo1 || "").trim();
-  const apl = (item.AlPt || "").trim();
-  const email = (item.TeaEmail || "").trim();
-  const teaname = (item.TeaName1 || "").trim();
+  const teacherNo = (item.TeaNo1 || "").trim();
+  const teacherName = (item.TeaName1 || "").trim();
+  const teacherEmail = (item.TeaEmail || "").trim();
+  const teacherApl = (item.AlPt || "").trim();
 
-  if (!teano || !teaname) return undefined;
+  if (!teacherNo || !teacherName) return undefined;
 
-  if (apl === "1" && email) {
-    const id = email.split("@")[0];
+  if (teacherApl === "1" && teacherEmail) {
+    const id = teacherEmail.split("@")[0];
     return `https://gaweb.nutn.edu.tw/faculty/teaData.aspx?id=${id}`;
   }
 
-  return `${BASE_URL}/Course/Qry/TeaInfo?id=${teano}&ap=${apl}`;
+  return `${BASE_URL}/Course/Qry/TeaInfo?id=${teacherNo}&ap=${teacherApl}`;
 }
 
 function buildCourseUrl(courseName: string) {
@@ -185,7 +183,6 @@ async function fetchSession(): Promise<{ csrfToken: string; cookie: string }> {
 
   const cookie = pickCookieHeader(res.headers["set-cookie"]);
   const $ = cheerio.load(res.data);
-
   const csrfToken = ($("#ctl00_hv_token").val() as string) || "";
 
   if (!csrfToken) {
@@ -197,12 +194,8 @@ async function fetchSession(): Promise<{ csrfToken: string; cookie: string }> {
 
 async function runScraper(): Promise<void> {
   try {
-    const semester = formatSemesterFromAcs(PAYLOAD.acs);
-
-    // 1) 先拿 csrf + cookie
     const { csrfToken, cookie } = await fetchSession();
 
-    // 2) 打 API
     const headers = {
       accept: "*/*",
       "content-type": "application/json; charset=utf-8",
@@ -214,9 +207,9 @@ async function runScraper(): Promise<void> {
 
     const res = await postWithRetry<GetCourseItem[]>(API_URL, PAYLOAD, headers, 3);
     const data = res.data || [];
-    const items = data.filter((x) => x && x.Result === "00");
+    const items = data.filter((item) => item && item.Result === "00");
 
-    console.log(`GetCourse 回傳: ${data.length} 筆，Result=00: ${items.length} 筆`);
+    console.log(`GetCourse 使用學期代碼 ${EWANT_ACS}，回傳: ${data.length} 筆，Result=00: ${items.length} 筆`);
 
     const limit = pLimit(10);
     let created = 0;
@@ -226,23 +219,17 @@ async function runScraper(): Promise<void> {
     const tasks = items.map((item) =>
       limit(async () => {
         try {
+          const semester = formatSemesterFromApi(item) || formatSemesterFromAcs(EWANT_ACS);
           const courseName = (item.CourName || "").trim() || "未知課程";
-          const courseUrl = buildCourseUrl(courseName);
-          const instructorName = buildInstructorName(item);
-          const instructorUrl = buildInstructorUrl(item);
-
-          // ✅ 依你需求：遠距固定寫「遠距」，不看 API Room（也不 trim）
-          // ✅ course_time 讓它空（不存）
-          // ✅ course_url 不存
           const payload = {
             semester,
-            academy: "其他", // 你也可以改成 null，不影響（欄位可空）
+            academy: "其他",
             department: DEPARTMENT_LABEL,
             course_name: courseName,
-            instructor: instructorName,
-            instructor_url: instructorUrl,
+            instructor: buildInstructorName(item),
+            instructor_url: buildInstructorUrl(item),
             course_room: "遠距",
-            course_url: courseUrl,
+            course_url: buildCourseUrl(courseName),
             credit_hours: Number.parseInt(item.Credit || "0", 10) || 0,
             course_type: "選修",
             updated_at: new Date(),
@@ -262,14 +249,14 @@ async function runScraper(): Promise<void> {
 
           if (existing) {
             await existing.update(payload);
-            updated++;
+            updated += 1;
             return;
           }
 
           await CourseModel.create(payload as any);
-          created++;
+          created += 1;
         } catch (err) {
-          failed++;
+          failed += 1;
           console.error(`寫入失敗：${item.CourName} (${item.SelCourNo})`, err);
         }
       })
