@@ -76,6 +76,7 @@ class CourseRepository {
         [Op.and]: [
           { department: { [Op.notLike]: "%碩士%" } },
           { department: { [Op.notLike]: "%通識%" } },
+          { department: { [Op.notLike]: "校外遠距(EWANT)" } },
         ]
       });
     } else if (search && search.category === "graduate") {
