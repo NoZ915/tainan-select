@@ -12,6 +12,19 @@ interface CourseCardProp {
 }
 
 const CourseCard: React.FC<CourseCardProp> = ({ course }) => {
+	const courseLocationAndTimeParts = [
+		course.course_room?.trim(),
+		course.course_time ? formatCourseTime(course.course_time) : null,
+	].filter(Boolean)
+	const courseLocationAndTime = courseLocationAndTimeParts.length > 0
+		? courseLocationAndTimeParts.map((part, index) => (
+			<span key={index}>
+				{index > 0 ? ' / ' : ''}
+				{part}
+			</span>
+		))
+		: null
+
 	return (
 		<Card padding='lg' className={style.courseCard}>
 			<Link to={`/course/${course.id}`} style={{ textDecoration: 'none', flexGrow: 1, color: 'black' }} >
@@ -24,7 +37,7 @@ const CourseCard: React.FC<CourseCardProp> = ({ course }) => {
 				<Text fw={300} c='gray'>{course.instructor}</Text>
 
 				<Group justify='center'>
-					<Text fw={300} c='gray'>{course.course_room} / {formatCourseTime(course.course_time)}</Text>
+					<Text fw={300} c='gray'>{courseLocationAndTime}</Text>
 				</Group>
 
 				<Group justify='center' mt='sm' >

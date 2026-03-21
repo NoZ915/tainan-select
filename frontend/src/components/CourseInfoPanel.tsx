@@ -39,6 +39,10 @@ const CourseInfoPanel: React.FC<CourseInfoPanelProps> = ({ course, isLoading }) 
   const instructorUrl = courseData?.instructor_url
   const courseTime = courseData?.course_time ? formatCourseTime(courseData.course_time) : '-'
   const courseRoom = displayText(courseData?.course_room)
+  const mobileCourseMeta = [
+    courseData?.course_time ? formatCourseTime(courseData.course_time) : null,
+    courseData?.course_room?.trim() || null,
+  ].filter(Boolean)
   const courseType = displayText(courseData?.course_type)
   const creditHours = displayText(courseData?.credit_hours)
 
@@ -62,7 +66,16 @@ const CourseInfoPanel: React.FC<CourseInfoPanelProps> = ({ course, isLoading }) 
 
         <div>
           <Text className={style.label}>上課時間 / 上課教室</Text>
-          <Text className={style.courseDetail}>{courseTime} / {courseRoom}</Text>
+          <Text className={style.courseDetail}>
+            {mobileCourseMeta.length > 0
+              ? mobileCourseMeta.map((item, index) => (
+                <span key={index}>
+                  {index > 0 ? ' / ' : ''}
+                  {item}
+                </span>
+              ))
+              : '-'}
+          </Text>
         </div>
 
         <div>
