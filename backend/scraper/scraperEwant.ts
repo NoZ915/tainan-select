@@ -3,6 +3,7 @@ import axios from "axios";
 import https from "https";
 import pLimit from "p-limit";
 import * as cheerio from "cheerio";
+import { Op } from "sequelize";
 import db from "../models";
 import CourseModel from "../models/Course";
 
@@ -227,6 +228,8 @@ async function runScraper(): Promise<void> {
         try {
           const courseName = (item.CourName || "").trim() || "未知課程";
           const courseUrl = buildCourseUrl(courseName);
+          const instructorName = buildInstructorName(item);
+          const instructorUrl = buildInstructorUrl(item);
 
           // ✅ 依你需求：遠距固定寫「遠距」，不看 API Room（也不 trim）
           // ✅ course_time 讓它空（不存）
@@ -236,8 +239,8 @@ async function runScraper(): Promise<void> {
             academy: "其他", // 你也可以改成 null，不影響（欄位可空）
             department: DEPARTMENT_LABEL,
             course_name: courseName,
-            instructor: "EWANT教師",
-            instructor_url: undefined,
+            instructor: instructorName,
+            instructor_url: instructorUrl,
             course_room: "遠距",
             course_url: courseUrl,
             credit_hours: Number.parseInt(item.Credit || "0", 10) || 0,
@@ -250,7 +253,9 @@ async function runScraper(): Promise<void> {
               semester: payload.semester,
               department: payload.department,
               course_name: payload.course_name,
-              instructor: payload.instructor,
+              instructor: {
+                [Op.in]: [payload.instructor, "EWANT教師"],
+              },
               credit_hours: payload.credit_hours,
             },
           });
