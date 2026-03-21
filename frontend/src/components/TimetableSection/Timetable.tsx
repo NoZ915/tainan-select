@@ -37,6 +37,7 @@ const weekdays: WeekdayOption[] = [
 ]
 const EMPTY_TIMETABLE_ITEMS: TimetableItem[] = []
 const EMPTY_ADDED_ITEMS: AddedCourseItem[] = []
+const EWANT_DEPARTMENT = '校外遠距(EWANT)'
 
 const periodOrder = Object.keys(periodTimeMap) as PeriodKey[]
 const periodIndexMap = periodOrder.reduce<Record<string, number>>((acc, period, index) => {
@@ -110,10 +111,22 @@ const Timetable: React.FC = () => {
     if (!selectedSemester) return []
     return allAddedItems.filter((item) => item.semester === selectedSemester)
   }, [allAddedItems, selectedSemester])
+  const ewantItemsInSelectedSemester = useMemo(
+    () => addedItemsInSelectedSemester.filter((item) => item.course.department === EWANT_DEPARTMENT),
+    [addedItemsInSelectedSemester],
+  )
+  const scheduledItemsInSelectedSemester = useMemo(
+    () => addedItemsInSelectedSemester.filter((item) => item.course.department !== EWANT_DEPARTMENT),
+    [addedItemsInSelectedSemester],
+  )
+  const gridItems = useMemo(
+    () => items.filter((item) => item.course.department !== EWANT_DEPARTMENT),
+    [items],
+  )
   const timetableId = timetableData?.timetable.id
-  const grid = useMemo(() => buildGrid(items), [items])
+  const grid = useMemo(() => buildGrid(gridItems), [gridItems])
   const missingTimeslotCountInCurrentSemester = useMemo(
-    () => items.filter((item) => item.timeslots.length === 0).length,
+    () => items.filter((item) => item.course.department !== EWANT_DEPARTMENT && item.timeslots.length === 0).length,
     [items],
   )
   const existingCourseIdSet = useMemo(() => new Set(items.map((item) => item.course.id)), [items])
@@ -143,8 +156,8 @@ const Timetable: React.FC = () => {
     [grid],
   )
   const hasWeekendCourses = useMemo(
-    () => items.some((item) => item.timeslots.some((timeslot) => timeslot.dayOfWeek === 6 || timeslot.dayOfWeek === 7)),
-    [items],
+    () => gridItems.some((item) => item.timeslots.some((timeslot) => timeslot.dayOfWeek === 6 || timeslot.dayOfWeek === 7)),
+    [gridItems],
   )
   const weekdaysToRender = useMemo(
     () => (hasWeekendCourses ? weekdays : weekdays.filter((day) => day.value <= 5)),
@@ -263,11 +276,13 @@ const Timetable: React.FC = () => {
           itemsCount={items.length}
           selectableCount={selectableInterestCourses.length}
           missingTimeslotCount={missingTimeslotCountInCurrentSemester}
+          ewantCount={ewantItemsInSelectedSemester.length}
         />
 
         <TimetableCourseLists
           selectableInterestCourses={selectableInterestCourses}
-          addedItemsInSelectedSemester={addedItemsInSelectedSemester}
+          addedItemsInSelectedSemester={scheduledItemsInSelectedSemester}
+          ewantItemsInSelectedSemester={ewantItemsInSelectedSemester}
           isAdding={addCourseMutation.isPending}
           isRemoving={removeCourseMutation.isPending}
           onAddCourse={(course) => {
@@ -292,9 +307,16 @@ const Timetable: React.FC = () => {
                 星期{conflict.dayLabel} 第{conflict.period}節：{conflict.courses.join(' / ')}
               </Text>
             ))}
-            <Text size='sm' c='dimmed'>
-              缺時段課程 {missingTimeslotCountInCurrentSemester} 門，不參與衝堂判斷。
-            </Text>
+            {missingTimeslotCountInCurrentSemester > 0 && (
+              <Text size='sm' c='dimmed'>
+                缺時段課程 {missingTimeslotCountInCurrentSemester} 門，不參與衝堂判斷。
+              </Text>
+            )}
+            {ewantItemsInSelectedSemester.length > 0 && (
+              <Text size='sm' c='dimmed'>
+                遠距課程 {ewantItemsInSelectedSemester.length} 門，已移到下方獨立區塊，不顯示在時間格中。
+              </Text>
+            )}
             {conflicts.length > 6 && (
               <Text size='sm' c='dimmed'>
                 還有 {conflicts.length - 6} 個衝堂時段...
@@ -308,6 +330,14 @@ const Timetable: React.FC = () => {
         <Alert color='orange' title='缺少時段資料'>
           <Text size='sm'>
             本學期有 {missingTimeslotCountInCurrentSemester} 門課資料較舊，平台尚未更新時段資料。這些課程不會顯示在課表格，也不參與衝堂判斷。
+          </Text>
+        </Alert>
+      )}
+
+      {ewantItemsInSelectedSemester.length > 0 && (
+        <Alert color='blue' title='遠距課程已獨立顯示'>
+          <Text size='sm'>
+            本學期有 {ewantItemsInSelectedSemester.length} 門 EWANT 遠距課程，已集中顯示在「遠距課程」區塊，不會直接排進時間格，也不參與衝堂判斷。
           </Text>
         </Alert>
       )}

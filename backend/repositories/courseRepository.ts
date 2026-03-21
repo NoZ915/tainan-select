@@ -76,12 +76,16 @@ class CourseRepository {
         [Op.and]: [
           { department: { [Op.notLike]: "%碩士%" } },
           { department: { [Op.notLike]: "%通識%" } },
+          { department: { [Op.notLike]: "校外遠距(EWANT)" } },
         ]
       });
     } else if (search && search.category === "graduate") {
       categoryConditions.push({ department: { [Op.like]: "%碩士%" } });
     } else if (search && search.category === "teacher") {
       categoryConditions.push({ department: { [Op.like]: "%師%" } });
+    }
+    if (search && search.category === "ewant") {
+      categoryConditions.push({ department: "校外遠距(EWANT)" });
     }
     if (search && search.department) {
       categoryConditions.push({ department: search.department });
@@ -151,6 +155,11 @@ class CourseRepository {
   async getAllDepartments(): Promise<string[]> {
     const departments = await CourseModel.findAll({
       attributes: [[db.Sequelize.fn("DISTINCT", db.Sequelize.col("department")), "department"]],
+      where: {
+        department: {
+          [Op.ne]: "校外遠距(EWANT)",
+        },
+      },
       raw: true
     });
     const departmentList = departments.map((item: { department: string }) => {

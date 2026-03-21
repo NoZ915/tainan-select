@@ -14,6 +14,7 @@ type TimetableHeaderProps = {
   itemsCount: number
   selectableCount: number
   missingTimeslotCount: number
+  ewantCount: number
 }
 
 const TimetableHeader: React.FC<TimetableHeaderProps> = ({
@@ -24,6 +25,7 @@ const TimetableHeader: React.FC<TimetableHeaderProps> = ({
   itemsCount,
   selectableCount,
   missingTimeslotCount,
+  ewantCount,
 }) => {
   return (
     <>
@@ -58,6 +60,9 @@ const TimetableHeader: React.FC<TimetableHeaderProps> = ({
         </Badge>
         <Badge variant='light' color={missingTimeslotCount > 0 ? 'orange' : 'gray'}>
           缺時段課程 {missingTimeslotCount}
+        </Badge>
+        <Badge variant='light' color={ewantCount > 0 ? 'blue' : 'gray'}>
+          遠距課程 {ewantCount}
         </Badge>
       </Group>
     </>

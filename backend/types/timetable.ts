@@ -23,6 +23,7 @@ export interface TimetableItemResponse {
     id: number;
     name: string;
     semester: string;
+    department: string;
     instructor: string;
     room?: string;
   };
@@ -45,6 +46,7 @@ export interface AddedCourseItemResponse {
     id: number;
     name: string;
     semester: string;
+    department: string;
     instructor: string;
     room?: string;
     courseTime?: string;

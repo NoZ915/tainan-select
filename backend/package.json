@@ -7,6 +7,7 @@
   "scripts": {
     "start": "nodemon --exec tsx server.ts",
     "scrape": "tsx scraper/scraper.ts",
+    "scrape:ewant": "tsx scraper/scraperEwant.ts",
     "backfill:schedules": "tsx scripts/backfillCourseSchedules.ts",
     "backfill:dcard-related-post-counts": "tsx scripts/backfillDcardRelatedPostCounts.ts",
     "migrate": "sequelize-cli db:migrate --config config/config.cjs"

@@ -10,6 +10,7 @@ export interface TimetableCourse {
   id: number
   name: string
   semester: string
+  department: string
   instructor: string
   room?: string
 }
@@ -35,6 +36,7 @@ export interface AddedCourseItem {
     id: number
     name: string
     semester: string
+    department: string
     instructor: string
     room?: string
     courseTime?: string

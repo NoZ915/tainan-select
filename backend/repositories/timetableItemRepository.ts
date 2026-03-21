@@ -34,7 +34,7 @@ class TimetableItemRepository {
         {
           model: CourseModel,
           as: "course",
-          attributes: ["id", "course_name", "semester", "instructor", "course_room"],
+          attributes: ["id", "course_name", "semester", "department", "instructor", "course_room"],
         },
       ],
       order: [["created_at", "ASC"]],
@@ -53,7 +53,7 @@ class TimetableItemRepository {
         {
           model: CourseModel,
           as: "course",
-          attributes: ["id", "course_name", "semester", "instructor", "course_time", "course_room"],
+          attributes: ["id", "course_name", "semester", "department", "instructor", "course_time", "course_room"],
         },
       ],
       order: [["created_at", "DESC"]],

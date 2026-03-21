@@ -62,7 +62,7 @@ CourseModel.init(
       type: DataTypes.STRING(100),
     },
     course_url: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.TEXT,
     },
     credit_hours: {
       type: DataTypes.TINYINT,
