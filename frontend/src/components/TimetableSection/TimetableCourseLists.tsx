@@ -7,6 +7,7 @@ import { AddedTimetableItem, SelectableInterestCourse } from './types'
 type TimetableCourseListsProps = {
   selectableInterestCourses: SelectableInterestCourse[]
   addedItemsInSelectedSemester: AddedTimetableItem[]
+  ewantItemsInSelectedSemester: AddedTimetableItem[]
   isAdding: boolean
   isRemoving: boolean
   onAddCourse: (course: SelectableInterestCourse) => void
@@ -16,6 +17,7 @@ type TimetableCourseListsProps = {
 const TimetableCourseLists: React.FC<TimetableCourseListsProps> = ({
   selectableInterestCourses,
   addedItemsInSelectedSemester,
+  ewantItemsInSelectedSemester,
   isAdding,
   isRemoving,
   onAddCourse,
@@ -94,6 +96,54 @@ const TimetableCourseLists: React.FC<TimetableCourseListsProps> = ({
                       {[item.course.instructor, item.semester, item.course.room].filter(Boolean).join('・')}
                     </Text>
                     <Text size='xs' c='dimmed' ta='left'>{item.course.courseTime}</Text>
+                  </div>
+                </Link>
+                <Tooltip label='從課表移除'>
+                  <ActionIcon
+                    color='red'
+                    variant='light'
+                    loading={isRemoving}
+                    onClick={() => onRemoveCourse(item)}
+                  >
+                    <FaTrashAlt size={14} />
+                  </ActionIcon>
+                </Tooltip>
+              </div>
+            ))}
+          </Stack>
+        )}
+      </div>
+
+      <div className={`${styles.listPanel} ${styles.asyncPanel}`}>
+        <Group justify='space-between' mb='xs'>
+          <Text fw={600}>遠距課程</Text>
+          <Badge variant='light' color='blue'>{ewantItemsInSelectedSemester.length}</Badge>
+        </Group>
+        {ewantItemsInSelectedSemester.length === 0 ? (
+          <Stack gap={2}>
+            <Text size='sm' fw={600}>此學期目前沒有遠距課程。</Text>
+            <Text size='sm' c='dimmed'>EWANT 課程加入後會集中列在這裡，不顯示在時間格中。</Text>
+          </Stack>
+        ) : (
+          <Stack gap={0}>
+            {ewantItemsInSelectedSemester.map((item) => (
+              <div key={`${item.timetableId}-${item.course.id}`} className={styles.listRow}>
+                <Link to={`/course/${item.course.id}`} className={styles.courseInfoLink}>
+                  <div className={styles.courseInfoBlock}>
+                    <Group gap='xs'>
+                      <Text size='sm' fw={600} ta='left'>
+                        {item.course.name}
+                      </Text>
+                      <Badge size='xs' color='blue' variant='light'>
+                        遠距
+                      </Badge>
+                    </Group>
+                    <Text size='xs' c='dimmed' ta='left'>
+                      {[item.course.instructor, item.semester, item.course.room].filter(Boolean).join('・')}
+                    </Text>
+                    <Text size='xs' c='dimmed' ta='left'>
+                      {item.course.courseTime || '非同步／無固定時段'}
+                    </Text>
                   </div>
                 </Link>
                 <Tooltip label='從課表移除'>

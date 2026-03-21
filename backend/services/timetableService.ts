@@ -18,6 +18,7 @@ type CourseMeta = {
   id: number;
   name: string;
   semester: string;
+  department: string;
   instructor: string;
   room?: string;
 };
@@ -184,6 +185,7 @@ class TimetableService {
           id: course.id,
           name: course.course_name,
           semester: course.semester,
+          department: course.department,
           instructor: course.instructor,
           room: course.course_room,
         },
@@ -241,6 +243,7 @@ class TimetableService {
         id: raw.course.id,
         name: raw.course.course_name,
         semester: raw.course.semester,
+        department: raw.course.department,
         instructor: raw.course.instructor,
         room: raw.course.course_room,
       };
@@ -249,6 +252,7 @@ class TimetableService {
       id: course.id,
       name: course.course_name,
       semester: course.semester,
+      department: course.department,
       instructor: course.instructor,
       room: course.course_room,
     };
@@ -306,6 +310,7 @@ class TimetableService {
       id: course.id,
       name: course.course_name,
       semester: course.semester,
+      department: course.department,
       instructor: course.instructor,
       room: course.course_room,
     };
@@ -328,6 +333,7 @@ class TimetableService {
             id: raw.course.id,
             name: raw.course.course_name,
             semester: raw.course.semester,
+            department: raw.course.department,
             instructor: raw.course.instructor,
             room: raw.course.course_room,
           };
@@ -382,6 +388,7 @@ class TimetableService {
       id: interest.course.id,
       name: interest.course.course_name,
       semester: interest.course.semester,
+      department: interest.course.department,
       instructor: interest.course.instructor,
     }));
     const existingCourses: CourseMeta[] = existingItems.map((item) => {
@@ -390,6 +397,7 @@ class TimetableService {
         id: raw.course.id,
         name: raw.course.course_name,
         semester: raw.course.semester,
+        department: raw.course.department,
         instructor: raw.course.instructor,
         room: raw.course.course_room,
       };
@@ -460,6 +468,7 @@ class TimetableService {
           id: raw.course.id,
           name: raw.course.course_name,
           semester: raw.course.semester,
+          department: raw.course.department,
           instructor: raw.course.instructor,
           room: raw.course.course_room,
           courseTime: raw.course.course_time,
@@ -475,6 +484,7 @@ type TimetableItemModelJson = {
     id: number;
     course_name: string;
     semester: string;
+    department: string;
     instructor: string;
     course_time?: string;
     course_room?: string;

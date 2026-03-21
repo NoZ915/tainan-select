@@ -16,7 +16,7 @@
 .listGrid {
   margin-top: 16px;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
 }
 
@@ -33,6 +33,10 @@
 
 .addedPanel {
   border-bottom-color: #dc2626;
+}
+
+.asyncPanel {
+  border-bottom-color: #2563eb;
 }
 
 .listRow {
