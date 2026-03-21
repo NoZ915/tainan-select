@@ -155,6 +155,11 @@ class CourseRepository {
   async getAllDepartments(): Promise<string[]> {
     const departments = await CourseModel.findAll({
       attributes: [[db.Sequelize.fn("DISTINCT", db.Sequelize.col("department")), "department"]],
+      where: {
+        department: {
+          [Op.ne]: "校外遠距(EWANT)",
+        },
+      },
       raw: true
     });
     const departmentList = departments.map((item: { department: string }) => {
