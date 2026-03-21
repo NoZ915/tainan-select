@@ -42,6 +42,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
         { label: '大學', value: 'university' },
         { label: '研究所', value: 'graduate' },
         { label: '師培', value: 'teacher' },
+        { label: 'EWANT', value: 'ewant' },
     ]
     const { data: departmentList, isLoading: isLoadingDepartments } = useGetDepartments()
     const { data: academyList, isLoading: isLoadingAcademies } = useGetAcademies()
@@ -179,55 +180,57 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
                         searchable
                     />
                 )}
-                <Accordion
-                    variant='separated'
-                    radius='md'
-                    className={style.advancedFilterAccordion}
-                    value={advancedAccordionValue}
-                    onChange={setAdvancedAccordionValue}
-                >
-                    <Accordion.Item value='time-semester-filters'>
-                        <Accordion.Control>
-                            進階篩選：星期／節次／學期
-                            <div className={style.advancedFilterSummary}>{advancedSummaryText}</div>
-                        </Accordion.Control>
-                        <Accordion.Panel>
-                            <MultiSelect
-                                placeholder='篩選星期（可多選）'
-                                data={weekdayOptions}
-                                value={weekdays}
-                                size='md'
-                                classNames={{ input: style.selectInput }}
-                                className={style.select}
-                                onChange={setWeekdays}
-                                searchable
-                                clearable
-                            />
-                            <MultiSelect
-                                placeholder='篩選節次（可多選）'
-                                data={periodOptions}
-                                value={periods}
-                                size='md'
-                                classNames={{ input: style.selectInput }}
-                                className={style.select}
-                                onChange={setPeriods}
-                                searchable
-                                clearable
-                            />
-                            <MultiSelect
-                                placeholder='篩選學期（可多選）'
-                                data={semesterOptions}
-                                value={semesters}
-                                size='md'
-                                classNames={{ input: style.selectInput }}
-                                className={style.select}
-                                onChange={setSemesters}
-                                searchable
-                                clearable
-                            />
-                        </Accordion.Panel>
-                    </Accordion.Item>
-                </Accordion>
+                {activeTab !== 'ewant' && (
+                    <Accordion
+                        variant='separated'
+                        radius='md'
+                        className={style.advancedFilterAccordion}
+                        value={advancedAccordionValue}
+                        onChange={setAdvancedAccordionValue}
+                    >
+                        <Accordion.Item value='time-semester-filters'>
+                            <Accordion.Control>
+                                進階篩選：星期／節次／學期
+                                <div className={style.advancedFilterSummary}>{advancedSummaryText}</div>
+                            </Accordion.Control>
+                            <Accordion.Panel>
+                                <MultiSelect
+                                    placeholder='篩選星期（可多選）'
+                                    data={weekdayOptions}
+                                    value={weekdays}
+                                    size='md'
+                                    classNames={{ input: style.selectInput }}
+                                    className={style.select}
+                                    onChange={setWeekdays}
+                                    searchable
+                                    clearable
+                                />
+                                <MultiSelect
+                                    placeholder='篩選節次（可多選）'
+                                    data={periodOptions}
+                                    value={periods}
+                                    size='md'
+                                    classNames={{ input: style.selectInput }}
+                                    className={style.select}
+                                    onChange={setPeriods}
+                                    searchable
+                                    clearable
+                                />
+                                <MultiSelect
+                                    placeholder='篩選學期（可多選）'
+                                    data={semesterOptions}
+                                    value={semesters}
+                                    size='md'
+                                    classNames={{ input: style.selectInput }}
+                                    className={style.select}
+                                    onChange={setSemesters}
+                                    searchable
+                                    clearable
+                                />
+                            </Accordion.Panel>
+                        </Accordion.Item>
+                    </Accordion>
+                )}
 
                 <Button className={style.searchButton} onClick={() => handleClick()}>
                     搜尋

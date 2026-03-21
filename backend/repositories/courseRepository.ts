@@ -83,6 +83,9 @@ class CourseRepository {
     } else if (search && search.category === "teacher") {
       categoryConditions.push({ department: { [Op.like]: "%師%" } });
     }
+    if (search && search.category === "ewant") {
+      categoryConditions.push({ department: "校外遠距(EWANT)" });
+    }
     if (search && search.department) {
       categoryConditions.push({ department: search.department });
     }
