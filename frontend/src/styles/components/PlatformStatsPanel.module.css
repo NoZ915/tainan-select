@@ -2,15 +2,23 @@
   margin: 0 auto;
   max-width: 800px;
   padding-inline: 0;
-  margin-bottom: 20px;
+  margin-bottom: 32px;
 }
 
 .statCard {
   border: 2px solid black;
+  border-radius: 10px;
+  box-shadow: 3px 3px 0 black;
   opacity: 0;
   transform: translateY(8px);
   animation: statEnter 420ms ease-out forwards;
   will-change: transform, opacity;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 5px 5px 0 black;
 }
 
 @keyframes statEnter {
@@ -21,6 +29,7 @@
 }
 
 .iconPop {
+  color: var(--mantine-color-brick-red-5);
   animation: iconPop 520ms cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
   will-change: transform;
 }

@@ -1,0 +1,5 @@
+.heading {
+  padding-left: 12px;
+  border-left: 4px solid var(--mantine-color-brick-red-5);
+  text-align: left;
+}

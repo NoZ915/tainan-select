@@ -1,7 +1,17 @@
-.selectContainer{
+.selectContainer {
   margin-left: auto;
   margin-right: 0;
-  width: 200px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+}
+
+.selectLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b5563;
+  white-space: nowrap;
 }
 
 .gridContainer{

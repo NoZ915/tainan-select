@@ -1,35 +1,16 @@
-* {
-    /* border: 1px solid black; */
-}
-
 .container {
-    padding-inline: 0;
-    text-align: left;
+  padding-inline: 0;
+  text-align: left;
 }
 
 .heading {
-    margin-bottom: 1rem;
-    font-size: 1.25rem;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  font-weight: 900;
+  padding-left: 12px;
+  border-left: 4px solid var(--mantine-color-brick-red-5);
 }
 
 .container > * + * {
-    margin-top: 1rem;
-}
-
-.card{
-    margin-top: 1rem;
-    border: 2px solid black;
-    padding: 1.5rem 1.5rem;
-}
-
-.cardSection{
-    padding: 0.5rem 1.5rem;
-}
-
-.dropdown{
-    border: 2px solid black;
-}
-
-.itemLabel{
-    font-size: 16px;
+  margin-top: 1rem;
 }
