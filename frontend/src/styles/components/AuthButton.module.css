@@ -1,4 +1,17 @@
-.loginButton{
-  font-size: 18px;
+.loginButton {
+  font-size: 15px;
+  font-weight: 700;
+  border: 2px solid black;
+  box-shadow: 2px 2px 0 black;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.loginButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 3px 3px 0 black;
+}
+
+.logoutButton {
+  border: 2px solid var(--mantine-color-brick-red-5);
   font-weight: 700;
 }

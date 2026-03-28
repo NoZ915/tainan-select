@@ -119,7 +119,7 @@ const ProfilePage: React.FC = () => {
         <div className={styles.headerTop}>
           <div className={styles.avatarWrapper}>
             <Avatar
-              size='lg'
+              size={80}
               radius='xl'
               variant='light'
               color='brick-red.6'
@@ -165,7 +165,7 @@ const ProfilePage: React.FC = () => {
       </Card>
 
       <Card className={styles.contentCard}>
-        <Tabs value={currentTab} onChange={(value) => setCurrentTab(value ?? 'reviews')} keepMounted={false}>
+        <Tabs value={currentTab} onChange={(value) => setCurrentTab(value ?? 'reviews')} keepMounted={false} classNames={{ tab: styles.tab }}>
           <Tabs.List className={styles.tabsList}>
 						<Tabs.Tab value='reviews'>個人評價</Tabs.Tab>
 						<Tabs.Tab value='favorites'>個人收藏</Tabs.Tab>

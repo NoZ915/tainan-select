@@ -61,19 +61,28 @@ const Header: React.FC = () => {
           </Group>
         </Box>
 
-        <Drawer opened={opened} onClose={() => setOpened(false)} zIndex={1100} size='80%'>
+        <Drawer
+          opened={opened}
+          onClose={() => setOpened(false)}
+          zIndex={1100}
+          size='80%'
+          title={<Image src='/images/logo.png' className={styles.logo} alt='Logo' />}
+          classNames={{ header: styles.drawerHeader }}
+        >
           <nav className={styles.mobileNav}>
             {navItems.map((item) => (
               <Link
                 to={item.path}
                 key={item.path}
                 onClick={() => setOpened(false)}
-                className={styles.mobileLink}
+                className={`${styles.mobileLink} ${location.pathname === item.path ? styles.mobileLinkActive : ''}`}
               >
                 {item.label}
               </Link>
             ))}
+            <div className={styles.mobileDivider} />
             <AuthButton className={styles.mobileAuthButton} onClick={() => setOpened(false)} />
+            <div className={styles.mobileDivider} />
             <Text
               component={Link}
               to='/versions'

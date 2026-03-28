@@ -1,8 +1,8 @@
-﻿.footer {
+.footer {
   margin-top: 20px;
-  border: 2px solid black;
-  padding: 16px 0;
-  background-color: #f8f9fa;
+  border-top: 2px solid black;
+  padding: 20px 0;
+  background-color: #F4DEA9;
 }
 
 .container {
@@ -12,14 +12,26 @@
 }
 
 .text {
-  color: #666;
+  color: #5a4e3a;
+  font-weight: 600;
+  font-size: 13px;
 }
 
-.linkText {
-  color: #1a1a1a;
+.socialLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1.5px solid rgba(0, 0, 0, 0.35);
+  border-radius: 999px;
   text-decoration: none;
+  color: #2d2010;
+  font-size: 13px;
+  font-weight: 600;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.linkText:hover {
-  text-decoration: underline;
+.socialLink:hover {
+  border-color: black;
+  background-color: rgba(0, 0, 0, 0.06);
 }
