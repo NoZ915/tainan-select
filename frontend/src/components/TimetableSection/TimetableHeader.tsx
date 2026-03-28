@@ -1,4 +1,5 @@
-﻿import { Badge, Group, Select, Text } from '@mantine/core'
+﻿import { ActionIcon, Badge, Group, Select, Text } from '@mantine/core'
+import { FaChevronDown, FaChevronUp } from 'react-icons/fa'
 import styles from '../../styles/components/Timetable.module.css'
 
 type SemesterOption = {
@@ -15,6 +16,8 @@ type TimetableHeaderProps = {
   selectableCount: number
   missingTimeslotCount: number
   ewantCount: number
+  collapsed: boolean
+  onToggleCollapse: () => void
 }
 
 const TimetableHeader: React.FC<TimetableHeaderProps> = ({
@@ -26,12 +29,25 @@ const TimetableHeader: React.FC<TimetableHeaderProps> = ({
   selectableCount,
   missingTimeslotCount,
   ewantCount,
+  collapsed,
+  onToggleCollapse,
 }) => {
   return (
     <>
       <div className={styles.toolbar}>
         <div className={styles.toolbarLeft}>
-          <Text fw={700}>學期課表</Text>
+          <Group gap='xs' align='center'>
+            <Text fw={700}>學期課表</Text>
+            <ActionIcon
+              variant='subtle'
+              color='gray'
+              size='sm'
+              onClick={onToggleCollapse}
+              aria-label={collapsed ? '展開課程清單' : '收合課程清單'}
+            >
+              {collapsed ? <FaChevronDown size={12} /> : <FaChevronUp size={12} />}
+            </ActionIcon>
+          </Group>
           <Text c='dimmed' size='sm'>
             課表只顯示選定學期，並限制只能加入同學期的收藏課程。
           </Text>

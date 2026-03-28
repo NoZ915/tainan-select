@@ -1,37 +1,49 @@
-* {
-    /* border: 1px solid black; */
-}
-
 .flex {
-    text-align: left;
-    /* border: 2px solid black;
-    padding: 1rem;
-    border-radius: 0.25rem;
-    background-color: #f9f9f9; */
+  text-align: left;
+  border: 2px solid black;
+  border-radius: 12px;
+  padding: 1.5rem;
+  background-color: white;
+  box-shadow: 4px 4px 0 black;
 }
 
 .courseName {
-    margin-bottom: 0.5rem;
-    font-size: 2rem;
-    font-weight: bold;
-    color: #000000;
+  margin-bottom: 0.5rem;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #000000;
+  line-height: 1.3;
 }
 
 .label {
-    margin-top: 1rem;
-    font-size: 1.2rem;
-    color: gray;
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .courseDetail {
-    margin-top: 0.5rem;
-    font-size: 1.2rem;
-    font-weight: 500;
-    color: #000000;
+  margin-top: 0.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #111827;
 }
 
-.link{
-    margin-top: 0.5rem;
-    margin-left: 0.5rem;
-    text-decoration: none;
+.link {
+  margin-left: 0.4rem;
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.link:hover {
+  opacity: 1;
+}
+
+.divider {
+  margin: 1rem 0 0;
+  border: none;
+  border-top: 1px solid #e5e7eb;
 }

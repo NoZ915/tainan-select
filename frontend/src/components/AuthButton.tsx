@@ -34,7 +34,7 @@ const AuthButton: React.FC<AuthButtonProps> = ({ className, onClick }) => {
       {isAuthenticated ? (
         <>
           <Text component={Link} to='/profile' onClick={onClick}>{user?.name}</Text>
-          <Button onClick={handleLogout} variant='outline' color='brick-red.6'>
+          <Button onClick={handleLogout} variant='outline' color='brick-red.6' className={styles.logoutButton}>
             {isLoggingOut ? '登出中...' : '登出'}
           </Button>
         </>

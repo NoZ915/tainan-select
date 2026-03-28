@@ -547,6 +547,7 @@ const ReviewCard: React.FC<ReviewCardProp> = ({ review, course }) => {
                   autosize
                   maxLength={500}
                   disabled={!user || isCreatingComment}
+                  variant='unstyled'
                   className={style.commentComposerTextarea}
                 />
                 <ActionIcon

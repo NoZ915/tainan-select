@@ -45,6 +45,7 @@ const CourseDetailPage: React.FC = () => {
   const [loginModalOpened, setLoginModalOpened] = useState(false)
   const [AddOrEditReviewModalOpened, setAddOrEditReviewModalOpened] = useState(false)
 
+
   const { course_id } = useParams<{ course_id: string }>()
   const courseId = course_id || ''
 
@@ -133,7 +134,7 @@ const CourseDetailPage: React.FC = () => {
 
   return (
     <>
-      <Container size='lg' mt='lg' style={{ display: 'flex', gap: '1rem' }}>
+      <Container size='lg' mt='lg' style={{ display: 'flex', gap: '2.5rem' }}>
         <div style={{ flex: '1' }}>
           <CourseInfoPanel course={courseResponse} isLoading={isInfoLoading} />
         </div>

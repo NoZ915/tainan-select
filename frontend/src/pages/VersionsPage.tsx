@@ -1,4 +1,4 @@
-﻿import { Badge, Box, Container, Divider, Stack, Text, Title } from '@mantine/core'
+﻿import { Badge, Box, Container, Stack, Text, Title } from '@mantine/core'
 
 import { VERSION_HISTORY } from '../constants/versionHistory'
 import styles from '../styles/pages/VersionsPage.module.css'
@@ -16,18 +16,18 @@ const VersionsPage: React.FC = () => {
   return (
     <Container size='md' py='lg'>
       <Stack gap='md'>
-        <Stack gap={6}>
+        <Stack gap={6} className={styles.pageHeading}>
           <Title order={2}>版本更新紀錄</Title>
-          <Text c='dimmed' size='sm' className={styles.subtleText}>
+          <Text c='dimmed' size='sm'>
             紀錄一下都把時間丟到哪裡去。
           </Text>
         </Stack>
 
-        <Divider />
-
         <div className={styles.timeline}>
           {VERSION_HISTORY.map((entry) => (
-            <article key={entry.version} className={styles.item}>
+            <div key={entry.version} className={styles.entry} data-kind={entry.kind}>
+              <div className={styles.dot} />
+            <article className={styles.item}>
               <div className={styles.content}>
                 <div className={styles.contentHeader}>
                   <Box className={styles.titleBlock}>
@@ -51,6 +51,7 @@ const VersionsPage: React.FC = () => {
                 <p className={styles.summary}>{entry.summary}</p>
               </div>
             </article>
+            </div>
           ))}
         </div>
       </Stack>

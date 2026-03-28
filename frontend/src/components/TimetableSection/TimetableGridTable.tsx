@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Paper, Stack, Table, Text } from '@mantine/core'
+import { Stack, Table, Text } from '@mantine/core'
 import periodTimeMap from '../../utils/periodTimeMap'
 import styles from '../../styles/components/Timetable.module.css'
 import { TimetableGrid, WeekdayOption } from './types'
@@ -63,8 +63,42 @@ const TimetableGridTable: React.FC<TimetableGridTableProps> = ({ periodOrder, we
 
   const currentSlot = useMemo(() => getCurrentDayAndPeriod(now), [now])
 
+  const nowCourses = useMemo(() => {
+    if (!currentSlot.period) return []
+    return grid[currentSlot.period]?.[currentSlot.day] ?? []
+  }, [currentSlot, grid])
+
+  const nowTimeLabel = currentSlot.period
+    ? `第 ${currentSlot.period} 節　${getPeriodTimeLines(currentSlot.period).start} ～ ${getPeriodTimeLines(currentSlot.period).end}`
+    : null
+
   return (
-    <Paper withBorder px='xs' py='sm' radius='md'>
+    <div className={styles.tableCard}>
+      <div className={styles.nowBanner}>
+        <span className={styles.nowDot} />
+        <span className={styles.nowLabel}>現在</span>
+        {nowTimeLabel ? (
+          <>
+            <span className={styles.nowTime}>{nowTimeLabel}</span>
+            {nowCourses.length > 0 ? (
+              <span className={styles.nowCourses}>
+                {nowCourses.map((c, i) => (
+                  <span key={c.courseId}>
+                    {i > 0 && <span className={styles.nowSep}>/</span>}
+                    <Link to={`/course/${c.courseId}`} className={styles.nowCourseLink}>
+                      {c.courseName}
+                    </Link>
+                  </span>
+                ))}
+              </span>
+            ) : (
+              <span className={styles.nowEmpty}>本時段無排課</span>
+            )}
+          </>
+        ) : (
+          <span className={styles.nowEmpty}>非上課時段</span>
+        )}
+      </div>
       <div className={styles.tableScroll}>
         <Table striped highlightOnHover className={styles.timetableTable}>
           <colgroup>
@@ -135,7 +169,7 @@ const TimetableGridTable: React.FC<TimetableGridTableProps> = ({ periodOrder, we
           </tbody>
         </Table>
       </div>
-    </Paper>
+    </div>
   )
 }
 

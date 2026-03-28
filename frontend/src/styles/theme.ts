@@ -26,5 +26,23 @@ export const theme = createTheme({
         },
       },
     },
+    Modal: {
+      styles: {
+        content: {
+          border: '2px solid black',
+          boxShadow: '6px 6px 0 black',
+          borderRadius: '12px',
+        },
+        header: {
+          borderBottom: '1px solid #e5e7eb',
+          paddingBottom: '12px',
+          marginBottom: '4px',
+        },
+        title: {
+          fontWeight: 700,
+          fontSize: '1rem',
+        },
+      },
+    },
   },
 })

@@ -6,7 +6,7 @@ import { useAuthStore } from '../stores/authStore'
 import { CourseDetailResponse } from '../types/courseType'
 
 import styles from '../styles/components/InterestButton.module.css'
-import { Button, Text } from '@mantine/core'
+import { Button } from '@mantine/core'
 
 interface InterestButtonProps {
 	course: CourseDetailResponse | null | undefined;
@@ -31,17 +31,16 @@ const InterestButton: React.FC<InterestButtonProps> = ({course}) => {
 			onClick={handleToggleInterest}
 			leftSection={
 				course?.hasUserAddInterest
-					? <FaHeart size={20} />
-					: <FaRegHeart size={20} />
+					? <FaHeart size={13} />
+					: <FaRegHeart size={13} />
 			}
 			variant={ course?.hasUserAddInterest ? 'filled': 'outline' }
-			size='lg'
+			size='xs'
+			radius='xl'
 			disabled={!isAuthenticated}
 			className={styles.button}
 		>
-			<Text>
-				{ course?.hasUserAddInterest ? '取消收藏' : '加入收藏' }
-			</Text>
+			{ course?.hasUserAddInterest ? '取消收藏' : '加入收藏' }
 		</Button>
 	)
 }

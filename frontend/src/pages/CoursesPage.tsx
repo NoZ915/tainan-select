@@ -165,6 +165,7 @@ const CoursesPage: React.FC = () => {
 
 			<div>
 				<div className={style.selectContainer}>
+					<span className={style.selectLabel}>排序</span>
 					<Select
 						value={sortOption}
 						onChange={(value) => handleSortBy(value)}
@@ -177,6 +178,7 @@ const CoursesPage: React.FC = () => {
 						renderOption={renderSortOption}
 						filter={filterSortOptions}
 						leftSection={<SelectedSortIcon size={14} />}
+						w={180}
 					/>
 				</div>
 				<Grid gutter='md' className={style.gridContainer}>
