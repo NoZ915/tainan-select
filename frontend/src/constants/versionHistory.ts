@@ -11,6 +11,30 @@ export type VersionEntry = {
 // Keep this list in reverse-chronological order (newest first).
 export const VERSION_HISTORY: VersionEntry[] = [
   {
+    version: 'v3.2.0',
+    releasedAt: '2026-03-27',
+    kind: 'enhancement',
+    title: '整體 UI 大幅美化',
+    summary:
+      '全站視覺風格統一：課程卡片、課程詳細頁、評論留言、個人頁、課表、版本頁等全面調整，加入黑框平陰影設計語言。版本頁新增時間軸；課表新增「現在」即時提示欄、課程清單可收合；換頁後自動捲回頂部。',
+  },
+  {
+    version: 'v3.1.0',
+    releasedAt: '2026-03-21',
+    kind: 'feat',
+    title: 'EWANT 遠距課程整合',
+    summary:
+      '新增 EWANT 遠距課程爬蟲與獨立搜尋 tab，課表中遠距課程改為獨立區塊顯示，不排入時間格也不參與衝堂判斷。',
+  },
+  {
+    version: 'v3.0.2',
+    releasedAt: '2026-03-14',
+    kind: 'enhancement',
+    title: 'Dcard 相關貼文補強',
+    summary:
+      '相關貼文數量現在會持久化；管理員匯入介面改善，支援課程關鍵字覆蓋設定，可手動掛載現有貼文；修正分頁時 Admin 統計資料被清空的問題。',
+  },
+  {
     version: 'v3.0.1',
     releasedAt: '2026-03-12',
     kind: 'feat',

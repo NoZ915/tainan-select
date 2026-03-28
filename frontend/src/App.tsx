@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, ScrollRestoration } from 'react-router-dom'
 import { useEffect } from 'react'
 
 import { useAuthStore } from './stores/authStore'
@@ -22,6 +22,7 @@ function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <ScrollRestoration />
       <RouteHeadTitle />
       <Header />
       <main style={{ flex: 1 }}>

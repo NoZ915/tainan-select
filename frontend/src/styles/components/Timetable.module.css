@@ -13,11 +13,132 @@
   text-align: left;
 }
 
+/* ── Cards ── */
+.card {
+  border: 2px solid black;
+  border-radius: 12px;
+  padding: 20px;
+  background: white;
+  box-shadow: 4px 4px 0 black;
+}
+
+.tableCard {
+  border: 2px solid black;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 4px 4px 0 black;
+  overflow: hidden;
+}
+
+/* ── Now Banner ── */
+.nowBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #fff9db;
+  border-bottom: 1.5px solid #f08c00;
+  flex-wrap: wrap;
+}
+
+.nowDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f08c00;
+  flex-shrink: 0;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+.nowLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #c47700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.nowTime {
+  font-size: 12px;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.nowCourses {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.nowCourseLink {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  text-decoration: none;
+}
+
+.nowCourseLink:hover {
+  text-decoration: underline;
+}
+
+.nowSep {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 0 2px;
+}
+
+.nowEmpty {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.overlayCard {
+  border: 2px solid black;
+  border-radius: 12px;
+  padding: 20px;
+  background: white;
+  box-shadow: 5px 5px 0 black;
+  max-width: 400px;
+  width: 100%;
+}
+
+/* ── Alert ── */
+.alert {
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #fafafa;
+}
+
+.alertRed {
+  border-left: 4px solid #e03131;
+}
+
+.alertOrange {
+  border-left: 4px solid #f08c00;
+}
+
+.alertBlue {
+  border-left: 4px solid #1971c2;
+}
+
+.alertTitle {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+/* ── Course Lists ── */
 .listGrid {
   margin-top: 16px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
+  gap: 16px;
 }
 
 .listPanel {
@@ -40,12 +161,16 @@
 }
 
 .listRow {
-  padding: 12px 0;
-  border-bottom: 1px solid #ececec;
+  padding: 10px 0;
+  border-bottom: 1px solid #e5e7eb;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+}
+
+.listRow:last-child {
+  border-bottom: none;
 }
 
 .timetableLockWrapper {
@@ -63,10 +188,16 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(1.5px);
+  padding: 40px 12px 12px;
+  background: rgba(244, 222, 169, 0.55);
+  backdrop-filter: blur(2px);
   z-index: 5;
+  border-radius: 12px;
+}
+
+.timetableOverlayInner {
+  position: sticky;
+  top: 100px;
 }
 
 .timetableOverlayAuthButton {
@@ -80,6 +211,7 @@
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+  padding: 8px 4px;
 }
 
 .timetableTable {

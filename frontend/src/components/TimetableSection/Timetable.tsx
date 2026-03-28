@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
-import { Alert, Paper, Stack, Text } from '@mantine/core'
+import { Collapse, Stack, Text } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -83,6 +83,7 @@ const Timetable: React.FC = () => {
   const { data: semestersData, isLoading: isSemestersLoading } = useGetSemesters()
 
   const [selectedSemester, setSelectedSemester] = useState<string | null>(null)
+  const [isCourseListCollapsed, setIsCourseListCollapsed] = useState(true)
   const semesterOptions = useMemo(
     () => (semestersData?.items ?? []).map((semester) => ({ value: semester, label: semester })),
     [semestersData]
@@ -237,17 +238,17 @@ const Timetable: React.FC = () => {
 
   if (isAuthenticated && (isSemestersLoading || isTimetableLoading)) {
     return (
-      <Paper withBorder p='lg' radius='md'>
+      <div className={styles.card}>
         <Text>課表載入中...</Text>
-      </Paper>
+      </div>
     )
   }
 
   if (isAuthenticated && semesterOptions.length === 0) {
     return (
-      <Paper withBorder p='lg' radius='md'>
+      <div className={styles.card}>
         <Text c='dimmed'>目前沒有可選學期。</Text>
-      </Paper>
+      </div>
     )
   }
 
@@ -267,7 +268,7 @@ const Timetable: React.FC = () => {
         onConfirm={handleConfirmSwap}
       />
 
-      <Paper withBorder p='md' radius='md'>
+      <div className={styles.card}>
         <TimetableHeader
           semesterOptions={semesterOptions}
           selectedSemester={selectedSemester}
@@ -277,30 +278,35 @@ const Timetable: React.FC = () => {
           selectableCount={selectableInterestCourses.length}
           missingTimeslotCount={missingTimeslotCountInCurrentSemester}
           ewantCount={ewantItemsInSelectedSemester.length}
+          collapsed={isCourseListCollapsed}
+          onToggleCollapse={() => setIsCourseListCollapsed((v) => !v)}
         />
 
-        <TimetableCourseLists
-          selectableInterestCourses={selectableInterestCourses}
-          addedItemsInSelectedSemester={scheduledItemsInSelectedSemester}
-          ewantItemsInSelectedSemester={ewantItemsInSelectedSemester}
-          isAdding={addCourseMutation.isPending}
-          isRemoving={removeCourseMutation.isPending}
-          onAddCourse={(course) => {
-            void handleAddCourse(course)
-          }}
-          onRemoveCourse={(item) => {
-            if (!selectedSemester) return
-            removeCourseMutation.mutate({
-              timetableId: item.timetableId,
-              courseId: item.course.id,
-              semester: selectedSemester,
-            })
-          }}
-        />
-      </Paper>
+        <Collapse in={!isCourseListCollapsed}>
+          <TimetableCourseLists
+            selectableInterestCourses={selectableInterestCourses}
+            addedItemsInSelectedSemester={scheduledItemsInSelectedSemester}
+            ewantItemsInSelectedSemester={ewantItemsInSelectedSemester}
+            isAdding={addCourseMutation.isPending}
+            isRemoving={removeCourseMutation.isPending}
+            onAddCourse={(course) => {
+              void handleAddCourse(course)
+            }}
+            onRemoveCourse={(item) => {
+              if (!selectedSemester) return
+              removeCourseMutation.mutate({
+                timetableId: item.timetableId,
+                courseId: item.course.id,
+                semester: selectedSemester,
+              })
+            }}
+          />
+        </Collapse>
+      </div>
 
       {conflicts.length > 0 && (
-        <Alert color='red' title='目前課表有撞課'>
+        <div className={`${styles.alert} ${styles.alertRed}`}>
+          <Text fw={700} size='sm' className={styles.alertTitle}>目前課表有撞課</Text>
           <Stack gap={4}>
             {conflicts.slice(0, 6).map((conflict) => (
               <Text key={`${conflict.dayLabel}-${conflict.period}`} size='sm'>
@@ -323,23 +329,25 @@ const Timetable: React.FC = () => {
               </Text>
             )}
           </Stack>
-        </Alert>
+        </div>
       )}
 
       {conflicts.length === 0 && missingTimeslotCountInCurrentSemester > 0 && (
-        <Alert color='orange' title='缺少時段資料'>
+        <div className={`${styles.alert} ${styles.alertOrange}`}>
+          <Text fw={700} size='sm' className={styles.alertTitle}>缺少時段資料</Text>
           <Text size='sm'>
             本學期有 {missingTimeslotCountInCurrentSemester} 門課資料較舊，平台尚未更新時段資料。這些課程不會顯示在課表格，也不參與衝堂判斷。
           </Text>
-        </Alert>
+        </div>
       )}
 
       {ewantItemsInSelectedSemester.length > 0 && (
-        <Alert color='blue' title='遠距課程已獨立顯示'>
+        <div className={`${styles.alert} ${styles.alertBlue}`}>
+          <Text fw={700} size='sm' className={styles.alertTitle}>遠距課程已獨立顯示</Text>
           <Text size='sm'>
             本學期有 {ewantItemsInSelectedSemester.length} 門 EWANT 遠距課程，已集中顯示在「遠距課程」區塊，不會直接排進時間格，也不參與衝堂判斷。
           </Text>
-        </Alert>
+        </div>
       )}
 
       <TimetableGridTable
@@ -351,13 +359,15 @@ const Timetable: React.FC = () => {
 
       {!isAuthenticated && (
         <div className={styles.timetableLoginOverlay}>
-          <Paper withBorder radius='md' p='md'>
-            <Text fw={700}>登入後即可使用排課表功能</Text>
-            <Text c='dimmed' size='sm'>
-              登入後，即可使用排課、檢查衝堂，並依當前時段提示目前所在欄位，提醒上課時間。
-            </Text>
-            <AuthButton className={styles.timetableOverlayAuthButton} />
-          </Paper>
+          <div className={styles.timetableOverlayInner}>
+            <div className={styles.overlayCard}>
+              <Text fw={700}>登入後即可使用排課表功能</Text>
+              <Text c='dimmed' size='sm'>
+                登入後，即可使用排課、檢查衝堂，並依當前時段提示目前所在欄位，提醒上課時間。
+              </Text>
+              <AuthButton className={styles.timetableOverlayAuthButton} />
+            </div>
+          </div>
         </div>
       )}
     </div>

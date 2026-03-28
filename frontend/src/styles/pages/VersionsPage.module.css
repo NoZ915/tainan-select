@@ -1,40 +1,77 @@
-﻿.page {
-  padding-top: 20px;
-  padding-bottom: 28px;
+.pageHeading {
+  padding-left: 12px;
+  border-left: 4px solid var(--mantine-color-brick-red-5);
+  text-align: left;
 }
 
-.header {
-  margin-bottom: 8px;
-}
-
-.subtleText {
-  max-width: 680px;
-  margin-inline: auto;
-}
-
+/* ── Timeline ── */
 .timeline {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-top: 4px;
+  position: relative;
+  padding-left: 28px;
+  padding-top: 4px;
+  padding-bottom: 4px;
 }
 
-.item {
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: black;
+}
+
+/* ── Entry ── */
+.entry {
   position: relative;
-  display: flex;
-  align-items: stretch;
+  padding-bottom: 16px;
+}
+
+.entry:last-child {
+  padding-bottom: 0;
+}
+
+.entry[data-kind='feat']        { --item-accent: #2f9e44; }
+.entry[data-kind='fix']         { --item-accent: #e03131; }
+.entry[data-kind='enhancement'] { --item-accent: #1971c2; }
+
+/* ── Dot ── */
+.dot {
+  position: absolute;
+  left: -28px;
+  top: 18px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
   border: 2px solid black;
-  border-radius: 0;
+  background: var(--item-accent, #d1d5db);
+  z-index: 1;
+  box-shadow: 1px 1px 0 black;
+}
+
+/* ── Card ── */
+.item {
+  border: 2px solid black;
+  border-left: 4px solid var(--item-accent, #d1d5db);
+  border-radius: 10px;
   background: #ffffff;
   overflow: hidden;
+  box-shadow: 3px 3px 0 black;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.item:hover {
+  transform: translateY(-2px);
+  box-shadow: 5px 5px 0 black;
 }
 
 .content {
   flex: 1;
-  padding: 18px 20px;
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   align-items: flex-start;
   text-align: left;
 }
@@ -91,11 +128,7 @@
 }
 
 @media (max-width: 640px) {
-  .item {
-    flex-direction: column;
-  }
-
   .content {
-    padding: 14px 16px 16px;
+    padding: 14px 16px;
   }
 }
