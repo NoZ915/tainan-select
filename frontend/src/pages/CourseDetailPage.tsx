@@ -138,7 +138,7 @@ const CourseDetailPage: React.FC = () => {
         <div style={{ flex: '1' }}>
           <CourseInfoPanel course={courseResponse} isLoading={isInfoLoading} />
         </div>
-        <div style={{ flex: '2', paddingTop: '1.5rem' }}>
+        <div style={{ flex: '2' }}>
           <CourseReviewsPanel course={courseResponse} reviews={reviews} isLoading={isReviewsLoading} />
           <div style={{ marginTop: '2rem' }}>
             <CourseRelatedPostsPanel course={courseResponse} isLoading={isInfoLoading} />
