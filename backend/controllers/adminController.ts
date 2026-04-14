@@ -160,9 +160,21 @@ export const addWhitelistEmail: RequestHandler = async (req, res): Promise<void>
     const studentId = typeof req.body?.student_id === "string" ? req.body.student_id.trim() : "";
     const note = typeof req.body?.note === "string" ? req.body.note.trim() : "";
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const MAX_EMAIL_LENGTH = 255;
+    const MAX_STUDENT_ID_LENGTH = 64;
 
     if (!email || !emailPattern.test(email)) {
       res.status(400).json({ message: "email 格式不正確" });
+      return;
+    }
+
+    if (email.length > MAX_EMAIL_LENGTH) {
+      res.status(400).json({ message: `email 長度不可超過 ${MAX_EMAIL_LENGTH} 字元` });
+      return;
+    }
+
+    if (studentId.length > MAX_STUDENT_ID_LENGTH) {
+      res.status(400).json({ message: `student_id 長度不可超過 ${MAX_STUDENT_ID_LENGTH} 字元` });
       return;
     }
 
