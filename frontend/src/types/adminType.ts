@@ -150,6 +150,8 @@ export interface AttachRelatedPostCoursesResponse {
 
 export interface AddWhitelistEmailPayload {
   email: string;
+  student_id?: string;
+  note?: string;
 }
 
 export interface AddWhitelistEmailResponse {
@@ -157,5 +159,7 @@ export interface AddWhitelistEmailResponse {
   whitelist: {
     id: number;
     email: string;
+    student_id: string;
+    note?: string | null;
   };
 }

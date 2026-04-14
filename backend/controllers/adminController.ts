@@ -157,6 +157,8 @@ export const deleteRelatedPostImport: RequestHandler = async (req, res): Promise
 export const addWhitelistEmail: RequestHandler = async (req, res): Promise<void> => {
   try {
     const email = typeof req.body?.email === "string" ? req.body.email.trim() : "";
+    const studentId = typeof req.body?.student_id === "string" ? req.body.student_id.trim() : "";
+    const note = typeof req.body?.note === "string" ? req.body.note.trim() : "";
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!email || !emailPattern.test(email)) {
@@ -164,12 +166,14 @@ export const addWhitelistEmail: RequestHandler = async (req, res): Promise<void>
       return;
     }
 
-    const result = await whitelistService.addWhitelistEmail(email);
+    const result = await whitelistService.addWhitelistEmail(email, studentId, note);
     res.status(result.created ? 201 : 200).json({
       created: result.created,
       whitelist: {
         id: result.record.id,
         email: result.record.email,
+        student_id: result.record.student_id,
+        note: result.record.note,
       },
     });
   } catch (error) {

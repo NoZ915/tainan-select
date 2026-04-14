@@ -131,6 +131,8 @@ const AdminRelatedPostsPage: React.FC = () => {
   const [selectedAttachCourseIds, setSelectedAttachCourseIds] = useState<number[]>([])
   const [attachCourseKeywordOverrides, setAttachCourseKeywordOverrides] = useState<Record<number, string>>({})
   const [whitelistEmail, setWhitelistEmail] = useState('')
+  const [whitelistStudentId, setWhitelistStudentId] = useState('')
+  const [whitelistNote, setWhitelistNote] = useState('')
 
   const previewCourseLookupSearchParams = useMemo(() => ({
     page: 1,
@@ -476,15 +478,21 @@ const AdminRelatedPostsPage: React.FC = () => {
     }
 
     try {
-      const result = await addWhitelistEmailMutation.mutateAsync({ email: normalizedEmail })
+      const result = await addWhitelistEmailMutation.mutateAsync({
+        email: normalizedEmail,
+        student_id: whitelistStudentId.trim() || undefined,
+        note: whitelistNote.trim() || undefined,
+      })
       notifications.show({
         title: result.created ? '加入成功' : '已在白名單中',
         message: result.created
-          ? `${result.whitelist.email} 已加入白名單。`
-          : `${result.whitelist.email} 原本就在白名單中。`,
+          ? `${result.whitelist.email} 已加入白名單（學號：${result.whitelist.student_id}）。`
+          : `${result.whitelist.email} 原本就在白名單中（學號：${result.whitelist.student_id}）。`,
         color: 'green',
       })
       setWhitelistEmail('')
+      setWhitelistStudentId('')
+      setWhitelistNote('')
     } catch (error) {
       notifications.show({
         title: '加入白名單失敗',
@@ -816,15 +824,27 @@ const AdminRelatedPostsPage: React.FC = () => {
       <Card withBorder className={styles.card}>
         <Stack>
           <Title order={4}>白名單管理</Title>
-          <Text size='sm' c='dimmed'>輸入 Email 後可直接加入白名單，供非校內信箱使用者登入。</Text>
-          <Group align='flex-end'>
-            <TextInput
-              label='Email'
-              placeholder='name@example.com'
-              value={whitelistEmail}
-              onChange={(event) => setWhitelistEmail(event.currentTarget.value)}
-              style={{ flex: 1 }}
-            />
+          <Text size='sm' c='dimmed'>可輸入 Email、學號與備註後加入白名單，供非校內信箱使用者登入。</Text>
+          <TextInput
+            label='Email'
+            placeholder='name@example.com'
+            value={whitelistEmail}
+            onChange={(event) => setWhitelistEmail(event.currentTarget.value)}
+          />
+          <TextInput
+            label='學號（選填）'
+            placeholder='例如：A123456789'
+            value={whitelistStudentId}
+            onChange={(event) => setWhitelistStudentId(event.currentTarget.value)}
+          />
+          <Textarea
+            label='備註（選填）'
+            placeholder='例如：2026 應屆畢業生，人工審核通過'
+            minRows={2}
+            value={whitelistNote}
+            onChange={(event) => setWhitelistNote(event.currentTarget.value)}
+          />
+          <Group justify='flex-end'>
             <Button onClick={() => void handleAddWhitelistEmail()} loading={addWhitelistEmailMutation.isPending}>
               加入白名單
             </Button>

@@ -7,7 +7,7 @@ class WhitelistService {
     return await whitelistRepository.findByEmail(normalizeEmail(email));
   }
 
-  async addWhitelistEmail(email: string) {
+  async addWhitelistEmail(email: string, studentId?: string, note?: string | null) {
     const normalizedEmail = normalizeEmail(email);
     const existing = await whitelistRepository.findByEmail(normalizedEmail);
     if (existing) {
@@ -19,8 +19,8 @@ class WhitelistService {
 
     const created = await whitelistRepository.create(
       normalizedEmail,
-      `manual-${Date.now()}`,
-      "管理員手動加入白名單"
+      studentId?.trim() || `manual-${Date.now()}`,
+      note?.trim() || "管理員手動加入白名單"
     );
     return {
       created: true,
