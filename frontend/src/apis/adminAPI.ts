@@ -1,4 +1,6 @@
 import {
+  AddWhitelistEmailPayload,
+  AddWhitelistEmailResponse,
   AdminStatusResponse,
   AttachRelatedPostCoursesPayload,
   AttachRelatedPostCoursesResponse,
@@ -62,5 +64,12 @@ export const deleteRelatedPost = async (id: number): Promise<{ success: boolean 
 
 export const deleteRelatedPostImport = async (id: number): Promise<{ success: boolean }> => {
   const response = await axiosInstance.delete(`/admin/related-post-imports/${id}`)
+  return response.data
+}
+
+export const addWhitelistEmail = async (
+  payload: AddWhitelistEmailPayload
+): Promise<AddWhitelistEmailResponse> => {
+  const response = await axiosInstance.post('/admin/whitelist', payload)
   return response.data
 }

@@ -1,6 +1,7 @@
 import express, { Router } from "express";
 import {
   attachRelatedPostToCourses,
+  addWhitelistEmail,
   deleteRelatedPostImport,
   deleteRelatedPost,
   getAdminStatus,
@@ -15,6 +16,7 @@ import { authenticateAdmin } from "../middlewares/adminMiddleware";
 const router: Router = express.Router();
 
 router.get("/status", authenticateJWT, getAdminStatus);
+router.post("/whitelist", authenticateJWT, authenticateAdmin, addWhitelistEmail);
 router.get("/related-posts/overview", authenticateJWT, authenticateAdmin, getRelatedPostOverview);
 router.post("/related-posts/import-dcard-source-preview", authenticateJWT, authenticateAdmin, previewImportDcardSource);
 router.post("/related-posts/import-dcard-source", authenticateJWT, authenticateAdmin, importDcardSource);

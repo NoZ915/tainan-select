@@ -29,6 +29,7 @@ import { useDeleteRelatedPost } from '../hooks/admin/useDeleteRelatedPost'
 import { useDeleteRelatedPostImport } from '../hooks/admin/useDeleteRelatedPostImport'
 import { usePreviewImportDcardSource } from '../hooks/admin/usePreviewImportDcardSource'
 import { useSyncRelatedPostsFromGoogle } from '../hooks/admin/useSyncRelatedPostsFromGoogle'
+import { useAddWhitelistEmail } from '../hooks/admin/useAddWhitelistEmail'
 import { useGetCourses } from '../hooks/courses/useGetCourses'
 import { ManualImportPayloadItem, ManualImportPreviewResponse } from '../types/adminType'
 import styles from '../styles/pages/AdminRelatedPostsPage.module.css'
@@ -91,6 +92,7 @@ const AdminRelatedPostsPage: React.FC = () => {
   const previewDcardSourceMutation = usePreviewImportDcardSource()
   const googleSyncMutation = useSyncRelatedPostsFromGoogle()
   const attachRelatedPostMutation = useAttachRelatedPostToCourses()
+  const addWhitelistEmailMutation = useAddWhitelistEmail()
 
   const [dcardSourceInput, setDcardSourceInput] = useState('')
   const [previewModalOpened, setPreviewModalOpened] = useState(false)
@@ -128,6 +130,7 @@ const AdminRelatedPostsPage: React.FC = () => {
   const [attachCourseLookupKeyword, setAttachCourseLookupKeyword] = useState('')
   const [selectedAttachCourseIds, setSelectedAttachCourseIds] = useState<number[]>([])
   const [attachCourseKeywordOverrides, setAttachCourseKeywordOverrides] = useState<Record<number, string>>({})
+  const [whitelistEmail, setWhitelistEmail] = useState('')
 
   const previewCourseLookupSearchParams = useMemo(() => ({
     page: 1,
@@ -461,6 +464,36 @@ const AdminRelatedPostsPage: React.FC = () => {
     }
   }
 
+  const handleAddWhitelistEmail = async () => {
+    const normalizedEmail = whitelistEmail.trim().toLowerCase()
+    if (!normalizedEmail) {
+      notifications.show({
+        title: '請輸入 Email',
+        message: '請先輸入要加入白名單的 Email。',
+        color: 'red',
+      })
+      return
+    }
+
+    try {
+      const result = await addWhitelistEmailMutation.mutateAsync({ email: normalizedEmail })
+      notifications.show({
+        title: result.created ? '加入成功' : '已在白名單中',
+        message: result.created
+          ? `${result.whitelist.email} 已加入白名單。`
+          : `${result.whitelist.email} 原本就在白名單中。`,
+        color: 'green',
+      })
+      setWhitelistEmail('')
+    } catch (error) {
+      notifications.show({
+        title: '加入白名單失敗',
+        message: error instanceof Error ? error.message : '請稍後再試',
+        color: 'red',
+      })
+    }
+  }
+
   return (
     <Container size='lg' className={styles.container}>
       <ConfirmModal
@@ -779,6 +812,25 @@ const AdminRelatedPostsPage: React.FC = () => {
         <Title order={2}>相關貼文後台</Title>
         <Text c='dimmed'>手動匯入 Dcard 貼文，或以 Google 搜尋同步到課程詳情頁。</Text>
       </div>
+
+      <Card withBorder className={styles.card}>
+        <Stack>
+          <Title order={4}>白名單管理</Title>
+          <Text size='sm' c='dimmed'>輸入 Email 後可直接加入白名單，供非校內信箱使用者登入。</Text>
+          <Group align='flex-end'>
+            <TextInput
+              label='Email'
+              placeholder='name@example.com'
+              value={whitelistEmail}
+              onChange={(event) => setWhitelistEmail(event.currentTarget.value)}
+              style={{ flex: 1 }}
+            />
+            <Button onClick={() => void handleAddWhitelistEmail()} loading={addWhitelistEmailMutation.isPending}>
+              加入白名單
+            </Button>
+          </Group>
+        </Stack>
+      </Card>
 
       <Group gap='sm' className={styles.badges}>
         <Badge size='lg' variant='light'>manual_import: {countsMap.get('manual_import') ?? 0}</Badge>
