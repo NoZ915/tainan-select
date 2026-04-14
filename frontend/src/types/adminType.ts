@@ -147,3 +147,19 @@ export interface AttachRelatedPostCoursesResponse {
   skipped_course_ids: number[];
   imported_courses: ImportedCourseSummary[];
 }
+
+export interface AddWhitelistEmailPayload {
+  email: string;
+  student_id?: string;
+  note?: string;
+}
+
+export interface AddWhitelistEmailResponse {
+  created: boolean;
+  whitelist: {
+    id: number;
+    email: string;
+    student_id: string;
+    note?: string | null;
+  };
+}

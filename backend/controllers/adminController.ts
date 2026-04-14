@@ -3,6 +3,7 @@ import AdminRelatedPostService from "../services/adminRelatedPostService";
 import { ManualCourseKeywordOverride } from "../types/admin";
 import UserService from "../services/userService";
 import { DcardImportValidationError } from "../utils/dcardImportParser";
+import whitelistService from "../services/whitelistService";
 
 const getErrorStatus = (error: unknown): number =>
   error instanceof DcardImportValidationError ? 400 : 500;
@@ -150,5 +151,44 @@ export const deleteRelatedPostImport: RequestHandler = async (req, res): Promise
     res.status(200).json({ success: true });
   } catch (error) {
     res.status(500).json({ message: error instanceof Error ? error.message : "刪除匯入紀錄失敗" });
+  }
+};
+
+export const addWhitelistEmail: RequestHandler = async (req, res): Promise<void> => {
+  try {
+    const email = typeof req.body?.email === "string" ? req.body.email.trim() : "";
+    const studentId = typeof req.body?.student_id === "string" ? req.body.student_id.trim() : "";
+    const note = typeof req.body?.note === "string" ? req.body.note.trim() : "";
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const MAX_EMAIL_LENGTH = 255;
+    const MAX_STUDENT_ID_LENGTH = 64;
+
+    if (!email || !emailPattern.test(email)) {
+      res.status(400).json({ message: "email 格式不正確" });
+      return;
+    }
+
+    if (email.length > MAX_EMAIL_LENGTH) {
+      res.status(400).json({ message: `email 長度不可超過 ${MAX_EMAIL_LENGTH} 字元` });
+      return;
+    }
+
+    if (studentId.length > MAX_STUDENT_ID_LENGTH) {
+      res.status(400).json({ message: `student_id 長度不可超過 ${MAX_STUDENT_ID_LENGTH} 字元` });
+      return;
+    }
+
+    const result = await whitelistService.addWhitelistEmail(email, studentId, note);
+    res.status(result.created ? 201 : 200).json({
+      created: result.created,
+      whitelist: {
+        id: result.record.id,
+        email: result.record.email,
+        student_id: result.record.student_id,
+        note: result.record.note,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error instanceof Error ? error.message : "加入白名單失敗" });
   }
 };
