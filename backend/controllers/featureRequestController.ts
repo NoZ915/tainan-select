@@ -9,6 +9,7 @@ const ERROR_STATUS_MAP: Record<string, number> = {
   EMPTY_CONTENT: 400,
   CONTENT_TOO_LONG: 400,
   INVALID_STATUS: 400,
+  INVALID_ADMIN_REPLY: 400,
   ADMIN_REPLY_TOO_LONG: 400,
   FEATURE_REQUEST_NOT_FOUND: 404,
   FORBIDDEN: 403,
@@ -18,6 +19,7 @@ const ERROR_MESSAGE_MAP: Record<string, string> = {
   EMPTY_CONTENT: "許願內容不可為空",
   CONTENT_TOO_LONG: "許願內容長度過長",
   INVALID_STATUS: "狀態參數不正確",
+  INVALID_ADMIN_REPLY: "回覆內容格式不正確",
   ADMIN_REPLY_TOO_LONG: "回覆內容長度過長",
   FEATURE_REQUEST_NOT_FOUND: "找不到此許願",
   FORBIDDEN: "沒有權限執行此操作",
@@ -93,7 +95,11 @@ export const updateFeatureRequestStatus: RequestHandler<FeatureRequestParams> = 
 export const updateFeatureRequestAdminReply: RequestHandler<FeatureRequestParams> = async (req, res): Promise<void> => {
   try {
     const feature_request_id = parseInt(req.params.id);
-    const adminReply = typeof req.body?.admin_reply === "string" ? req.body.admin_reply : "";
+    if (typeof req.body?.admin_reply !== "string") {
+      throw new Error("INVALID_ADMIN_REPLY");
+    }
+
+    const adminReply = req.body.admin_reply;
     await FeatureRequestService.updateAdminReply(feature_request_id, adminReply);
     res.status(200).json({ message: "回覆更新成功" });
   } catch (err) {

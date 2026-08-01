@@ -6,15 +6,15 @@ import { QUERY_KEYS } from '../queryKeys'
 
 export const useToggleFeatureRequestVote = () => {
   const queryClient = useQueryClient()
-  const userId = useAuthStore((state) => state.user?.id)
 
   return useMutation({
     mutationFn: (id: number) => toggleFeatureRequestVote(id),
-    onSuccess: (data, id) => {
+    onMutate: () => ({ userKey: useAuthStore.getState().user?.id ?? 'anonymous' }),
+    onSuccess: (data, id, context) => {
       queryClient.setQueriesData<FeatureRequest[]>(
         {
           queryKey: [QUERY_KEYS.FEATURE_REQUESTS],
-          predicate: (query) => query.queryKey[2] === (userId ?? 'anonymous'),
+          predicate: (query) => query.queryKey[2] === context.userKey,
         },
         (oldData) =>
           oldData
