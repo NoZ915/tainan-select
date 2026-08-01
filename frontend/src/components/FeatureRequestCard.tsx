@@ -57,7 +57,11 @@ const FeatureRequestCard: React.FC<FeatureRequestCardProps> = ({
       onRequireLogin()
       return
     }
-    toggleVote(item.id)
+    toggleVote(item.id, {
+      onError: (error) => {
+        notifications.show({ title: '投票失敗', message: error instanceof Error ? error.message : '請稍後再試', color: 'red' })
+      },
+    })
   }
 
   const startEditReply = () => {
