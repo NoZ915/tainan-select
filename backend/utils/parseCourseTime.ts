@@ -14,6 +14,26 @@ const DAY_MAP: Record<string, number> = {
   "日": 7,
 };
 
+const ENGLISH_DAY_MAP: Record<string, keyof typeof DAY_MAP> = {
+  MON: "一",
+  MONDAY: "一",
+  TUE: "二",
+  TUES: "二",
+  TUESDAY: "二",
+  WED: "三",
+  WEDNESDAY: "三",
+  THU: "四",
+  THUR: "四",
+  THURS: "四",
+  THURSDAY: "四",
+  FRI: "五",
+  FRIDAY: "五",
+  SAT: "六",
+  SATURDAY: "六",
+  SUN: "日",
+  SUNDAY: "日",
+};
+
 interface CourseScheduleParsed {
   day: number;         // 星期幾（數字 1~7 -> 存進DB用）
   startPeriod: string; // 節次字串（可能是數字或字母）
@@ -46,8 +66,29 @@ const extractLeadingPeriodTokens = (sectionAfterMarker: string): string[] => {
   return tokens.filter((token, index, arr) => index === 0 || token !== arr[index - 1]);
 };
 
+const normalizeEnglishCourseTime = (courseTime: string): string => {
+  const normalizedText = courseTime.replace(/\s+/g, "");
+  const pattern = /(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Mon|Tues|Tue|Wed|Thurs|Thur|Thu|Fri|Sat|Sun),?Period([1-9A-G](?:[、，,/\-~][1-9A-G])*)/gi;
+  const normalizedChunks: string[] = [];
+
+  for (const match of normalizedText.matchAll(pattern)) {
+    const day = ENGLISH_DAY_MAP[match[1].toUpperCase()];
+    if (!day) continue;
+
+    const periodTokens = extractLeadingPeriodTokens(match[2]);
+    if (periodTokens.length === 0) continue;
+
+    normalizedChunks.push(`星期${day}，節次${periodTokens.join("、")}`);
+  }
+
+  return normalizedChunks.join("；");
+};
+
 export const normalizeCourseTime = (courseTime?: string): string => {
   if (!courseTime) return "";
+
+  const englishCourseTime = normalizeEnglishCourseTime(courseTime);
+  if (englishCourseTime) return englishCourseTime;
 
   const chunks = courseTime
     .replace(/\s+/g, "")
