@@ -42,6 +42,9 @@ const Header: React.FC = () => {
             相關貼文後台
           </Menu.Item>
         )}
+        <Menu.Item component={Link} to='/wishlist'>
+          功能許願
+        </Menu.Item>
         <Menu.Item component={Link} to='/versions'>
           版本紀錄
         </Menu.Item>
@@ -83,6 +86,14 @@ const Header: React.FC = () => {
             <div className={styles.mobileDivider} />
             <AuthButton className={styles.mobileAuthButton} onClick={() => setOpened(false)} />
             <div className={styles.mobileDivider} />
+            <Text
+              component={Link}
+              to='/wishlist'
+              onClick={() => setOpened(false)}
+              className={styles.mobileSecondaryLink}
+            >
+              功能許願
+            </Text>
             <Text
               component={Link}
               to='/versions'

@@ -1,0 +1,62 @@
+.heading {
+  padding-left: 12px;
+  border-left: 4px solid var(--mantine-color-brick-red-5);
+  text-align: left;
+}
+
+.composer {
+  border: 2px solid black;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 3px 3px 0 black;
+  padding: 16px;
+}
+
+.card {
+  border: 2px solid black;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 3px 3px 0 black;
+  padding: 16px;
+  text-align: left;
+}
+
+.headerRow {
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.userInfo {
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+}
+
+.userMeta {
+  min-width: 0;
+}
+
+.contentText {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.statusSelect {
+  width: 96px;
+}
+
+.composerToggle {
+  align-self: flex-start;
+}
+
+.replyBox {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--mantine-color-brick-red-0);
+  border: 1px solid var(--mantine-color-brick-red-2);
+}
+
+.replyEditBox {
+  margin-top: 10px;
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fix PR"
+  short_description: "修正 PR review 並逐則等待 Codex 複查"
+  default_prompt: "使用 $fix-pr 處理目前 PR 尚未解決的 review 意見，完成驗證與發布，並逐 thread 等待 Codex 複查。"
