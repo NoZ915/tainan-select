@@ -22,6 +22,7 @@ import OAuthCallbackPage from './pages/OAuthCallbackPage.tsx'
 import MailErrorPage from './pages/MailErrorPage.tsx'
 import ProfilePage from './pages/ProfilePage.tsx'
 import VersionsPage from './pages/VersionsPage.tsx'
+import WishlistPage from './pages/WishlistPage.tsx'
 import ProtectedRoute from './pages/ProtectedRoute.tsx'
 import AdminRoute from './pages/AdminRoute.tsx'
 import AdminRelatedPostsPage from './pages/AdminRelatedPostsPage.tsx'
@@ -82,6 +83,11 @@ const router = createBrowserRouter([
         path: 'versions',
         element: <VersionsPage />,
         handle: { seo: { title: buildTitleStatic('版本更新紀錄') } },
+      },
+      {
+        path: 'wishlist',
+        element: <WishlistPage />,
+        handle: { seo: { title: buildTitleStatic('功能許願') } },
       },
 
       // 受保護的 route（未登入無法瀏覽）
