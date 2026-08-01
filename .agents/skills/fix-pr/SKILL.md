@@ -1,5 +1,5 @@
 ---
-name: gh-fix-unresolved-review
+name: fix-pr
 description: 處理 GitHub Pull Request 尚未解決且可執行的 review threads，完成程式碼修正、驗證、commit、push，並在每個原始 comment 下以可點擊的完整 commit SHA 逐則回覆，再串行觸發 @codex review 並等待回應。當使用者要求處理 PR 未解決問題、修正 review 意見、推送修正並回覆 reviewer 時使用；預設保留 threads 為 unresolved，不直接 resolve。
 ---
 
