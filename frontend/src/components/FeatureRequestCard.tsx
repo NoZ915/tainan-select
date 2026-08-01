@@ -147,7 +147,7 @@ const FeatureRequestCard: React.FC<FeatureRequestCardProps> = ({
             size='xs'
             leftSection={item.has_voted ? <FaThumbsUp size={14} /> : <FaRegThumbsUp size={14} />}
             onClick={handleToggleVote}
-            disabled={!isAuthenticated || isTogglingVote}
+            disabled={isTogglingVote}
             loading={isTogglingVote}
           >
             {item.vote_count}
