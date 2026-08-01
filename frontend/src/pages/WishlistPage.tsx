@@ -37,7 +37,7 @@ const WishlistPage: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<FeatureRequest | null>(null)
 
   const status = activeTab === 'all' ? undefined : activeTab
-  const { data: featureRequests, isLoading } = useGetFeatureRequests(status)
+  const { data: featureRequests, isLoading, isError, isFetching, refetch } = useGetFeatureRequests(status)
 
   const { mutate: createFeatureRequest, isPending: isCreating } = useCreateFeatureRequest()
   const { mutate: removeFeatureRequest, isPending: isDeleting } = useDeleteFeatureRequest()
@@ -140,6 +140,18 @@ const WishlistPage: React.FC = () => {
           <Group justify='center' py='xl'>
             <Loader size='sm' />
           </Group>
+        ) : isError ? (
+          <Stack align='center' gap='xs' py='xl'>
+            <Text c='red.6' ta='center'>載入功能許願失敗，請稍後再試。</Text>
+            <Button
+              variant='light'
+              color='brick-red.6'
+              loading={isFetching}
+              onClick={() => void refetch()}
+            >
+              重新載入
+            </Button>
+          </Stack>
         ) : items.length === 0 ? (
           <Text c='dimmed' ta='center' py='xl'>{EMPTY_MESSAGES[activeTab]}</Text>
         ) : (

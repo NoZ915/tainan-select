@@ -44,34 +44,30 @@ class FeatureRequestService {
   }
 
   async toggleVote(feature_request_id: number, user_id: number): Promise<ToggleFeatureRequestVoteResult> {
-    const transaction = await db.sequelize.transaction();
-
     try {
-const featureRequest = await FeatureRequestRepository.findById(feature_request_id, transaction, true);
-      if (!featureRequest) {
-        throw new Error("FEATURE_REQUEST_NOT_FOUND");
-      }
+      return await db.sequelize.transaction(async (transaction) => {
+        const featureRequest = await FeatureRequestRepository.findById(feature_request_id, transaction, true);
+        if (!featureRequest) {
+          throw new Error("FEATURE_REQUEST_NOT_FOUND");
+        }
 
-      const existingVote = await FeatureRequestRepository.findVote(feature_request_id, user_id, transaction);
-      let has_voted: boolean;
+        const existingVote = await FeatureRequestRepository.findVote(feature_request_id, user_id, transaction);
+        let has_voted: boolean;
 
-      if (existingVote) {
-        await FeatureRequestRepository.removeVote(feature_request_id, user_id, transaction);
-        await FeatureRequestRepository.decrementVoteCount(feature_request_id, transaction);
-        has_voted = false;
-      } else {
-        await FeatureRequestRepository.addVote(feature_request_id, user_id, transaction);
-        await FeatureRequestRepository.incrementVoteCount(feature_request_id, transaction);
-        has_voted = true;
-      }
+        if (existingVote) {
+          await FeatureRequestRepository.removeVote(feature_request_id, user_id, transaction);
+          await FeatureRequestRepository.decrementVoteCount(feature_request_id, transaction);
+          has_voted = false;
+        } else {
+          await FeatureRequestRepository.addVote(feature_request_id, user_id, transaction);
+          await FeatureRequestRepository.incrementVoteCount(feature_request_id, transaction);
+          has_voted = true;
+        }
 
-      await transaction.commit();
-
-      const updated = await FeatureRequestRepository.findById(feature_request_id);
-      return { has_voted, vote_count: updated?.vote_count ?? 0 };
+        const updated = await FeatureRequestRepository.findById(feature_request_id, transaction);
+        return { has_voted, vote_count: updated?.vote_count ?? 0 };
+      });
     } catch (err) {
-      await transaction.rollback();
-
       if (err instanceof UniqueConstraintError) {
         const updated = await FeatureRequestRepository.findById(feature_request_id);
         return { has_voted: true, vote_count: updated?.vote_count ?? 0 };
