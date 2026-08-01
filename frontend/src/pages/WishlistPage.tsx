@@ -44,6 +44,13 @@ const WishlistPage: React.FC = () => {
 
   const items = useMemo(() => featureRequests ?? [], [featureRequests])
 
+  const EMPTY_MESSAGES: Record<TabValue, string> = {
+    all: '目前還沒有許願，快來許下第一個吧！',
+    pending: '目前沒有「許願中」的功能建議，快來提出你的想法吧！',
+    in_progress: '目前沒有進行中的許願，開發中功能會顯示在這裡。',
+    completed: '目前尚未有已完成的許願。',
+  }
+
   const handleOpenComposer = () => {
     if (!isAuthenticated) {
       setIsLoginModalOpen(true)
@@ -134,7 +141,7 @@ const WishlistPage: React.FC = () => {
             <Loader size='sm' />
           </Group>
         ) : items.length === 0 ? (
-          <Text c='dimmed' ta='center' py='xl'>目前還沒有許願，快來許下第一個吧！</Text>
+          <Text c='dimmed' ta='center' py='xl'>{EMPTY_MESSAGES[activeTab]}</Text>
         ) : (
           <Stack gap='sm'>
             {items.map((item) => (
