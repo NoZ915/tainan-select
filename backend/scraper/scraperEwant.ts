@@ -237,13 +237,11 @@ async function runScraper(): Promise<void> {
 
           const existing = await CourseModel.findOne({
             where: {
-              semester: payload.semester,
               department: payload.department,
               course_name: payload.course_name,
               instructor: {
                 [Op.in]: [payload.instructor, "EWANT教師", "無教師"],
               },
-              credit_hours: payload.credit_hours,
             },
           });
 
