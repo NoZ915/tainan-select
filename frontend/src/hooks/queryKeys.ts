@@ -23,6 +23,8 @@ export const QUERY_KEYS = {
   
   PLATFORM_STATS: 'platform_stats',
   ADMIN_RELATED_POSTS_OVERVIEW: 'admin_related_posts_overview',
+
+  FEATURE_REQUESTS: 'feature_requests',
   
   // NOTE: 暫時移除此功能
   POPULAR_COURSES: 'popular_courses',
