@@ -47,7 +47,7 @@ class FeatureRequestService {
     const transaction = await db.sequelize.transaction();
 
     try {
-      const featureRequest = await FeatureRequestRepository.findById(feature_request_id, transaction);
+const featureRequest = await FeatureRequestRepository.findById(feature_request_id, transaction, true);
       if (!featureRequest) {
         throw new Error("FEATURE_REQUEST_NOT_FOUND");
       }

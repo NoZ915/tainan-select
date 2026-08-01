@@ -18,8 +18,11 @@ class FeatureRequestRepository {
     });
   }
 
-  async findById(id: number, transaction?: Transaction): Promise<FeatureRequestModel | null> {
-    return await FeatureRequestModel.findByPk(id, { transaction });
+  async findById(id: number, transaction?: Transaction, lockForUpdate = false): Promise<FeatureRequestModel | null> {
+    return await FeatureRequestModel.findByPk(id, {
+      transaction,
+      lock: transaction && lockForUpdate ? transaction.LOCK.UPDATE : undefined,
+    });
   }
 
   async create(user_id: number, content: string): Promise<FeatureRequestModel> {
