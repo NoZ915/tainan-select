@@ -40,30 +40,39 @@ interface CourseScheduleParsed {
   span: number;        // 節數長度
 }
 
-const PERIOD_SEPARATORS = new Set(["、", "，", ",", "/", "-", "~"]);
+const PERIOD_SEPARATOR_PATTERN = /[、，,/\-~]/;
+const PERIOD_LIST_PATTERN = /^[1-9A-G](?:[、，,/\-~][1-9A-G])*/i;
 
 const extractLeadingPeriodTokens = (sectionAfterMarker: string): string[] => {
   const source = sectionAfterMarker.trim().toUpperCase();
+  const periodListMatch = source.match(PERIOD_LIST_PATTERN);
+  if (!periodListMatch) return [];
 
-  // Require a valid period token at the beginning; this avoids notes like "第10週".
-  if (!/^[1-9A-G]/.test(source)) return [];
-
-  const tokens: string[] = [];
-  for (const ch of source) {
-    if (PERIOD_ORDER_MAP[ch]) {
-      tokens.push(ch);
-      continue;
-    }
-
-    if (PERIOD_SEPARATORS.has(ch)) {
-      continue;
-    }
-
-    // Stop at the first non-period/non-separator char (annotation boundary).
-    break;
-  }
+  const tokens = periodListMatch[0].split(PERIOD_SEPARATOR_PATTERN);
 
   return tokens.filter((token, index, arr) => index === 0 || token !== arr[index - 1]);
+};
+
+const normalizeChineseCourseTime = (courseTime: string): string => {
+  const chunks = courseTime.split(/(?=星期[一二三四五六日])/);
+  const normalizedChunks: string[] = [];
+
+  for (const chunk of chunks) {
+    const normalizedChunk = chunk.replace(/\s+/g, "");
+    const dayMatch = normalizedChunk.match(/星期([一二三四五六日])/);
+    if (!dayMatch) continue;
+
+    // 中文星期決定日期，完整節次優先取自明確的 Period 欄位，不解析前方的英文星期。
+    const fullPeriodMatch = normalizedChunk.match(/Period([1-9A-G](?:[、，,/\-~][1-9A-G])*)/i);
+    const sectionAfterMarker = fullPeriodMatch?.[1]
+      ?? (normalizedChunk.includes("節次") ? normalizedChunk.split("節次")[1] : "");
+    const periodTokens = extractLeadingPeriodTokens(sectionAfterMarker);
+    if (periodTokens.length === 0) continue;
+
+    normalizedChunks.push(`星期${dayMatch[1]}，節次${periodTokens.join("、")}`);
+  }
+
+  return normalizedChunks.join("；");
 };
 
 const normalizeEnglishCourseTime = (courseTime: string): string => {
@@ -87,29 +96,13 @@ const normalizeEnglishCourseTime = (courseTime: string): string => {
 export const normalizeCourseTime = (courseTime?: string): string => {
   if (!courseTime) return "";
 
+  const chineseCourseTime = normalizeChineseCourseTime(courseTime);
+  if (chineseCourseTime) return chineseCourseTime;
+
   const englishCourseTime = normalizeEnglishCourseTime(courseTime);
   if (englishCourseTime) return englishCourseTime;
 
-  const chunks = courseTime
-    .replace(/\s+/g, "")
-    .split(/[；;]/)
-    .map((chunk) => chunk.trim())
-    .filter(Boolean);
-
-  const normalizedChunks = chunks
-    .map((chunk) => {
-      const dayMatch = chunk.match(/星期([一二三四五六日])/);
-      if (!dayMatch) return "";
-
-      const sectionAfterMarker = chunk.includes("節次") ? chunk.split("節次")[1] : "";
-      const periodTokens = extractLeadingPeriodTokens(sectionAfterMarker);
-      if (periodTokens.length === 0) return "";
-
-      return `星期${dayMatch[1]}，節次${periodTokens.join("、")}`;
-    })
-    .filter(Boolean);
-
-  return normalizedChunks.join("；");
+  return "";
 };
 
 export const parseCourseTime = (courseTime?: string): CourseScheduleParsed[] => {

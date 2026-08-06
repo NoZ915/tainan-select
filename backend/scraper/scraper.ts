@@ -162,7 +162,9 @@ async function runScraper(): Promise<void> {
           const coursePage$ = cheerio.load(res.data);
 
           // 抓取課程頁面中的資料
-          const rawCourseTime = coursePage$("#Label10").text();
+          const courseTimeElement = coursePage$("#Label10").clone();
+          courseTimeElement.find("br").replaceWith("\n");
+          const rawCourseTime = courseTimeElement.text();
           const courseTime = normalizeCourseTime(rawCourseTime);
           const courseRoom = coursePage$("#Label11").text();
           const rawCourseType = coursePage$("#Label16").text();
