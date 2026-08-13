@@ -3,9 +3,12 @@ import CourseModel from "../models/Course";
 import CourseScheduleModel from "../models/CourseSchedule";
 import { Course, CourseOptionFilters, PaginationParams } from "../types/course";
 import db from "../models";
+import {
+  EWANT_DEPARTMENT,
+  normalizeCourseSchedule,
+  PERIOD_ORDER,
+} from "../utils/courseSchedule";
 
-const EWANT_DEPARTMENT = "校外遠距(EWANT)";
-const PERIOD_ORDER = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G"] as const;
 const PERIOD_INDEX_MAP = PERIOD_ORDER.reduce<Record<string, number>>((acc, period, index) => {
   acc[period] = index;
   return acc;
@@ -78,16 +81,16 @@ class CourseRepository {
 
     const matchedCourseIds = new Set<number>();
     scheduleRows.forEach((row) => {
-      const startIndex = PERIOD_INDEX_MAP[row.start_period as string];
-      if (typeof startIndex !== "number") return;
+      const normalizedSchedule = normalizeCourseSchedule(row);
+      if (!normalizedSchedule) return;
 
       if (selectedPeriods.size === 0) {
         matchedCourseIds.add(Number(row.course_id));
         return;
       }
 
-      const span = Math.max(Number(row.span) || 1, 1);
-      const endIndex = startIndex + span - 1;
+      const startIndex = PERIOD_INDEX_MAP[normalizedSchedule.startPeriod];
+      const endIndex = PERIOD_INDEX_MAP[normalizedSchedule.endPeriod];
       for (let index = startIndex; index <= endIndex; index += 1) {
         const period = PERIOD_ORDER[index];
         if (period && selectedPeriods.has(period)) {

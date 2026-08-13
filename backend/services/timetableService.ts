@@ -13,6 +13,12 @@ import {
   TimetableItemResponse,
   TimetableResponse,
 } from "../types/timetable";
+import {
+  buildTimetableConflict,
+  hasTimeslotOverlap,
+  isEwantDepartment,
+  normalizeCourseSchedule,
+} from "../utils/courseSchedule";
 
 type CourseMeta = {
   id: number;
@@ -26,83 +32,6 @@ type CourseMeta = {
 type CourseWithTimeslots = {
   course: CourseMeta;
   timeslots: CourseTimeslot[];
-};
-
-const PERIOD_ORDER = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G"];
-const PERIOD_INDEX_MAP = PERIOD_ORDER.reduce<Record<string, number>>((map, period, index) => {
-  map[period] = index;
-  return map;
-}, {});
-const PERIOD_MIN_MAP: Record<string, { start: number; end: number }> = {
-  "1": { start: 430, end: 480 },
-  "2": { start: 480, end: 530 },
-  "3": { start: 540, end: 590 },
-  "4": { start: 600, end: 650 },
-  "5": { start: 660, end: 710 },
-  "6": { start: 720, end: 770 },
-  "7": { start: 780, end: 830 },
-  "8": { start: 840, end: 890 },
-  "9": { start: 900, end: 950 },
-  A: { start: 960, end: 1010 },
-  B: { start: 1020, end: 1070 },
-  C: { start: 1110, end: 1160 },
-  D: { start: 1160, end: 1210 },
-  E: { start: 1210, end: 1260 },
-  F: { start: 1260, end: 1310 },
-  G: { start: 1310, end: 1360 },
-};
-
-const getPeriodByMinute = (minute: number, mode: "start" | "end"): string => {
-  if (mode === "start") {
-    const found = PERIOD_ORDER.find((period) => PERIOD_MIN_MAP[period].start <= minute && minute < PERIOD_MIN_MAP[period].end);
-    return found ?? PERIOD_ORDER[0];
-  }
-
-  const found = [...PERIOD_ORDER].reverse().find((period) => PERIOD_MIN_MAP[period].start < minute && minute <= PERIOD_MIN_MAP[period].end);
-  return found ?? PERIOD_ORDER[PERIOD_ORDER.length - 1];
-};
-
-const normalizeSchedule = (schedule: CourseScheduleModel): CourseTimeslot | null => {
-  const startIndex = PERIOD_INDEX_MAP[schedule.start_period];
-  if (typeof startIndex !== "number") return null;
-
-  const endIndex = startIndex + Math.max(schedule.span, 1) - 1;
-  if (endIndex >= PERIOD_ORDER.length) return null;
-
-  const startPeriod = PERIOD_ORDER[startIndex];
-  const endPeriod = PERIOD_ORDER[endIndex];
-  const startMin = PERIOD_MIN_MAP[startPeriod]?.start;
-  const endMin = PERIOD_MIN_MAP[endPeriod]?.end;
-  if (typeof startMin !== "number" || typeof endMin !== "number") return null;
-
-  return {
-    dayOfWeek: schedule.day,
-    startPeriod,
-    endPeriod,
-    startMin,
-    endMin,
-  };
-};
-
-const hasOverlap = (a: CourseTimeslot, b: CourseTimeslot): boolean => {
-  return a.dayOfWeek === b.dayOfWeek && a.startMin < b.endMin && b.startMin < a.endMin;
-};
-
-const buildConflict = (courseId: number, conflictWithCourseId: number, a: CourseTimeslot, b: CourseTimeslot): TimetableConflict => {
-  const overlapStart = Math.max(a.startMin, b.startMin);
-  const overlapEnd = Math.min(a.endMin, b.endMin);
-
-  return {
-    courseId,
-    conflictWithCourseId,
-    dayOfWeek: a.dayOfWeek,
-    overlap: {
-      startMin: overlapStart,
-      endMin: overlapEnd,
-      startPeriod: getPeriodByMinute(overlapStart, "start"),
-      endPeriod: getPeriodByMinute(overlapEnd, "end"),
-    },
-  };
 };
 
 export class TimetableServiceError extends Error {
@@ -136,10 +65,10 @@ class TimetableService {
     });
 
     schedules.forEach((schedule) => {
-      const normalized = normalizeSchedule(schedule);
-      if (!normalized) return;
       const target = map.get(schedule.course_id);
-      if (!target) return;
+      if (!target || isEwantDepartment(target.course.department)) return;
+      const normalized = normalizeCourseSchedule(schedule);
+      if (!normalized) return;
       target.timeslots.push(normalized);
     });
 
@@ -152,8 +81,8 @@ class TimetableService {
     existingCourses.forEach((existing) => {
       candidate.timeslots.forEach((candidateSlot) => {
         existing.timeslots.forEach((existingSlot) => {
-          if (!hasOverlap(candidateSlot, existingSlot)) return;
-          conflicts.push(buildConflict(candidate.course.id, existing.course.id, candidateSlot, existingSlot));
+          if (!hasTimeslotOverlap(candidateSlot, existingSlot)) return;
+          conflicts.push(buildTimetableConflict(candidate.course.id, existing.course.id, candidateSlot, existingSlot));
         });
       });
     });
@@ -167,7 +96,7 @@ class TimetableService {
     const schedules = await CourseScheduleRepository.getByCourseIds(courseIds);
 
     const scheduleMap = schedules.reduce<Map<number, CourseTimeslot[]>>((map, schedule) => {
-      const normalized = normalizeSchedule(schedule);
+      const normalized = normalizeCourseSchedule(schedule);
       if (!normalized) return map;
 
       const current = map.get(schedule.course_id) ?? [];
@@ -189,7 +118,7 @@ class TimetableService {
           instructor: course.instructor,
           room: course.course_room,
         },
-        timeslots: scheduleMap.get(course.id) ?? [],
+        timeslots: isEwantDepartment(course.department) ? [] : scheduleMap.get(course.id) ?? [],
       };
     });
 
@@ -456,14 +385,18 @@ class TimetableService {
     const items = await TimetableItemRepository.getAllByUserId(userId);
     const courseIds = Array.from(new Set(items.map((item) => item.course_id)));
     const schedules = await CourseScheduleRepository.getByCourseIds(courseIds);
-    const hasTimeslotsSet = new Set(schedules.map((schedule) => schedule.course_id));
+    const hasTimeslotsSet = new Set(
+      schedules
+        .filter((schedule) => normalizeCourseSchedule(schedule) !== null)
+        .map((schedule) => schedule.course_id)
+    );
 
     return items.map((item) => {
       const raw = item.toJSON() as unknown as TimetableItemWithSemesterJson;
       return {
         timetableId: raw.timetable.id,
         semester: raw.timetable.semester,
-        hasTimeslots: hasTimeslotsSet.has(raw.course.id),
+        hasTimeslots: !isEwantDepartment(raw.course.department) && hasTimeslotsSet.has(raw.course.id),
         course: {
           id: raw.course.id,
           name: raw.course.course_name,
