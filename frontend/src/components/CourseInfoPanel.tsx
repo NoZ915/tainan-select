@@ -17,8 +17,9 @@ interface CourseInfoPanelProps {
 const CourseInfoPanel: React.FC<CourseInfoPanelProps> = ({ course, isLoading }) => {
   const isMobile = useIsMobile()
 
-  if (isLoading) {
-    return <>載入中...</>
+  if (!course?.course) {
+    if (isLoading) return <>載入中...</>
+    return <Text c='red'>課程資料載入失敗，請稍後再試。</Text>
   }
 
   const courseData = course?.course
