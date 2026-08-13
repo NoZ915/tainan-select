@@ -70,7 +70,22 @@ export const removeTimetableCourse = async (
   })
 }
 
-export const swapTimetableCourse = async (timetableId: number, courseId: number): Promise<SwapTimetableCourseResponse> => {
-  const response = await axiosInstance.post(`/timetables/${timetableId}/items/swap`, { courseId })
+export const swapTimetableCourse = async (
+  timetableId: number,
+  courseId: number,
+  conflictCourseIds: readonly number[],
+  context: TimetableRequestContext,
+): Promise<SwapTimetableCourseResponse> => {
+  const response = await axiosInstance.post(
+    `/timetables/${timetableId}/items/swap`,
+    {
+      courseId,
+      conflictCourseIds,
+    },
+    {
+      signal: context.signal,
+      headers: getSessionHeaders(context.expectedSessionScope),
+    },
+  )
   return response.data
 }

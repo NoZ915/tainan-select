@@ -16,6 +16,7 @@ import { AddedCourseItem, TimetableConflict, TimetableItem } from '../../types/t
 import { swapTimetableCourse } from '../../apis/timetableAPI'
 import { ApiError } from '../../apis/axiosInstance'
 import { QUERY_KEYS } from '../../hooks/queryKeys'
+import { getUserCacheScope } from '../../utils/userCacheScope'
 import styles from '../../styles/components/Timetable.module.css'
 import AuthButton from '../AuthButton'
 
@@ -106,6 +107,12 @@ const Timetable: React.FC = () => {
   const [swapTargetCourse, setSwapTargetCourse] = useState<{ id: number; name: string } | null>(null)
   const [swapConflicts, setSwapConflicts] = useState<TimetableConflict[]>([])
   const [swapContext, setSwapContext] = useState<{ timetableId: number; semester: string } | null>(null)
+  const swapConflictCourseIds = useMemo(
+    () => Array.from(new Set(
+      swapConflicts.map((conflict) => conflict.conflictWithCourseId),
+    )),
+    [swapConflicts],
+  )
 
   const items = timetableData?.items ?? EMPTY_TIMETABLE_ITEMS
   const allAddedItems = allAddedItemsData?.items ?? EMPTY_ADDED_ITEMS
@@ -200,11 +207,17 @@ const Timetable: React.FC = () => {
     try {
       setIsSwapSubmitting(true)
 
-      const result = await swapTimetableCourse(swapContext.timetableId, swapTargetCourse.id)
+      const requestUserCacheScope = getUserCacheScope(useAuthStore.getState().user)
+      const result = await swapTimetableCourse(
+        swapContext.timetableId,
+        swapTargetCourse.id,
+        swapConflictCourseIds,
+        { expectedSessionScope: requestUserCacheScope },
+      )
 
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TIMETABLE, swapContext.semester] }),
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TIMETABLE_ALL_ITEMS] }),
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TIMETABLE, swapContext.semester, requestUserCacheScope] }),
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TIMETABLE_ALL_ITEMS, requestUserCacheScope] }),
       ])
 
       if (result.alreadyExists) {
@@ -259,7 +272,7 @@ const Timetable: React.FC = () => {
       <SwapConflictModal
         opened={isSwapDialogOpened}
         targetCourse={swapTargetCourse}
-        conflicts={swapConflicts}
+        conflictCourseIds={swapConflictCourseIds}
         addedCourseNameMap={addedCourseNameMap}
         isSubmitting={isSwapSubmitting}
         onClose={() => {
