@@ -1,5 +1,4 @@
-﻿import { AddedCourseItem } from '../../types/timetableType'
-
+import { AddedCourseItem } from '../../types/timetableType'
 import type { TimetablePeriod } from '../../utils/timetable'
 
 export type Weekday = '一' | '二' | '三' | '四' | '五' | '六' | '日'
@@ -14,22 +13,9 @@ export type TimetableSlotSelection = {
   period: TimetablePeriod
 }
 
-export type GridCell = {
-  courseId: number
-  courseName: string
-  instructor: string
-  room?: string
-}
-
-export type TimetableGrid = Record<string, Partial<Record<number, GridCell[]>>>
-
-export type SelectableInterestCourse = {
-  id: number
-  course_name: string
+export type TimetableListItem = {
+  timetableId?: number
   semester: string
-  instructor: string
-  course_room?: string | null
-  course_time?: string | null
+  hasTimeslots: boolean
+  course: AddedCourseItem['course']
 }
-
-export type AddedTimetableItem = AddedCourseItem
