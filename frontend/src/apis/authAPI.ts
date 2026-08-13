@@ -11,6 +11,21 @@ export const checkAuthStatus = async (signal?: AbortSignal): Promise<AuthStatusR
   return response.data
 }
 
+export type OAuthAttemptStatus =
+  | 'completed'
+  | 'cancelled'
+  | 'expired'
+  | 'not_found'
+
+export const cancelOAuthAttempt = async (owner: string): Promise<OAuthAttemptStatus> => {
+  const response = await axiosInstance.post(
+    '/auth/google/cancel',
+    { owner },
+    { timeout: 15_000 },
+  )
+  return response.data.status
+}
+
 export const logoutUser = async (): Promise<void> => {
   await axiosInstance.post('/auth/logout')
 }

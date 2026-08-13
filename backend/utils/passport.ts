@@ -2,6 +2,7 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import userService from "../services/userService";
 import whitelistService from "../services/whitelistService";
+import { OAuthStateStore } from "./oauthStateStore";
 
 function normalizeEmail(email: unknown) {
   return String(email ?? "").trim().toLowerCase();
@@ -18,6 +19,7 @@ passport.use(
     clientID: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     callbackURL: `${process.env.BACKEND_BASE_URL}/auth/google/callback`,
+    store: new OAuthStateStore(),
   },
     async (accessToken: string, refreshToken: string, profile: any, done: any) => {
       try {

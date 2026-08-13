@@ -5,6 +5,7 @@ export const GUEST_USER_CACHE_SCOPE = 'guest'
 export const UNKNOWN_AUTHENTICATED_USER_CACHE_SCOPE = 'user:unknown'
 
 const AUTH_SESSION_RECORD_STORAGE_KEY = 'tainan-select:auth-session-epoch:v1'
+const OAUTH_TRANSITION_OWNER_SESSION_KEY = 'tainan-select:oauth-transition-owner:v1'
 const AUTH_SESSION_RECORD_CHANGE_EVENT = 'tainan-select:auth-session-record:change'
 const AUTH_SESSION_RECORD_LOCK = 'tainan-select:auth-session-record:lock'
 const AUTH_TRANSITION_TIMEOUT_MS = 10 * 60 * 1000
@@ -176,6 +177,35 @@ export const beginAuthSessionTransition = async (
   writeAuthSessionRecord(nextRecord)
   return nextRecord
 })
+
+export const beginOAuthAuthSessionTransition = async (): Promise<string | null> => {
+  const transition = await beginAuthSessionTransition('oauth')
+  if (!transition) return null
+  if (typeof window !== 'undefined') {
+    window.sessionStorage.setItem(OAUTH_TRANSITION_OWNER_SESSION_KEY, transition.owner)
+  }
+  return transition.owner
+}
+
+export const getOAuthAuthSessionTransitionOwner = (): string | null => {
+  if (typeof window === 'undefined') return null
+
+  try {
+    return window.sessionStorage.getItem(OAUTH_TRANSITION_OWNER_SESSION_KEY)
+  } catch {
+    return null
+  }
+}
+
+export const clearOAuthAuthSessionTransitionOwner = (): void => {
+  if (typeof window === 'undefined') return
+
+  try {
+    window.sessionStorage.removeItem(OAUTH_TRANSITION_OWNER_SESSION_KEY)
+  } catch {
+    return
+  }
+}
 
 const restoreTransitionPreviousState = (
   transition: TransitionAuthSessionRecord,

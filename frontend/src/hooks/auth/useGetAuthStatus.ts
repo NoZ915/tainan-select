@@ -8,17 +8,22 @@ import {
     isAuthSessionRecordCurrent,
 } from '../../utils/userCacheScope'
 
-export const useGetAuthStatus = () => {
+export const useGetAuthStatus = (oauthTransitionOwner: string | null) => {
     const login = useAuthStore((state) => state.login)
     const logout = useAuthStore((state) => state.logout)
 
     return useQuery({
-        queryKey: [QUERY_KEYS.AUTH_STATUS],
+        queryKey: [QUERY_KEYS.AUTH_STATUS, oauthTransitionOwner ?? 'missing-owner'],
         queryFn: async({ signal }) => {
             const requestSnapshot = captureAuthStatusRequestSnapshot()
             const authStatus = await getAuthStatus(signal)
             if (useAuthStore.getState().isLogoutInProgress) return null
-            const result = await applyAuthStatusResponse(requestSnapshot, authStatus)
+            if (!oauthTransitionOwner) return null
+
+            const result = await applyAuthStatusResponse(requestSnapshot, authStatus, {
+                transitionOwner: oauthTransitionOwner,
+                transitionKind: 'oauth',
+            })
             if (!result.applied || !isAuthSessionRecordCurrent(result.record)) return null
 
             if (authStatus.authenticated) {
@@ -31,9 +36,10 @@ export const useGetAuthStatus = () => {
                 return authStatus.user
             }
 
-            if (result.record?.status === 'guest') logout()
+            if (!authStatus.authenticated && result.record?.status === 'guest') logout()
             return null
         },
+        enabled: Boolean(oauthTransitionOwner),
         retry: 1,
     })
 }
