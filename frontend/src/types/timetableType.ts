@@ -21,6 +21,15 @@ export interface TimetableItem {
   timeslots: Timeslot[]
 }
 
+export interface GuestTimetableItem extends TimetableItem {
+  addedAt: string
+}
+
+export interface GuestTimetableStorage {
+  version: 1
+  semesters: Record<string, GuestTimetableItem[]>
+}
+
 export interface TimetableGridCell {
   courseId: number
   courseName: string
