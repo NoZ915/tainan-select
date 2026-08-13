@@ -344,75 +344,111 @@ class TimetableService {
   }
 
   async batchAddFromInterests(timetableId: number, userId: number) {
-    const timetable = await this.getOrThrowOwnedTimetable(timetableId, userId);
-    const allInterests = await InterestRepository.getAllInterestsByUserId(userId);
-    const requested = allInterests.length;
-    const eligibleInterests = allInterests.filter((interest) => interest.course.semester === timetable.semester);
+    return await db.sequelize.transaction(
+      { isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED },
+      async (transaction) => {
+        const timetable = await this.getOrThrowLockedTimetable(
+          timetableId,
+          userId,
+          transaction
+        );
+        const allInterests = await InterestRepository.getAllInterestsByUserId(
+          userId,
+          transaction
+        );
+        const requested = allInterests.length;
+        const eligibleInterests = allInterests.filter(
+          (interest) => interest.course.semester === timetable.semester
+        );
 
-    const existingItems = await TimetableItemRepository.getAllByTimetableId(timetable.id);
-    const existingCourseIds = new Set(existingItems.map((item) => item.course_id));
+        const existingItems = await TimetableItemRepository.getAllByTimetableId(
+          timetable.id,
+          transaction
+        );
+        const existingCourseIds = new Set(existingItems.map((item) => item.course_id));
 
-    const candidateCourses: CourseMeta[] = eligibleInterests.map((interest) => ({
-      id: interest.course.id,
-      name: interest.course.course_name,
-      semester: interest.course.semester,
-      department: interest.course.department,
-      instructor: interest.course.instructor,
-    }));
-    const existingCourses: CourseMeta[] = existingItems.map((item) => {
-      const raw = item.toJSON() as unknown as TimetableItemModelJson;
-      return {
-        id: raw.course.id,
-        name: raw.course.course_name,
-        semester: raw.course.semester,
-        department: raw.course.department,
-        instructor: raw.course.instructor,
-        room: raw.course.course_room,
-      };
-    });
+        const candidateCourses: CourseMeta[] = eligibleInterests.map((interest) => ({
+          id: interest.course.id,
+          name: interest.course.course_name,
+          semester: interest.course.semester,
+          department: interest.course.department,
+          instructor: interest.course.instructor,
+          room: interest.course.course_room,
+        }));
+        const existingCourses: CourseMeta[] = existingItems.map((item) => {
+          const raw = item.toJSON() as unknown as TimetableItemModelJson;
+          return {
+            id: raw.course.id,
+            name: raw.course.course_name,
+            semester: raw.course.semester,
+            department: raw.course.department,
+            instructor: raw.course.instructor,
+            room: raw.course.course_room,
+          };
+        });
 
-    const allCourseIds = [...new Set([...existingCourseIds, ...candidateCourses.map((course) => course.id)])];
-    const schedules = await CourseScheduleRepository.getByCourseIds(allCourseIds);
-    const courseMap = this.toCourseWithTimeslotsMap([...existingCourses, ...candidateCourses], schedules);
+        const allCourseIds = [...new Set([
+          ...existingCourseIds,
+          ...candidateCourses.map((course) => course.id),
+        ])];
+        const schedules = await CourseScheduleRepository.getByCourseIds(
+          allCourseIds,
+          transaction
+        );
+        const courseMap = this.toCourseWithTimeslotsMap(
+          [...existingCourses, ...candidateCourses],
+          schedules
+        );
 
-    const selectedCourseIds = new Set(existingCourses.map((course) => course.id));
-    const selectedCourses = [...existingCourses].map((course) => courseMap.get(course.id) ?? { course, timeslots: [] });
-    const conflicts: TimetableConflict[] = [];
-    let added = 0;
-    let skippedAlreadyExists = 0;
-    let conflicted = 0;
+        const selectedCourseIds = new Set(existingCourses.map((course) => course.id));
+        const selectedCourses = existingCourses.map(
+          (course) => courseMap.get(course.id) ?? { course, timeslots: [] }
+        );
+        const conflicts: TimetableConflict[] = [];
+        let added = 0;
+        let skippedAlreadyExists = 0;
+        let conflicted = 0;
 
-    for (const candidateMeta of candidateCourses) {
-      if (selectedCourseIds.has(candidateMeta.id)) {
-        skippedAlreadyExists += 1;
-        continue;
+        for (const candidateMeta of candidateCourses) {
+          if (selectedCourseIds.has(candidateMeta.id)) {
+            skippedAlreadyExists += 1;
+            continue;
+          }
+
+          const candidate = courseMap.get(candidateMeta.id) ?? {
+            course: candidateMeta,
+            timeslots: [],
+          };
+          const detected = this.findConflicts(candidate, selectedCourses);
+
+          if (detected.length > 0) {
+            conflicted += 1;
+            conflicts.push(...detected);
+            continue;
+          }
+
+          await TimetableItemRepository.addCourse(
+            timetable.id,
+            candidateMeta.id,
+            transaction
+          );
+          added += 1;
+          selectedCourseIds.add(candidateMeta.id);
+          selectedCourses.push(candidate);
+        }
+
+        return {
+          summary: {
+            requested,
+            eligibleSameSemester: eligibleInterests.length,
+            added,
+            skippedAlreadyExists,
+            conflicted,
+          },
+          conflicts,
+        };
       }
-
-      const candidate = courseMap.get(candidateMeta.id) ?? { course: candidateMeta, timeslots: [] };
-      const detected = this.findConflicts(candidate, selectedCourses);
-
-      if (detected.length > 0) {
-        conflicted += 1;
-        conflicts.push(...detected);
-        continue;
-      }
-
-      await TimetableItemRepository.addCourse(timetable.id, candidateMeta.id);
-      added += 1;
-      selectedCourseIds.add(candidateMeta.id);
-      selectedCourses.push(candidate);
-    }
-
-    return {
-      summary: {
-        requested,
-        eligibleSameSemester: eligibleInterests.length,
-        added,
-        skippedAlreadyExists,
-        conflicted,
-      },
-      conflicts,
-    };
+    );
   }
 
   async removeCourse(timetableId: number, userId: number, courseId: number): Promise<void> {
