@@ -76,6 +76,12 @@ export interface FilterOption {
   value: string;
 }
 
+export interface CourseOptionFilters {
+  semester?: string;
+  category?: string;
+  academy?: string;
+}
+
 export interface SearchParams {
   page: number;
   limit: number;
