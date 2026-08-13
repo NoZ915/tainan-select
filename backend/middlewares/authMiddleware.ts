@@ -1,5 +1,6 @@
 import { RequestHandler } from "express";
-import { verifyJwtToken } from "../utils/jwt.js";
+import jwt from "jsonwebtoken";
+import { getJwtSessionScope, verifyJwtToken } from "../utils/jwt.js";
 
 export const authenticateJWT: RequestHandler = (req, res, next): void => {
   const authHeader = req.headers.authorization;
@@ -20,10 +21,27 @@ export const authenticateJWT: RequestHandler = (req, res, next): void => {
 
   try {
     const decoded = verifyJwtToken(token);
+    const expectedSessionScope = req.header("x-expected-session-scope");
+    if (
+      expectedSessionScope
+      && expectedSessionScope !== `session:${getJwtSessionScope(token)}`
+    ) {
+      res.status(409).json({
+        code: "SESSION_CHANGED",
+        message: "登入帳號已變更，請重新開始操作",
+      });
+      return;
+    }
     req.user = decoded; // 將解碼的 payload 添加到 req.user
     next();
   } catch (err) {
-    res.status(403).json({ error: "Invalid token" });
+    if (err instanceof jwt.JsonWebTokenError) {
+      res.status(401).json({ error: "Invalid token" });
+      return;
+    }
+
+    console.error("登入驗證設定異常:", err);
+    res.status(500).json({ error: "無法確認登入狀態" });
   }
 };
 
@@ -50,7 +68,13 @@ export const getCookie: RequestHandler = (req, res, next): void => {
     
     next();
   } catch (err) {
-    req.user = undefined;
-    next();
+    if (err instanceof jwt.JsonWebTokenError) {
+      req.user = undefined;
+      next();
+      return;
+    }
+
+    console.error("登入驗證設定異常:", err);
+    res.status(500).json({ error: "無法確認登入狀態" });
   }
 };
