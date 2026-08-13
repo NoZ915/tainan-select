@@ -9,6 +9,7 @@ import RouteHeadTitle from './seo/RouteHeadTitle'
 
 import Header from './components/Header'
 import Footer from './components/Footer'
+import GuestTimetableImportModal from './components/GuestTimetableImportModal'
 import {
   applyAuthStatusResponse,
   clearOAuthAuthSessionTransitionOwner,
@@ -149,7 +150,7 @@ function App() {
       {hasCurrentAuthError && (
         <Alert color='red' title='無法確認登入狀態' radius={0}>
           <Group justify='space-between' align='center' gap='sm'>
-            <Text size='sm'>已登入狀態不會因連線異常切換成訪客。</Text>
+            <Text size='sm'>已登入狀態不會因連線異常切換成訪客；訪客仍可查看本機課表。</Text>
             <Button
               variant='light'
               color='red'
@@ -162,6 +163,7 @@ function App() {
           </Group>
         </Alert>
       )}
+      <GuestTimetableImportModal />
       <main style={{ flex: 1 }}>
         <Outlet />
       </main>
