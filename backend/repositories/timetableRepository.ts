@@ -30,12 +30,6 @@ class TimetableRepository {
     }
   }
 
-  async findByIdAndUser(id: number, user_id: number): Promise<TimetableModel | null> {
-    return await TimetableModel.findOne({
-      where: { id, user_id },
-    });
-  }
-
   async findByIdAndUserForUpdate(
     id: number,
     user_id: number,

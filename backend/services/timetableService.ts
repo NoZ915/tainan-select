@@ -46,14 +46,6 @@ export class TimetableServiceError extends Error {
 }
 
 class TimetableService {
-  private async getOrThrowOwnedTimetable(timetableId: number, userId: number) {
-    const timetable = await TimetableRepository.findByIdAndUser(timetableId, userId);
-    if (!timetable) {
-      throw new TimetableServiceError(404, "找不到課表");
-    }
-    return timetable;
-  }
-
   private async getOrThrowLockedTimetable(
     timetableId: number,
     userId: number,
@@ -263,8 +255,12 @@ class TimetableService {
     }
   }
 
-  async swapCourse(timetableId: number, userId: number, courseId: number) {
-    const timetable = await this.getOrThrowOwnedTimetable(timetableId, userId);
+  async swapCourse(
+    timetableId: number,
+    userId: number,
+    courseId: number,
+    expectedConflictCourseIds: number[]
+  ) {
     const course = await CourseRepository.getCourse(courseId);
     if (!course) {
       throw new TimetableServiceError(404, "找不到課程");
@@ -279,58 +275,79 @@ class TimetableService {
       room: course.course_room,
     };
 
-    if (course.semester !== timetable.semester) {
-      throw new TimetableServiceError(409, "只能加入相同學期的課程");
-    }
-
     try {
-      return await db.sequelize.transaction(async (transaction) => {
-        const existingItem = await TimetableItemRepository.findByTimetableAndCourse(timetable.id, course.id, transaction);
-        if (existingItem) {
+      return await db.sequelize.transaction(
+        { isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED },
+        async (transaction) => {
+          const timetable = await this.getOrThrowLockedTimetable(
+            timetableId,
+            userId,
+            transaction
+          );
+          if (course.semester !== timetable.semester) {
+            throw new TimetableServiceError(409, "只能加入相同學期的課程");
+          }
+
+          const timetableItems = await TimetableItemRepository.getAllByTimetableId(timetable.id, transaction);
+          if (timetableItems.some((item) => item.course_id === course.id)) {
+            return {
+              added: false,
+              alreadyExists: true,
+              removedCourseIds: [] as number[],
+            };
+          }
+
+          const existingCourses: CourseMeta[] = timetableItems.map((item) => {
+            const raw = item.toJSON() as unknown as TimetableItemModelJson;
+            return {
+              id: raw.course.id,
+              name: raw.course.course_name,
+              semester: raw.course.semester,
+              department: raw.course.department,
+              instructor: raw.course.instructor,
+              room: raw.course.course_room,
+            };
+          });
+
+          const allCourseIds = [...new Set([...existingCourses.map((item) => item.id), candidateCourse.id])];
+          const schedules = await CourseScheduleRepository.getByCourseIds(
+            allCourseIds,
+            transaction
+          );
+          const allMap = this.toCourseWithTimeslotsMap([candidateCourse, ...existingCourses], schedules);
+          const candidate = allMap.get(candidateCourse.id) ?? { course: candidateCourse, timeslots: [] };
+          const existingWithTimeslots = existingCourses.map((meta) => allMap.get(meta.id) ?? { course: meta, timeslots: [] });
+
+          const conflicts = this.findConflicts(candidate, existingWithTimeslots);
+          const conflictCourseIds = Array.from(new Set(conflicts.map((item) => item.conflictWithCourseId)));
+          const expectedConflictCourseIdSet = new Set(expectedConflictCourseIds);
+          const conflictsChanged = conflictCourseIds.length !== expectedConflictCourseIdSet.size
+            || conflictCourseIds.some((conflictCourseId) => !expectedConflictCourseIdSet.has(conflictCourseId));
+
+          if (conflictsChanged) {
+            throw new TimetableServiceError(
+              409,
+              "課表已在其他分頁變更，請重新確認衝堂課程",
+              { code: "CONFLICTS_CHANGED", conflicts }
+            );
+          }
+
+          for (const conflictCourseId of conflictCourseIds) {
+            await TimetableItemRepository.removeCourse(timetable.id, conflictCourseId, transaction);
+          }
+
+          await TimetableItemRepository.addCourse(timetable.id, course.id, transaction);
+
           return {
-            added: false,
-            alreadyExists: true,
-            removedCourseIds: [] as number[],
+            added: true,
+            alreadyExists: false,
+            removedCourseIds: conflictCourseIds,
           };
         }
-
-        const timetableItems = await TimetableItemRepository.getAllByTimetableId(timetable.id, transaction);
-        const existingCourses: CourseMeta[] = timetableItems.map((item) => {
-          const raw = item.toJSON() as unknown as TimetableItemModelJson;
-          return {
-            id: raw.course.id,
-            name: raw.course.course_name,
-            semester: raw.course.semester,
-            department: raw.course.department,
-            instructor: raw.course.instructor,
-            room: raw.course.course_room,
-          };
-        });
-
-        const allCourseIds = [...new Set([...existingCourses.map((item) => item.id), candidateCourse.id])];
-        const schedules = await CourseScheduleRepository.getByCourseIds(allCourseIds);
-        const allMap = this.toCourseWithTimeslotsMap([candidateCourse, ...existingCourses], schedules);
-        const candidate = allMap.get(candidateCourse.id) ?? { course: candidateCourse, timeslots: [] };
-        const existingWithTimeslots = existingCourses.map((meta) => allMap.get(meta.id) ?? { course: meta, timeslots: [] });
-
-        const conflicts = this.findConflicts(candidate, existingWithTimeslots);
-        const conflictCourseIds = Array.from(new Set(conflicts.map((item) => item.conflictWithCourseId)));
-
-        for (const conflictCourseId of conflictCourseIds) {
-          await TimetableItemRepository.removeCourse(timetable.id, conflictCourseId, transaction);
-        }
-
-        await TimetableItemRepository.addCourse(timetable.id, course.id, transaction);
-
-        return {
-          added: true,
-          alreadyExists: false,
-          removedCourseIds: conflictCourseIds,
-        };
-      });
+      );
     } catch (error) {
       if (error instanceof UniqueConstraintError) {
-        const existingItem = await TimetableItemRepository.findByTimetableAndCourse(timetable.id, course.id);
+        const existingItem = await TimetableItemRepository.findByTimetableAndCourse(timetableId, course.id);
         if (existingItem) {
           return {
             added: false,
