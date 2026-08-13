@@ -2,6 +2,17 @@ import CourseService from "../services/courseService";
 import CourseViewService from "../services/courseViewService";
 import { RequestHandler } from "express";
 
+const getQueryValues = (value: unknown): string[] => {
+  if (value === undefined || value === null || value === "") return [];
+  return String(value).split(",").map((item) => item.trim());
+};
+
+const getCourseOptionFilters = (query: Record<string, unknown>) => ({
+  category: String(query.category || "") || undefined,
+  academy: String(query.academy || "") || undefined,
+  semesters: getQueryValues(query.semester ?? query.semesters).filter(Boolean),
+});
+
 export const getAllCourses: RequestHandler = async (
   req,
   res
@@ -60,7 +71,7 @@ export const getAllDepartments: RequestHandler = async (
   res
 ): Promise<void> => {
   try {
-    const departments = await CourseService.getAllDepartments();
+    const departments = await CourseService.getAllDepartments(getCourseOptionFilters(req.query));
     res.status(200).json({ departments });
   } catch (err) {
     res.status(500).json({ message: err });
@@ -72,7 +83,7 @@ export const getAllAcademies: RequestHandler = async (
   res
 ): Promise<void> => {
   try {
-    const academies = await CourseService.getAllAcademies();
+    const academies = await CourseService.getAllAcademies(getCourseOptionFilters(req.query));
     res.status(200).json({ academies });
   } catch (err) {
     res.status(500).json({ message: err });

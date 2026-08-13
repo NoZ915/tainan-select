@@ -1,17 +1,63 @@
 import { Op, Transaction } from "sequelize";
 import CourseModel from "../models/Course";
 import CourseScheduleModel from "../models/CourseSchedule";
-import { Course } from "../types/course";
-import { PaginationParams } from "../types/course";
+import { Course, CourseOptionFilters, PaginationParams } from "../types/course";
 import db from "../models";
 
+const EWANT_DEPARTMENT = "校外遠距(EWANT)";
 const PERIOD_ORDER = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G"] as const;
 const PERIOD_INDEX_MAP = PERIOD_ORDER.reduce<Record<string, number>>((acc, period, index) => {
   acc[period] = index;
   return acc;
 }, {});
 
+const getCategoryConditions = (category?: string): any[] => {
+  if (category === "general") {
+    return [{ department: { [Op.like]: "%通識%" } }];
+  }
+  if (category === "university") {
+    return [{
+      [Op.and]: [
+        { department: { [Op.notLike]: "%碩士%" } },
+        { department: { [Op.notLike]: "%通識%" } },
+        { department: { [Op.notLike]: EWANT_DEPARTMENT } },
+      ],
+    }];
+  }
+  if (category === "graduate") {
+    return [{ department: { [Op.like]: "%碩士%" } }];
+  }
+  if (category === "teacher") {
+    return [{ department: { [Op.like]: "%師%" } }];
+  }
+  if (category === "ewant") {
+    return [{ department: EWANT_DEPARTMENT }];
+  }
+  return [];
+};
+
 class CourseRepository {
+  private getCourseOptionWhere = (
+    filters: CourseOptionFilters,
+    excludeEwantWhenUnfiltered = false
+  ): any => {
+    const whereCondition: any = {};
+    const categoryConditions = getCategoryConditions(filters.category);
+
+    if (excludeEwantWhenUnfiltered && (!filters.category || filters.category === "all")) {
+      categoryConditions.push({ department: { [Op.ne]: EWANT_DEPARTMENT } });
+    }
+    if (categoryConditions.length > 0) {
+      whereCondition[Op.and] = categoryConditions;
+    }
+    if (filters.academy) whereCondition.academy = filters.academy;
+    if (filters.semesters && filters.semesters.length > 0) {
+      whereCondition.semester = { [Op.in]: filters.semesters };
+    }
+
+    return whereCondition;
+  };
+
   private getFilteredCourseIdsBySchedule = async (
     weekdays: number[],
     periods: string[]
@@ -68,25 +114,7 @@ class CourseRepository {
     }
 
     // category(tab選項)filter與department有關
-    const categoryConditions: any[] = [];
-    if (search && search.category === "general") {
-      categoryConditions.push({ department: { [Op.like]: "%通識%" } });
-    } else if (search && search.category === "university") {
-      categoryConditions.push({
-        [Op.and]: [
-          { department: { [Op.notLike]: "%碩士%" } },
-          { department: { [Op.notLike]: "%通識%" } },
-          { department: { [Op.notLike]: "校外遠距(EWANT)" } },
-        ]
-      });
-    } else if (search && search.category === "graduate") {
-      categoryConditions.push({ department: { [Op.like]: "%碩士%" } });
-    } else if (search && search.category === "teacher") {
-      categoryConditions.push({ department: { [Op.like]: "%師%" } });
-    }
-    if (search && search.category === "ewant") {
-      categoryConditions.push({ department: "校外遠距(EWANT)" });
-    }
+    const categoryConditions = getCategoryConditions(search?.category);
     if (search && search.department) {
       categoryConditions.push({ department: search.department });
     }
@@ -153,14 +181,10 @@ class CourseRepository {
     return await CourseModel.count();
   }
 
-  async getAllDepartments(): Promise<string[]> {
+  async getAllDepartments(filters: CourseOptionFilters = {}): Promise<string[]> {
     const departments = await CourseModel.findAll({
       attributes: [[db.Sequelize.fn("DISTINCT", db.Sequelize.col("department")), "department"]],
-      where: {
-        department: {
-          [Op.ne]: "校外遠距(EWANT)",
-        },
-      },
+      where: this.getCourseOptionWhere(filters, true),
       raw: true
     });
     const departmentList = departments.map((item: { department: string }) => {
@@ -169,9 +193,10 @@ class CourseRepository {
     return departmentList;
   }
 
-  async getAllAcademies(): Promise<string[]> {
+  async getAllAcademies(filters: CourseOptionFilters = {}): Promise<string[]> {
     const academies = await CourseModel.findAll({
       attributes: [[db.Sequelize.fn("DISTINCT", db.Sequelize.col("academy")), "academy"]],
+      where: this.getCourseOptionWhere(filters, true),
       raw: true
     });
     const academyList = academies

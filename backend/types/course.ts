@@ -71,6 +71,12 @@ export interface CourseSearchParams {
   sortBy?: string;
 }
 
+export interface CourseOptionFilters {
+  category?: string;
+  academy?: string;
+  semesters?: string[];
+}
+
 export interface PaginationParams {
   page: number;
   limit: number;
