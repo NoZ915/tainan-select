@@ -1,5 +1,5 @@
 import TimetableModel from "../models/Timetable";
-import { UniqueConstraintError } from "sequelize";
+import { Transaction, UniqueConstraintError } from "sequelize";
 
 class TimetableRepository {
   async findByUserAndSemester(user_id: number, semester: string): Promise<TimetableModel | null> {
@@ -33,6 +33,18 @@ class TimetableRepository {
   async findByIdAndUser(id: number, user_id: number): Promise<TimetableModel | null> {
     return await TimetableModel.findOne({
       where: { id, user_id },
+    });
+  }
+
+  async findByIdAndUserForUpdate(
+    id: number,
+    user_id: number,
+    transaction: Transaction
+  ): Promise<TimetableModel | null> {
+    return await TimetableModel.findOne({
+      where: { id, user_id },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
     });
   }
 }
