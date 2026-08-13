@@ -107,7 +107,7 @@ class CourseRepository {
     limit,
     offset,
     search,
-  }: PaginationParams): Promise<{ courses: Course[]; total: number }> {
+  }: PaginationParams): Promise<{ courses: CourseModel[]; total: number }> {
     const whereCondition: any = {};
     if (search && search.search) {
       whereCondition[Op.or] = [
