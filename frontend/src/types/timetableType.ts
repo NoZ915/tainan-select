@@ -13,12 +13,22 @@ export interface TimetableCourse {
   department: string
   instructor: string
   room?: string
+  courseTime?: string
 }
 
 export interface TimetableItem {
   course: TimetableCourse
   timeslots: Timeslot[]
 }
+
+export interface TimetableGridCell {
+  courseId: number
+  courseName: string
+  instructor: string
+  room?: string
+}
+
+export type TimetableGrid = Record<string, Partial<Record<number, TimetableGridCell[]>>>
 
 export interface TimetableResponse {
   timetable: {
