@@ -1,20 +1,75 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Stack, Table, Text } from '@mantine/core'
+import { Menu, Stack, Table, Text } from '@mantine/core'
+import { FaExternalLinkAlt, FaTrashAlt } from 'react-icons/fa'
 import periodTimeMap from '../../utils/periodTimeMap'
 import styles from '../../styles/components/Timetable.module.css'
-import { TimetableGrid, WeekdayOption } from './types'
+import { TimetableGrid, TimetableGridCell } from '../../types/timetableType'
+import type { TimetablePeriod } from '../../utils/timetable'
+import { TimetableSlotSelection, WeekdayOption } from './types'
 
 type TimetableGridTableProps = {
-  periodOrder: string[]
+  periodOrder: readonly TimetablePeriod[]
   weekdaysToRender: WeekdayOption[]
   grid: TimetableGrid
+  onCourseClick?: (course: TimetableGridCell) => void
+  onEmptySlotClick?: (slot: TimetableSlotSelection) => void
+  selectedSearchSlot?: TimetableSlotSelection | null
+  isCourseActionDisabled?: boolean
 }
 
 type TimeRange = {
   startMin: number
   endMin: number
 }
+
+type TimetableCourseMenuProps = {
+  course: TimetableGridCell
+  onRemove: (course: TimetableGridCell) => void
+  disabled: boolean
+  className: string
+  children: React.ReactNode
+}
+
+const TimetableCourseMenu: React.FC<TimetableCourseMenuProps> = ({
+  course,
+  onRemove,
+  disabled,
+  className,
+  children,
+}) => (
+  <Menu shadow='md' width={190} position='bottom-start' withinPortal zIndex={1500}>
+    <Menu.Target>
+      <button
+        type='button'
+        className={className}
+        disabled={disabled}
+        aria-label={`開啟「${course.courseName}」課程操作`}
+        title='查看課程操作'
+      >
+        {children}
+      </button>
+    </Menu.Target>
+    <Menu.Dropdown>
+      <Menu.Item
+        component={Link}
+        to={`/course/${course.courseId}`}
+        target='_blank'
+        rel='noopener noreferrer'
+        leftSection={<FaExternalLinkAlt size={13} />}
+      >
+        查看課程評價
+      </Menu.Item>
+      <Menu.Item
+        color='red'
+        leftSection={<FaTrashAlt size={13} />}
+        onClick={() => onRemove(course)}
+      >
+        從課表移除
+      </Menu.Item>
+    </Menu.Dropdown>
+  </Menu>
+)
 
 const parseTimeTokenToMinute = (value: string): number | null => {
   const match = value.match(/(\d{1,2}):(\d{2})/)
@@ -48,7 +103,15 @@ const getCurrentDayAndPeriod = (now: Date): { day: number; period: string | null
   return { day, period }
 }
 
-const TimetableGridTable: React.FC<TimetableGridTableProps> = ({ periodOrder, weekdaysToRender, grid }) => {
+const TimetableGridTable: React.FC<TimetableGridTableProps> = ({
+  periodOrder,
+  weekdaysToRender,
+  grid,
+  onCourseClick,
+  onEmptySlotClick,
+  selectedSearchSlot = null,
+  isCourseActionDisabled = false,
+}) => {
   const [now, setNow] = useState(() => new Date())
 
   useEffect(() => {
@@ -69,7 +132,7 @@ const TimetableGridTable: React.FC<TimetableGridTableProps> = ({ periodOrder, we
   }, [currentSlot, grid])
 
   const nowTimeLabel = currentSlot.period
-    ? `第 ${currentSlot.period} 節　${getPeriodTimeLines(currentSlot.period).start} ～ ${getPeriodTimeLines(currentSlot.period).end}`
+    ? `第 ${currentSlot.period} 節 ${getPeriodTimeLines(currentSlot.period).start} ～ ${getPeriodTimeLines(currentSlot.period).end}`
     : null
 
   return (
@@ -85,9 +148,20 @@ const TimetableGridTable: React.FC<TimetableGridTableProps> = ({ periodOrder, we
                 {nowCourses.map((c, i) => (
                   <span key={c.courseId}>
                     {i > 0 && <span className={styles.nowSep}>/</span>}
-                    <Link to={`/course/${c.courseId}`} className={styles.nowCourseLink}>
-                      {c.courseName}
-                    </Link>
+                    {onCourseClick ? (
+                      <TimetableCourseMenu
+                        course={c}
+                        onRemove={onCourseClick}
+                        disabled={isCourseActionDisabled}
+                        className={styles.nowCourseButton}
+                      >
+                        {c.courseName}
+                      </TimetableCourseMenu>
+                    ) : (
+                      <Link to={`/course/${c.courseId}`} className={styles.nowCourseLink}>
+                        {c.courseName}
+                      </Link>
+                    )}
                   </span>
                 ))}
               </span>
@@ -109,16 +183,16 @@ const TimetableGridTable: React.FC<TimetableGridTableProps> = ({ periodOrder, we
           </colgroup>
           <thead>
             <tr>
-              <th aria-label='time-column' />
+              <th scope='col' aria-label='節次' />
               {weekdaysToRender.map((day) => (
-                <th key={day.value}>星期{day.label}</th>
+                <th key={day.value} scope='col'>星期{day.label}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {periodOrder.map((period) => (
               <tr key={period}>
-                <td className={styles.timeColumn}>
+                <th scope='row' className={styles.timeColumn}>
                   <Text size='sm' fw={700} className={styles.periodNumber}>
                     {period}
                   </Text>
@@ -130,35 +204,74 @@ const TimetableGridTable: React.FC<TimetableGridTableProps> = ({ periodOrder, we
                       {getPeriodTimeLines(period).end}
                     </Text>
                   </Stack>
-                </td>
+                </th>
                 {weekdaysToRender.map((day) => {
                   const slotCourses = grid[period]?.[day.value] ?? []
                   const hasConflict = slotCourses.length > 1
                   const isCurrentSlot = currentSlot.day === day.value && currentSlot.period === period
+                  const isSelectedSearchSlot = selectedSearchSlot?.dayOfWeek === day.value
+                    && selectedSearchSlot.period === period
+                  const isInteractiveEmptyCell = slotCourses.length === 0 && Boolean(onEmptySlotClick)
                   const cellClassName = [
                     hasConflict ? styles.conflictCell : styles.normalCell,
                     isCurrentSlot ? styles.currentTimeCell : '',
+                    isSelectedSearchSlot ? styles.selectedSearchCell : '',
+                    isInteractiveEmptyCell ? styles.interactiveEmptyCell : '',
                   ].filter(Boolean).join(' ')
                   return (
                     <td key={`${period}-${day.value}`} className={cellClassName}>
                       {slotCourses.length === 0 ? (
-                        <Text c='dimmed' size='xs'>-</Text>
+                        onEmptySlotClick ? (
+                          <button
+                            type='button'
+                            className={styles.emptySlotButton}
+                            onClick={() => onEmptySlotClick({
+                              dayOfWeek: day.value,
+                              period,
+                            })}
+                            disabled={isCourseActionDisabled}
+                            aria-label={`搜尋星期${day.label}第 ${period} 節的課程`}
+                            title={`搜尋星期${day.label}第 ${period} 節的課程`}
+                          >
+                            <span aria-hidden='true' className={styles.emptySlotIcon}>＋</span>
+                          </button>
+                        ) : (
+                          <Text c='dimmed' size='xs'>-</Text>
+                        )
                       ) : (
                         <Stack gap={4}>
-                          {slotCourses.map((course) => (
-                            <Link
-                              key={`${course.courseId}-${course.courseName}`}
-                              to={`/course/${course.courseId}`}
-                              className={styles.tableCourseLink}
-                            >
-                              <Text size='sm' fw={500} className={styles.courseNameText}>
-                                {course.courseName}
-                              </Text>
-                              <Text size='xs' c='dimmed' className={styles.courseMetaText}>
-                                {[course.instructor, course.room].filter(Boolean).join('・')}
-                              </Text>
-                            </Link>
-                          ))}
+                          {slotCourses.map((course) => {
+                            const courseContent = (
+                              <>
+                                <Text component='span' size='sm' fw={500} className={styles.courseNameText}>
+                                  {course.courseName}
+                                </Text>
+                                <Text component='span' size='xs' c='dimmed' className={styles.courseMetaText}>
+                                  {[course.instructor, course.room].filter(Boolean).join('・')}
+                                </Text>
+                              </>
+                            )
+
+                            return onCourseClick ? (
+                              <TimetableCourseMenu
+                                key={`${course.courseId}-${course.courseName}`}
+                                course={course}
+                                onRemove={onCourseClick}
+                                disabled={isCourseActionDisabled}
+                                className={styles.tableCourseButton}
+                              >
+                                {courseContent}
+                              </TimetableCourseMenu>
+                            ) : (
+                              <Link
+                                key={`${course.courseId}-${course.courseName}`}
+                                to={`/course/${course.courseId}`}
+                                className={styles.tableCourseLink}
+                              >
+                                {courseContent}
+                              </Link>
+                            )
+                          })}
                         </Stack>
                       )}
                     </td>

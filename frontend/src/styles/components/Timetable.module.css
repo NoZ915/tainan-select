@@ -291,6 +291,7 @@
 }
 
 .courseNameText {
+  display: block;
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -299,6 +300,7 @@
 }
 
 .courseMetaText {
+  display: block;
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;

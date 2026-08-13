@@ -4,6 +4,7 @@ import { notifications } from '@mantine/notifications'
 import { useQueryClient } from '@tanstack/react-query'
 
 import periodTimeMap from '../../utils/periodTimeMap'
+import type { TimetablePeriod } from '../../utils/timetable'
 import { useAuthStore } from '../../stores/authStore'
 import { useGetSemesters } from '../../hooks/semesters/useGetSemesters'
 import { useGetTimetable } from '../../hooks/timetables/useGetTimetable'
@@ -24,7 +25,7 @@ import TimetableCourseLists from './TimetableCourseLists'
 import TimetableGridTable from './TimetableGridTable'
 import { SelectableInterestCourse, TimetableGrid, Weekday, WeekdayOption } from './types'
 
-type PeriodKey = keyof typeof periodTimeMap
+type PeriodKey = TimetablePeriod
 
 const weekdays: WeekdayOption[] = [
   { label: '一', value: 1 },
