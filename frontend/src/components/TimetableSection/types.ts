@@ -21,8 +21,8 @@ export type SelectableInterestCourse = {
   course_name: string
   semester: string
   instructor: string
-  course_room?: string
-  course_time?: string
+  course_room?: string | null
+  course_time?: string | null
 }
 
 export type AddedTimetableItem = AddedCourseItem
