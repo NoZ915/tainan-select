@@ -1,10 +1,10 @@
 import { Transaction } from "sequelize";
 import InterestModel from "../models/Interest";
-import { AllInterestsResponse, Interest } from "../types/interest";
+import { AllInterestsResponse } from "../types/interest";
 import CourseModel from "../models/Course";
 
 class InterestRepository {
-  async findInterest(user_id: number, course_id: number): Promise<Interest | null> {
+  async findInterest(user_id: number, course_id: number): Promise<InterestModel | null> {
     return await InterestModel.findOne({
       where: { user_id, course_id }
     })
@@ -24,6 +24,7 @@ class InterestRepository {
   async getAllInterests(user_id: number, limit: number, offset: number): Promise<AllInterestsResponse[]> {
     const interests = await InterestModel.findAll({
       where: { user_id },
+      attributes: ["id", "course_id", "created_at"],
       limit,
       offset,
       order: [['created_at', 'DESC']],
@@ -48,6 +49,7 @@ class InterestRepository {
   async getAllInterestsByUserId(user_id: number): Promise<AllInterestsResponse[]> {
     const interests = await InterestModel.findAll({
       where: { user_id },
+      attributes: ["id", "course_id", "created_at"],
       order: [["created_at", "DESC"]],
       include: [
         {
