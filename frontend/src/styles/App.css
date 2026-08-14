@@ -51,3 +51,14 @@ body {
 .read-the-docs {
   color: #888;
 }
+
+/* iOS Safari/Chrome auto-zooms on focus when an input's font-size is under 16px,
+   and nothing resets that zoom afterward — this keeps every input/select/textarea
+   (including Mantine's Select search field) at or above the threshold on mobile. */
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
