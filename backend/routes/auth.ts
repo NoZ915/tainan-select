@@ -9,6 +9,7 @@ import {
   getOAuthOwner,
   getOAuthStateCookieName,
   getOAuthStateCookieOptions,
+  isOAuthStartRateLimited,
 } from "../utils/oauthStateStore";
 
 const router: Router = express.Router();
@@ -20,6 +21,11 @@ router.get(
   (req, res, next) => {
     if (!getOAuthOwner(req)) {
       res.status(400).json({ message: "無效的 OAuth 登入識別碼" });
+      return;
+    }
+
+    if (isOAuthStartRateLimited(req.ip ?? "")) {
+      res.status(429).json({ message: "登入請求過於頻繁，請稍後再試。" });
       return;
     }
 

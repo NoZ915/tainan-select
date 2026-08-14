@@ -7,6 +7,9 @@ const MAX_OAUTH_ATTEMPTS = 10_000;
 const OWNER_PATTERN = /^[A-Za-z0-9-]{20,128}$/;
 const isProd = process.env.NODE_ENV === "production";
 
+const OAUTH_START_RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const OAUTH_START_RATE_LIMIT_MAX = 10;
+
 type StoreCallback = OAuth2Strategy.StateStoreStoreCallback;
 type VerifyCallback = OAuth2Strategy.StateStoreVerifyCallback;
 type StateMetadata = OAuth2Strategy.Metadata;
@@ -26,6 +29,9 @@ export type OAuthAttemptResult = {
 
 const attemptsByStateHash = new Map<string, OAuthAttempt>();
 const stateHashByOwnerHash = new Map<string, string>();
+
+type RateLimitWindow = { count: number; windowStart: number };
+const oauthStartAttemptsByIp = new Map<string, RateLimitWindow>();
 
 const hashValue = (value: string): string =>
   createHash("sha256").update(value).digest("hex");
@@ -50,9 +56,43 @@ const cleanupExpiredAttempts = (now = Date.now()): void => {
   }
 };
 
+// 淘汰最舊的待處理 attempt，避免容量上限被未登入使用者當成全域阻斷開關；
+// 已進入 processing／completed 的 attempt 保留給正在完成的登入流程。
+const evictOldestPendingAttempt = (): boolean => {
+  for (const attempt of attemptsByStateHash.values()) {
+    if (attempt.status === "pending") {
+      deleteAttempt(attempt);
+      return true;
+    }
+  }
+  return false;
+};
+
+const cleanupExpiredRateLimitWindows = (now = Date.now()): void => {
+  for (const [ip, window] of oauthStartAttemptsByIp) {
+    if (now - window.windowStart >= OAUTH_START_RATE_LIMIT_WINDOW_MS) {
+      oauthStartAttemptsByIp.delete(ip);
+    }
+  }
+};
+
+export const isOAuthStartRateLimited = (ip: string): boolean => {
+  const now = Date.now();
+  cleanupExpiredRateLimitWindows(now);
+
+  const window = oauthStartAttemptsByIp.get(ip);
+  if (!window || now - window.windowStart >= OAUTH_START_RATE_LIMIT_WINDOW_MS) {
+    oauthStartAttemptsByIp.set(ip, { count: 1, windowStart: now });
+    return false;
+  }
+
+  window.count += 1;
+  return window.count > OAUTH_START_RATE_LIMIT_MAX;
+};
+
 const createOAuthAttempt = (req: Request): { state: string; stateHash: string } => {
   cleanupExpiredAttempts();
-  if (attemptsByStateHash.size >= MAX_OAUTH_ATTEMPTS) {
+  if (attemptsByStateHash.size >= MAX_OAUTH_ATTEMPTS && !evictOldestPendingAttempt()) {
     throw new Error("OAUTH_STATE_CAPACITY_REACHED");
   }
 
