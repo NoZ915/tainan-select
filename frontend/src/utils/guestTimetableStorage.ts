@@ -184,7 +184,7 @@ export const parseGuestTimetableStorage = (
   } catch (error) {
     throw new GuestTimetableStorageError(
       'PARSE_FAILED',
-      '本機課表資料已損毀，暫時無法讀取或修改，以免覆蓋其他學期的資料。',
+      '裝置上的課表資料已損毀，暫時無法讀取或修改，以免覆蓋其他學期的資料。',
       error,
     )
   }
@@ -192,7 +192,7 @@ export const parseGuestTimetableStorage = (
   if (!isGuestTimetableStorage(parsedValue)) {
     throw new GuestTimetableStorageError(
       'PARSE_FAILED',
-      '本機課表資料格式不相容（可能來自較新版本），暫時無法讀取或修改，以免覆蓋其他學期的資料。',
+      '裝置上的課表資料格式不相容（可能來自較新版本），暫時無法讀取或修改，以免覆蓋其他學期的資料。',
     )
   }
 
@@ -207,7 +207,7 @@ export const readGuestTimetableRawValue = (): string | null => {
   } catch (error) {
     throw new GuestTimetableStorageError(
       'READ_FAILED',
-      '無法讀取本機課表，請確認瀏覽器是否允許使用本機儲存空間。',
+      '無法讀取裝置上的課表，請確認瀏覽器是否允許儲存資料。',
       error,
     )
   }
@@ -267,7 +267,7 @@ const assertRawValueUnchanged = (expectedRawValue: string | null): void => {
 
   throw new GuestTimetableStorageError(
     'CONCURRENT_MODIFICATION',
-    '本機課表已在其他分頁變更，請重新嘗試。',
+    '裝置上的課表已在其他分頁變更，請重新嘗試。',
   )
 }
 
@@ -278,7 +278,7 @@ const writeGuestTimetable = (
   if (typeof window === 'undefined') {
     throw new GuestTimetableStorageError(
       'WRITE_FAILED',
-      '目前環境無法保存本機課表。',
+      '目前環境無法保存裝置上的課表。',
     )
   }
 
@@ -289,7 +289,7 @@ const writeGuestTimetable = (
   } catch (error) {
     throw new GuestTimetableStorageError(
       'WRITE_FAILED',
-      '無法保存本機課表，請確認瀏覽器是否允許使用本機儲存空間。',
+      '無法保存裝置上的課表，請確認瀏覽器是否允許儲存資料。',
       error,
     )
   }
@@ -302,7 +302,7 @@ const assertValidGuestTimetableItem = (item: GuestTimetableItem): void => {
 
   throw new GuestTimetableStorageError(
     'INVALID_ITEM',
-    '課程資料格式不正確，無法加入本機課表。',
+    '課程資料格式不正確，無法加入裝置上的課表。',
   )
 }
 
@@ -441,7 +441,7 @@ export const clearGuestTimetable = (
   if (typeof window === 'undefined') {
     throw new GuestTimetableStorageError(
       'REMOVE_FAILED',
-      '目前環境無法清除本機課表。',
+      '目前環境無法清除裝置上的課表。',
     )
   }
 
@@ -461,7 +461,7 @@ export const clearGuestTimetable = (
   } catch (error) {
     throw new GuestTimetableStorageError(
       'REMOVE_FAILED',
-      '無法清除本機課表，請確認瀏覽器是否允許使用本機儲存空間。',
+      '無法清除裝置上的課表，請確認瀏覽器是否允許儲存資料。',
       error,
     )
   }
@@ -506,7 +506,7 @@ export const swapGuestCourse = (
     if (conflictsChanged) {
       throw new GuestTimetableStorageError(
         'CONFLICTS_CHANGED',
-        '本機課表已在其他分頁變更，請重新確認衝堂課程。',
+        '裝置上的課表已在其他分頁變更，請重新確認衝堂課程。',
       )
     }
 

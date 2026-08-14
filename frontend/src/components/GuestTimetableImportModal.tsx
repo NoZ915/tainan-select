@@ -230,8 +230,8 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
         setClearAllSnapshot(null)
         setPhase('idle')
         notifications.show({
-          title: '本機課表已變更',
-          message: '其他分頁已更新本機課表，請重新確認後再清除。',
+          title: '裝置上的課表已變更',
+          message: '其他分頁已更新裝置上的課表，請重新確認後再清除。',
           color: 'orange',
         })
         return
@@ -241,14 +241,14 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
       setClearAllSnapshot(null)
       setPhase('idle')
       notifications.show({
-        title: clearResult === 'cleared' ? '已清除本機課表' : '本機課表已清空',
+        title: clearResult === 'cleared' ? '已清除裝置上的課表' : '裝置上的課表已清空',
         message: clearResult === 'cleared'
-          ? '所有訪客學期的本機課表皆已清除。'
-          : '本機課表已在其他分頁清空。',
+          ? '裝置上所有訪客學期的課表皆已清除。'
+          : '裝置上的課表已在其他分頁清空。',
         color: clearResult === 'cleared' ? 'green' : 'blue',
       })
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : '無法清除本機課表，請稍後再試。')
+      setActionError(error instanceof Error ? error.message : '無法清除裝置上的課表，請稍後再試。')
     } finally {
       clearInProgressRef.current = false
       setIsClearSubmitting(false)
@@ -361,14 +361,14 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
             }
             if (!removed) {
               cleanupErrors.push(
-                `「${item.course.name}」的本機快照已由其他分頁變更，因此未移除其他資料。`,
+                `「${item.course.name}」已在其他分頁被變更過，因此未移除裝置上的資料。`,
               )
             }
           } catch (error) {
             cleanupErrors.push(
               error instanceof Error
                 ? error.message
-                : `「${item.course.name}」已保存到帳號，但無法清除本機資料。`,
+                : `「${item.course.name}」已保存到帳號，但無法清除裝置上的資料。`,
             )
           }
         } catch (error) {
@@ -438,7 +438,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
     setImportConflictDetails(nextConflictDetails)
     setActionError([
       ...cleanupErrors,
-      ...(sessionChanged ? ['登入帳號已變更，匯入已停止；尚未處理的本機課程會繼續保留。'] : []),
+      ...(sessionChanged ? ['登入帳號已變更，匯入已停止；尚未處理的課程會繼續保留在裝置上。'] : []),
     ].join(' ') || null)
     setPhase('result')
   }
@@ -469,7 +469,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
         : currentPendingSwap
     ))
     notifications.show({
-      title: '本機課程已變更',
+      title: '裝置上的課程已變更',
       message: `「${conflictDetail.courseName}」已由其他分頁移除或重新加入，本次不會處理。`,
       color: 'blue',
     })
@@ -511,7 +511,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
           requestAuthSessionEpoch,
         )
         if (!isRequestSessionCurrent()) {
-          setActionError('登入帳號已變更；帳號課表可能已更新，本機待處理資料會繼續保留。')
+          setActionError('登入帳號已變更；帳號課表可能已更新，裝置上尚未處理的資料會繼續保留。')
           return
         }
 
@@ -522,18 +522,18 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
             isRequestSessionCurrent,
           )
           if (!removed && !isRequestSessionCurrent()) {
-            setActionError('登入帳號已變更；帳號課表可能已更新，本機待處理資料會繼續保留。')
+            setActionError('登入帳號已變更；帳號課表可能已更新，裝置上尚未處理的資料會繼續保留。')
             return
           }
           if (!removed) {
             localSnapshotChanged = true
-            setActionError('帳號課表已更新；本機快照已由其他分頁變更，因此未移除其他資料。')
+            setActionError('帳號課表已更新；這門課在其他分頁被變更過，因此未移除裝置上的資料。')
           }
         } catch (error) {
           setActionError(
             error instanceof Error
-              ? `課程已加入帳號課表，但本機資料清除失敗：${error.message}`
-              : '課程已加入帳號課表，但本機資料清除失敗，請再試一次。',
+              ? `課程已加入帳號課表，但裝置上的資料清除失敗：${error.message}`
+              : '課程已加入帳號課表，但裝置上的資料清除失敗，請再試一次。',
           )
           return
         }
@@ -557,8 +557,8 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
         notifications.show({
           title: result.alreadyExists ? '課程已在課表中' : '已加入課表',
           message: localSnapshotChanged
-            ? `「${conflictDetail.courseName}」已完成帳號處理，其他分頁的本機資料未受影響。`
-            : `「${conflictDetail.courseName}」已完成處理，本機待處理資料已清除。`,
+            ? `「${conflictDetail.courseName}」已完成帳號處理，裝置上其他分頁的資料未受影響。`
+            : `「${conflictDetail.courseName}」已完成處理，裝置上尚未處理的資料已清除。`,
           color: result.alreadyExists ? 'blue' : 'green',
         })
       } catch (error) {
@@ -591,7 +591,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
         return
       }
       if (hasApiErrorCode(error, 'SESSION_CHANGED')) {
-        setActionError('登入帳號已變更，請重新開啟本機課表匯入流程。')
+        setActionError('登入帳號已變更，請重新開啟裝置上的課表匯入流程。')
         return
       }
 
@@ -653,7 +653,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
       )
       if (!isRequestSessionCurrent()) {
         setPendingSwap(null)
-        setActionError('登入帳號已變更；帳號課表可能已完成交換，本機待處理資料會繼續保留。')
+        setActionError('登入帳號已變更；帳號課表可能已完成交換，裝置上尚未處理的資料會繼續保留。')
         return
       }
 
@@ -664,7 +664,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
         )
         if (!removed && !isRequestSessionCurrent()) {
           setPendingSwap(null)
-          setActionError('登入帳號已變更；帳號課表可能已完成交換，本機待處理資料會繼續保留。')
+          setActionError('登入帳號已變更；帳號課表可能已完成交換，裝置上尚未處理的資料會繼續保留。')
           return
         }
         if (!removed) {
@@ -673,12 +673,12 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
       } catch (error) {
         setActionError(
           error instanceof Error
-            ? `帳號課表已完成交換，但本機資料清除失敗：${error.message}`
-            : '帳號課表已完成交換，但本機資料清除失敗，請再試一次。',
+            ? `帳號課表已完成交換，但裝置上的資料清除失敗：${error.message}`
+            : '帳號課表已完成交換，但裝置上的資料清除失敗，請再試一次。',
         )
         notifications.show({
           title: '課表已交換',
-          message: '帳號課表已更新，但本機資料尚未清除。',
+          message: '帳號課表已更新，但裝置上的資料尚未清除。',
           color: 'orange',
         })
         setPendingSwap(null)
@@ -703,7 +703,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
       }))
       setActionError([
         ...(localSnapshotChanged
-          ? ['帳號課表已完成交換；本機快照已由其他分頁變更，因此未移除其他資料。']
+          ? ['帳號課表已完成交換；這門課在其他分頁被變更過，因此未移除裝置上的資料。']
           : []),
         ...(timetableRefreshFailed
           ? ['課表畫面更新失敗，請重新整理後確認。']
@@ -712,9 +712,9 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
       notifications.show({
         title: result.alreadyExists ? '課程已在課表中' : '已完成交換',
         message: localSnapshotChanged
-          ? `「${pendingSwap.courseName}」已完成帳號處理，其他分頁的本機資料未受影響。`
+          ? `「${pendingSwap.courseName}」已完成帳號處理，裝置上其他分頁的資料未受影響。`
           : result.alreadyExists
-            ? `「${pendingSwap.courseName}」已在帳號課表中，本機待處理資料已清除。`
+            ? `「${pendingSwap.courseName}」已在帳號課表中，裝置上尚未處理的資料已清除。`
             : `已移除 ${result.removedCourseIds.length} 門衝堂課，並加入「${pendingSwap.courseName}」。`,
         color: result.alreadyExists ? 'blue' : 'green',
       })
@@ -727,7 +727,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
       }
       if (hasApiErrorCode(error, 'SESSION_CHANGED')) {
         setPendingSwap(null)
-        setActionError('登入帳號已變更，請重新開啟本機課表匯入流程。')
+        setActionError('登入帳號已變更，請重新開啟裝置上的課表匯入流程。')
         return
       }
       if (hasApiErrorCode(error, 'CONFLICTS_CHANGED') && pendingSwap) {
@@ -768,10 +768,10 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
   }
 
   const modalTitle = visiblePhase === 'confirm-clear'
-    ? '確認清除本機課表'
+    ? '確認清除裝置上的課表'
     : visiblePhase === 'result'
-      ? '本機課表匯入結果'
-      : '保存本機課表'
+      ? '裝置上的課表匯入結果'
+      : '保存裝置上的課表'
 
   return (
     <>
@@ -793,7 +793,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
           ) : (
             <>
               <Text>
-                偵測到本機課表，共 {guestSummary.totalCourses} 門課、涵蓋 {guestSummary.semesterCount} 個學期。
+                偵測到裝置上的課表，共 {guestSummary.totalCourses} 門課、涵蓋 {guestSummary.semesterCount} 個學期。
               </Text>
               <Text size='sm' c='dimmed'>
                 你可以保存到帳號以跨裝置同步，系統不會覆蓋或自動移除帳號內既有課程。
@@ -812,7 +812,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
                 setPhase('confirm-clear')
               }}
             >
-              清除本機課表
+              清除裝置上的課表
             </Button>
             <Button
               disabled={guestStorageError !== null}
@@ -826,7 +826,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
 
       {visiblePhase === 'confirm-clear' && (
         <Stack gap='md'>
-          <Text>確定要清除所有訪客學期的本機課表嗎？此動作不會影響帳號課表，但無法復原。</Text>
+          <Text>確定要清除這個裝置上所有訪客學期的課表嗎？此動作不會影響帳號課表，但無法復原。</Text>
           {actionError && <Text size='sm' c='red'>{actionError}</Text>}
           <Group justify='flex-end'>
             <Button
@@ -854,7 +854,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
       {visiblePhase === 'importing' && (
         <Group justify='center' py='lg'>
           <Loader size='sm' />
-          <Text>正在保存本機課表，請稍候...</Text>
+          <Text>正在保存裝置上的課表，請稍候...</Text>
         </Group>
       )}
 
@@ -864,12 +864,12 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
           <Text>已存在：{importSummary.alreadyExists}</Text>
           <Text>發生衝堂：{importSummary.conflicted}</Text>
           <Text>匯入失敗：{importSummary.failed}</Text>
-          <Text>本機快照已變更：{importSummary.skipped}</Text>
+          <Text>裝置資料已變更：{importSummary.skipped}</Text>
           {importConflictDetails.length > 0 && (
             <Stack gap='xs' mt='xs'>
               <div>
                 <Text fw={700}>衝堂明細</Text>
-                <Text size='xs' c='dimmed'>這些課程仍保留在本機，可直接選擇是否替換帳號內的衝堂課程。</Text>
+                <Text size='xs' c='dimmed'>這些課程仍保留在裝置上，可直接選擇是否替換帳號內的衝堂課程。</Text>
               </div>
               {importConflictDetails.map((conflictDetail) => (
                 <Card

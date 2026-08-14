@@ -92,7 +92,7 @@ const CourseTimetableAction: React.FC<CourseTimetableActionProps> = ({
   else if (!isAuthResolved) buttonLabel = '確認登入狀態...'
   else if (isLoading || isCheckingAccountItems) buttonLabel = '確認課表狀態...'
   else if (isAuthenticated && hasAccountItemsError) buttonLabel = '重新載入課表狀態'
-  else if (!isAuthenticated && guestTimetable.error) buttonLabel = '無法讀取本機課表'
+  else if (!isAuthenticated && guestTimetable.error) buttonLabel = '無法讀取裝置上的課表'
   else if (isAlreadyAdded) buttonLabel = `從 ${courseData?.semester ?? ''} 課表移除`
 
   const handleButtonClick = (): void => {
@@ -166,14 +166,14 @@ const CourseTimetableAction: React.FC<CourseTimetableActionProps> = ({
       )
       notifications.show({
         title: removed ? '已移除課程' : '課程已不在課表中',
-        message: removed ? '課程已從本機課表移除' : '本機課表不需要再調整',
+        message: removed ? '課程已從裝置上的課表移除' : '裝置上的課表不需要再調整',
         color: removed ? 'green' : 'blue',
       })
       setRemoveConfirmation(null)
     } catch (error) {
       notifications.show({
         title: '移除失敗',
-        message: error instanceof Error ? error.message : '無法更新本機課表',
+        message: error instanceof Error ? error.message : '無法更新裝置上的課表',
         color: 'red',
       })
     } finally {

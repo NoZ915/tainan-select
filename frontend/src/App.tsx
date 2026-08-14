@@ -150,7 +150,7 @@ function App() {
       {hasCurrentAuthError && (
         <Alert color='red' title='無法確認登入狀態' radius={0}>
           <Group justify='space-between' align='center' gap='sm'>
-            <Text size='sm'>已登入狀態不會因連線異常切換成訪客；訪客仍可查看本機課表。</Text>
+            <Text size='sm'>已登入狀態不會因連線異常切換成訪客；訪客仍可查看裝置上的課表。</Text>
             <Button
               variant='light'
               color='red'

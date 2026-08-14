@@ -256,7 +256,7 @@ const Timetable: React.FC = () => {
       if (removed) {
         notifications.show({
           title: '已移除課程',
-          message: '課程已從本機課表移除',
+          message: '課程已從裝置上的課表移除',
           color: 'green',
         })
       }
@@ -264,7 +264,7 @@ const Timetable: React.FC = () => {
     } catch (error) {
       notifications.show({
         title: '移除失敗',
-        message: error instanceof Error ? error.message : '無法更新本機課表',
+        message: error instanceof Error ? error.message : '無法更新裝置上的課表',
         color: 'red',
       })
     } finally {
@@ -284,9 +284,9 @@ const Timetable: React.FC = () => {
       if (clearResult !== 'cleared') {
         setClearGuestSemesterSnapshot(null)
         notifications.show({
-          title: clearResult === 'already-empty' ? '課表已清空' : '本機課表已變更',
+          title: clearResult === 'already-empty' ? '課表已清空' : '裝置上的課表已變更',
           message: clearResult === 'already-empty'
-            ? '這學期的本機課表已在其他分頁清空。'
+            ? '裝置上這學期的課表已在其他分頁清空。'
             : '其他分頁已更新這學期的課表，請重新確認後再清空。',
           color: clearResult === 'already-empty' ? 'blue' : 'orange',
         })
@@ -294,14 +294,14 @@ const Timetable: React.FC = () => {
       }
       notifications.show({
         title: '已清空課表',
-        message: `已清空 ${clearGuestSemesterSnapshot.semester} 的本機課表，其他學期不受影響。`,
+        message: `已清空裝置上 ${clearGuestSemesterSnapshot.semester} 的課表，其他學期不受影響。`,
         color: 'green',
       })
       setClearGuestSemesterSnapshot(null)
     } catch (error) {
       notifications.show({
         title: '清空失敗',
-        message: error instanceof Error ? error.message : '無法清空本機課表',
+        message: error instanceof Error ? error.message : '無法清空裝置上的課表',
         color: 'red',
       })
     } finally {
@@ -336,15 +336,15 @@ const Timetable: React.FC = () => {
           <Text fw={800} size='sm'>
             {isAuthenticated
               ? guestTimetable.error
-                ? '無法讀取本機課表'
-                : `本機還有 ${guestTimetable.summary.totalCourses} 門課尚未處理`
-              : '這份課表保存在此裝置'}
+                ? '無法讀取裝置上的課表'
+                : `這個裝置上還有 ${guestTimetable.summary.totalCourses} 門課尚未處理`
+              : '這份課表目前只存在這個裝置'}
           </Text>
           <Text size='xs' c='dimmed'>
             {isAuthenticated
               ? guestTimetable.error?.message
-                ?? `涵蓋 ${guestTimetable.summary.semesterCount} 個學期，可隨時保存到帳號或清除本機資料。`
-              : '訪客模式不會寫入帳號；登入後可選擇保存，並跨裝置同步。'}
+                ?? `涵蓋 ${guestTimetable.summary.semesterCount} 個學期，可隨時保存到帳號，或清除裝置上的資料。`
+              : '還沒有登入，所以只有這個瀏覽器看得到；登入後可保存到帳號，換裝置也能查看。'}
           </Text>
         </div>
         {isAuthenticated
@@ -355,7 +355,7 @@ const Timetable: React.FC = () => {
             onClick={requestGuestTimetableImportPrompt}
             className={styles.localTimetableNoticeAction}
           >
-            {guestTimetable.error ? '重新檢查本機課表' : '處理本機課表'}
+            {guestTimetable.error ? '重新檢查裝置上的課表' : '處理裝置上的課表'}
           </Button>
         )}
       </div>
@@ -380,7 +380,7 @@ const Timetable: React.FC = () => {
         opened={clearGuestSemesterSnapshot !== null}
         onClose={() => setClearGuestSemesterSnapshot(null)}
         title='清空目前學期課表？'
-        message={`只會清空 ${clearGuestSemesterSnapshot?.semester ?? '目前學期'} 的本機課表，不影響其他學期或收藏資料。`}
+        message={`只會清空裝置上 ${clearGuestSemesterSnapshot?.semester ?? '目前學期'} 的課表，不影響其他學期或收藏資料。`}
         confirmText='清空課表'
         cancelText='取消'
         loading={isGuestMutationPending}
@@ -414,7 +414,7 @@ const Timetable: React.FC = () => {
 
         {guestTimetable.error && !isAuthenticated && (
           <div className={`${styles.alert} ${styles.alertRed}`}>
-            <Text fw={700} size='sm' className={styles.alertTitle}>無法讀取本機課表</Text>
+            <Text fw={700} size='sm' className={styles.alertTitle}>無法讀取裝置上的課表</Text>
             <Text size='sm'>{guestTimetable.error.message}</Text>
           </div>
         )}

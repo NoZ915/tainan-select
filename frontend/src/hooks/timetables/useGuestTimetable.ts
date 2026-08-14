@@ -80,7 +80,7 @@ export const useGuestTimetable = (): UseGuestTimetableResult => {
         storage: createEmptyGuestTimetableStorage(),
         error: new GuestTimetableStorageError(
           'READ_FAILED',
-          '無法讀取本機課表，請確認瀏覽器是否允許使用本機儲存空間。',
+          '無法讀取裝置上的課表，請確認瀏覽器是否允許儲存資料。',
         ),
       }
     }
@@ -97,7 +97,7 @@ export const useGuestTimetable = (): UseGuestTimetableResult => {
           ? error
           : new GuestTimetableStorageError(
             'PARSE_FAILED',
-            '本機課表資料無法讀取，暫時無法修改，以免覆蓋其他學期的資料。',
+            '裝置上的課表資料無法讀取，暫時無法修改，以免覆蓋其他學期的資料。',
             error,
           ),
       }
