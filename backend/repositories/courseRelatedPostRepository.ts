@@ -198,9 +198,10 @@ class CourseRelatedPostRepository {
     });
   }
 
-  async deleteById(id: number): Promise<number> {
+  async deleteById(id: number, transaction?: Transaction): Promise<number> {
     return await CourseRelatedPostModel.destroy({
       where: { id },
+      transaction,
     });
   }
 }
