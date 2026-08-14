@@ -1,30 +1,36 @@
-﻿import { useEffect, useMemo, useState } from 'react'
-import { Collapse, Stack, Text } from '@mantine/core'
+import { useEffect, useMemo, useState } from 'react'
+import { Button, Collapse, Stack, Text } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { useQueryClient } from '@tanstack/react-query'
+import { FaLaptop } from 'react-icons/fa'
 
-import periodTimeMap from '../../utils/periodTimeMap'
 import { useAuthStore } from '../../stores/authStore'
 import { useGetSemesters } from '../../hooks/semesters/useGetSemesters'
 import { useGetTimetable } from '../../hooks/timetables/useGetTimetable'
 import { useRemoveTimetableCourse } from '../../hooks/timetables/useRemoveTimetableCourse'
-import { useAddTimetableCourse } from '../../hooks/timetables/useAddTimetableCourse'
-import { useGetTimetableInterestOptions } from '../../hooks/timetables/useGetTimetableInterestOptions'
 import { useGetAllTimetableItems } from '../../hooks/timetables/useGetAllTimetableItems'
-import { AddedCourseItem, TimetableConflict, TimetableItem } from '../../types/timetableType'
-import { swapTimetableCourse } from '../../apis/timetableAPI'
-import { ApiError } from '../../apis/axiosInstance'
-import { QUERY_KEYS } from '../../hooks/queryKeys'
+import { useGuestTimetable } from '../../hooks/timetables/useGuestTimetable'
+import { AddedCourseItem, TimetableGridCell, TimetableItem } from '../../types/timetableType'
+import {
+  buildTimetableGrid,
+  countMissingTimeslotCourses,
+  hasWeekendCourses,
+  isEwantCourse,
+  TIMETABLE_PERIOD_ORDER,
+} from '../../utils/timetable'
+import { getUserCacheScope } from '../../utils/userCacheScope'
 import styles from '../../styles/components/Timetable.module.css'
-import AuthButton from '../AuthButton'
+import ConfirmModal from '../ConfirmModal'
 
-import SwapConflictModal from './SwapConflictModal'
 import TimetableHeader from './TimetableHeader'
 import TimetableCourseLists from './TimetableCourseLists'
 import TimetableGridTable from './TimetableGridTable'
-import { SelectableInterestCourse, TimetableGrid, Weekday, WeekdayOption } from './types'
-
-type PeriodKey = keyof typeof periodTimeMap
+import {
+  TimetableListItem,
+  TimetableSlotSelection,
+  Weekday,
+  WeekdayOption,
+} from './types'
+import TimetablePlannerModal from './TimetablePlannerModal'
 
 const weekdays: WeekdayOption[] = [
   { label: '一', value: 1 },
@@ -35,208 +41,276 @@ const weekdays: WeekdayOption[] = [
   { label: '六', value: 6 },
   { label: '日', value: 7 },
 ]
+
 const EMPTY_TIMETABLE_ITEMS: TimetableItem[] = []
 const EMPTY_ADDED_ITEMS: AddedCourseItem[] = []
-const EWANT_DEPARTMENT = '校外遠距(EWANT)'
 
-const periodOrder = Object.keys(periodTimeMap) as PeriodKey[]
-const periodIndexMap = periodOrder.reduce<Record<string, number>>((acc, period, index) => {
-  acc[period] = index
-  return acc
-}, {})
-
-const getPeriodsInRange = (startPeriod: PeriodKey, endPeriod: PeriodKey): PeriodKey[] => {
-  const startIndex = periodIndexMap[startPeriod]
-  const endIndex = periodIndexMap[endPeriod]
-  if (typeof startIndex !== 'number' || typeof endIndex !== 'number' || endIndex < startIndex) return []
-  return periodOrder.slice(startIndex, endIndex + 1)
+type ClearGuestSemesterSnapshot = {
+  semester: string
+  courseIds: number[]
 }
 
-const buildGrid = (items: TimetableItem[]): TimetableGrid => {
-  const grid = {} as TimetableGrid
-  periodOrder.forEach((period) => {
-    grid[period] = {}
-  })
+const parseSemester = (semester: string): { year: number; term: number } | null => {
+  const match = semester.trim().match(/^(\d+)\s*[-_/]\s*(\d+)$/)
+  if (!match) return null
+  return { year: Number(match[1]), term: Number(match[2]) }
+}
 
-  items.forEach((item) => {
-    item.timeslots.forEach((timeslot) => {
-      const periods = getPeriodsInRange(timeslot.startPeriod as PeriodKey, timeslot.endPeriod as PeriodKey)
-      periods.forEach((period) => {
-        const current = grid[period][timeslot.dayOfWeek] ?? []
-        current.push({
-          courseId: item.course.id,
-          courseName: item.course.name,
-          instructor: item.course.instructor,
-          room: item.course.room,
-        })
-        grid[period][timeslot.dayOfWeek] = current
-      })
-    })
-  })
+const compareSemestersDescending = (first: string, second: string): number => {
+  const parsedFirst = parseSemester(first)
+  const parsedSecond = parseSemester(second)
 
-  return grid
+  if (parsedFirst && parsedSecond) {
+    if (parsedFirst.year !== parsedSecond.year) return parsedSecond.year - parsedFirst.year
+    if (parsedFirst.term !== parsedSecond.term) return parsedSecond.term - parsedFirst.term
+  } else if (parsedFirst) {
+    return -1
+  } else if (parsedSecond) {
+    return 1
+  }
+
+  return second.localeCompare(first)
 }
 
 const Timetable: React.FC = () => {
-  const queryClient = useQueryClient()
-  const { isAuthenticated } = useAuthStore()
-  const { data: semestersData, isLoading: isSemestersLoading } = useGetSemesters()
+  const { isAuthenticated, isAuthResolved } = useAuthStore()
+  const userCacheScope = useAuthStore((state) => getUserCacheScope(state.user))
+  const {
+    data: semestersData,
+    isLoading: isSemestersLoading,
+    isError: hasSemestersError,
+  } = useGetSemesters()
+  const guestTimetable = useGuestTimetable()
 
   const [selectedSemester, setSelectedSemester] = useState<string | null>(null)
   const [isCourseListCollapsed, setIsCourseListCollapsed] = useState(true)
-  const semesterOptions = useMemo(
-    () => (semestersData?.items ?? []).map((semester) => ({ value: semester, label: semester })),
-    [semestersData]
-  )
+  const [clearGuestSemesterSnapshot, setClearGuestSemesterSnapshot] =
+    useState<ClearGuestSemesterSnapshot | null>(null)
+  const [isPlannerOpened, setIsPlannerOpened] = useState(false)
+  const [plannerInitialSlot, setPlannerInitialSlot] = useState<TimetableSlotSelection | null>(null)
+  const [isGuestMutationPending, setIsGuestMutationPending] = useState(false)
+  const [removeTarget, setRemoveTarget] = useState<TimetableListItem | null>(null)
 
   useEffect(() => {
-    if (!selectedSemester && semesterOptions.length > 0) {
-      setSelectedSemester(semesterOptions[0].value)
+    setRemoveTarget(null)
+    setClearGuestSemesterSnapshot(null)
+    setIsPlannerOpened(false)
+    setPlannerInitialSlot(null)
+  }, [isAuthenticated, userCacheScope])
+
+  const {
+    data: allAddedItemsData,
+    isError: hasAllAddedItemsError,
+    refetch: refetchAllAddedItems,
+  } = useGetAllTimetableItems(isAuthenticated)
+  const allAddedItems = allAddedItemsData?.items ?? EMPTY_ADDED_ITEMS
+  const accountSemesters = useMemo(
+    () => allAddedItems.map((item) => item.semester),
+    [allAddedItems],
+  )
+  const semesterOptions = useMemo(() => {
+    const extraSemesters = isAuthenticated ? accountSemesters : guestTimetable.semesters
+    const semesters = Array.from(new Set([
+      ...(semestersData?.items ?? []),
+      ...extraSemesters,
+    ])).sort(compareSemestersDescending)
+
+    return semesters.map((semester) => ({ value: semester, label: semester }))
+  }, [accountSemesters, guestTimetable.semesters, isAuthenticated, semestersData])
+
+  useEffect(() => {
+    if (semesterOptions.length === 0) {
+      if (selectedSemester !== null) setSelectedSemester(null)
+      return
     }
+
+    const selectedSemesterExists = semesterOptions.some(
+      (semester) => semester.value === selectedSemester,
+    )
+    if (!selectedSemesterExists) setSelectedSemester(semesterOptions[0].value)
   }, [selectedSemester, semesterOptions])
 
-  const { data: timetableData, isLoading: isTimetableLoading } = useGetTimetable(selectedSemester, isAuthenticated)
-  const { data: allAddedItemsData } = useGetAllTimetableItems(isAuthenticated)
-  const { data: interestOptionsData = [] } = useGetTimetableInterestOptions(isAuthenticated)
-  const addCourseMutation = useAddTimetableCourse()
+  const {
+    data: timetableData,
+    isLoading: isTimetableLoading,
+    isError: hasTimetableError,
+    refetch: refetchTimetable,
+  } = useGetTimetable(selectedSemester, isAuthenticated)
   const removeCourseMutation = useRemoveTimetableCourse()
-  const [isSwapDialogOpened, setIsSwapDialogOpened] = useState(false)
-  const [isSwapSubmitting, setIsSwapSubmitting] = useState(false)
-  const [swapTargetCourse, setSwapTargetCourse] = useState<{ id: number; name: string } | null>(null)
-  const [swapConflicts, setSwapConflicts] = useState<TimetableConflict[]>([])
-  const [swapContext, setSwapContext] = useState<{ timetableId: number; semester: string } | null>(null)
 
-  const items = timetableData?.items ?? EMPTY_TIMETABLE_ITEMS
-  const allAddedItems = allAddedItemsData?.items ?? EMPTY_ADDED_ITEMS
-  const addedItemsInSelectedSemester = useMemo(() => {
+  const guestItems = selectedSemester
+    ? guestTimetable.getItemsBySemester(selectedSemester)
+    : EMPTY_TIMETABLE_ITEMS
+  const items = isAuthenticated
+    ? timetableData?.items ?? EMPTY_TIMETABLE_ITEMS
+    : guestItems
+
+  const listItems = useMemo<TimetableListItem[]>(() => {
     if (!selectedSemester) return []
-    return allAddedItems.filter((item) => item.semester === selectedSemester)
-  }, [allAddedItems, selectedSemester])
+
+    if (isAuthenticated) {
+      return allAddedItems.filter((item) => item.semester === selectedSemester)
+    }
+
+    return guestItems.map((item) => ({
+      semester: item.course.semester,
+      hasTimeslots: item.timeslots.length > 0,
+      course: item.course,
+    }))
+  }, [allAddedItems, guestItems, isAuthenticated, selectedSemester])
+
   const ewantItemsInSelectedSemester = useMemo(
-    () => addedItemsInSelectedSemester.filter((item) => item.course.department === EWANT_DEPARTMENT),
-    [addedItemsInSelectedSemester],
+    () => listItems.filter((item) => isEwantCourse(item.course)),
+    [listItems],
   )
   const scheduledItemsInSelectedSemester = useMemo(
-    () => addedItemsInSelectedSemester.filter((item) => item.course.department !== EWANT_DEPARTMENT),
-    [addedItemsInSelectedSemester],
+    () => listItems.filter((item) => !isEwantCourse(item.course)),
+    [listItems],
   )
   const gridItems = useMemo(
-    () => items.filter((item) => item.course.department !== EWANT_DEPARTMENT),
+    () => items.filter((item) => !isEwantCourse(item.course)),
     [items],
   )
-  const timetableId = timetableData?.timetable.id
-  const grid = useMemo(() => buildGrid(gridItems), [gridItems])
+  const grid = useMemo(() => buildTimetableGrid(gridItems), [gridItems])
   const missingTimeslotCountInCurrentSemester = useMemo(
-    () => items.filter((item) => item.course.department !== EWANT_DEPARTMENT && item.timeslots.length === 0).length,
+    () => countMissingTimeslotCourses(items),
     [items],
   )
-  const existingCourseIdSet = useMemo(() => new Set(items.map((item) => item.course.id)), [items])
-  const selectableInterestCourses = useMemo<SelectableInterestCourse[]>(() => {
-    if (!selectedSemester) return []
-    return interestOptionsData
-      .map((item) => item.course)
-      .filter((course) => course.semester === selectedSemester)
-      .filter((course) => !existingCourseIdSet.has(course.id))
-  }, [interestOptionsData, selectedSemester, existingCourseIdSet])
 
   const conflicts = useMemo(
-    () =>
-      periodOrder.flatMap((period) =>
-        weekdays
-          .map((day) => {
-            const slotCourses = grid[period]?.[day.value] ?? []
-            if (slotCourses.length <= 1) return null
-            return {
-              dayLabel: day.label,
-              period,
-              courses: slotCourses.map((course) => course.courseName),
-            }
-          })
-          .filter((item): item is { dayLabel: Weekday; period: PeriodKey; courses: string[] } => item !== null),
-      ),
+    () => TIMETABLE_PERIOD_ORDER.flatMap((period) =>
+      weekdays
+        .map((day) => {
+          const slotCourses = grid[period]?.[day.value] ?? []
+          if (slotCourses.length <= 1) return null
+          return {
+            dayLabel: day.label,
+            period,
+            courses: slotCourses.map((course) => course.courseName),
+          }
+        })
+        .filter((item): item is {
+          dayLabel: Weekday
+          period: (typeof TIMETABLE_PERIOD_ORDER)[number]
+          courses: string[]
+        } => item !== null),
+    ),
     [grid],
   )
-  const hasWeekendCourses = useMemo(
-    () => gridItems.some((item) => item.timeslots.some((timeslot) => timeslot.dayOfWeek === 6 || timeslot.dayOfWeek === 7)),
+  const weekdaysToRender = useMemo(
+    () => hasWeekendCourses(gridItems)
+      ? weekdays
+      : weekdays.filter((day) => day.value <= 5),
     [gridItems],
   )
-  const weekdaysToRender = useMemo(
-    () => (hasWeekendCourses ? weekdays : weekdays.filter((day) => day.value <= 5)),
-    [hasWeekendCourses],
-  )
 
-  const addedCourseNameMap = useMemo(() => {
-    const map = new Map<number, string>()
-    allAddedItems.forEach((item) => {
-      map.set(item.course.id, item.course.name)
+  const handleGridCourseClick = (course: TimetableGridCell): void => {
+    if (!selectedSemester) return
+
+    const item = items.find((currentItem) => currentItem.course.id === course.courseId)
+    if (!item) return
+
+    setRemoveTarget({
+      timetableId: isAuthenticated ? timetableData?.timetable.id : undefined,
+      semester: selectedSemester,
+      hasTimeslots: item.timeslots.length > 0,
+      course: item.course,
     })
-    return map
-  }, [allAddedItems])
-
-  const handleAddCourse = async (course: SelectableInterestCourse) => {
-    if (!timetableId || !selectedSemester) return
-    try {
-      await addCourseMutation.mutateAsync({
-        timetableId,
-        courseId: course.id,
-        semester: selectedSemester,
-      })
-    } catch (error) {
-      const typedError = error as ApiError
-      const errorData = typedError.data as { conflicts?: TimetableConflict[] } | undefined
-      if (typedError.status === 409 && errorData?.conflicts && errorData.conflicts.length > 0) {
-        setSwapTargetCourse({ id: course.id, name: course.course_name })
-        setSwapConflicts(errorData.conflicts)
-        setSwapContext({ timetableId, semester: selectedSemester })
-        setIsSwapDialogOpened(true)
-      }
-    }
   }
 
-  const handleConfirmSwap = async () => {
-    if (!swapContext || !swapTargetCourse) return
+  const handleEmptySlotClick = (slot: TimetableSlotSelection): void => {
+    setPlannerInitialSlot(slot)
+    setIsPlannerOpened(true)
+  }
+
+  const handleConfirmRemoveCourse = async (): Promise<void> => {
+    if (!selectedSemester || !removeTarget) return
+
+    if (isAuthenticated) {
+      if (!removeTarget.timetableId) return
+      removeCourseMutation.mutate({
+        timetableId: removeTarget.timetableId,
+        courseId: removeTarget.course.id,
+        semester: selectedSemester,
+      }, {
+        onSuccess: () => setRemoveTarget(null),
+      })
+      return
+    }
+
+    if (removeTarget.timetableId) {
+      setRemoveTarget(null)
+      return
+    }
 
     try {
-      setIsSwapSubmitting(true)
-
-      const result = await swapTimetableCourse(swapContext.timetableId, swapTargetCourse.id)
-
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TIMETABLE, swapContext.semester] }),
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TIMETABLE_ALL_ITEMS] }),
-      ])
-
-      if (result.alreadyExists) {
+      setIsGuestMutationPending(true)
+      const removed = await guestTimetable.removeCourse(selectedSemester, removeTarget.course.id)
+      if (removed) {
         notifications.show({
-          title: '課程已在課表中',
-          message: `${swapTargetCourse.name} 已存在，未調整原有課表。`,
-          color: 'blue',
-        })
-      } else {
-        notifications.show({
-          title: '已完成交換',
-          message: `已移除 ${result.removedCourseIds.length} 門衝堂課，並加入 ${swapTargetCourse.name}`,
+          title: '已移除課程',
+          message: '課程已從本機課表移除',
           color: 'green',
         })
       }
-
-      setIsSwapDialogOpened(false)
-      setSwapTargetCourse(null)
-      setSwapConflicts([])
-      setSwapContext(null)
+      setRemoveTarget(null)
     } catch (error) {
-      const typedError = error as ApiError
       notifications.show({
-        title: '交換失敗',
-        message: typedError.message,
+        title: '移除失敗',
+        message: error instanceof Error ? error.message : '無法更新本機課表',
         color: 'red',
       })
     } finally {
-      setIsSwapSubmitting(false)
+      setIsGuestMutationPending(false)
     }
   }
 
-  if (isAuthenticated && (isSemestersLoading || isTimetableLoading)) {
+  const handleClearGuestSemester = async (): Promise<void> => {
+    if (!clearGuestSemesterSnapshot || isAuthenticated) return
+
+    try {
+      setIsGuestMutationPending(true)
+      const clearResult = await guestTimetable.clearSemester(
+        clearGuestSemesterSnapshot.semester,
+        clearGuestSemesterSnapshot.courseIds,
+      )
+      if (clearResult !== 'cleared') {
+        setClearGuestSemesterSnapshot(null)
+        notifications.show({
+          title: clearResult === 'already-empty' ? '課表已清空' : '本機課表已變更',
+          message: clearResult === 'already-empty'
+            ? '這學期的本機課表已在其他分頁清空。'
+            : '其他分頁已更新這學期的課表，請重新確認後再清空。',
+          color: clearResult === 'already-empty' ? 'blue' : 'orange',
+        })
+        return
+      }
+      notifications.show({
+        title: '已清空課表',
+        message: `已清空 ${clearGuestSemesterSnapshot.semester} 的本機課表，其他學期不受影響。`,
+        color: 'green',
+      })
+      setClearGuestSemesterSnapshot(null)
+    } catch (error) {
+      notifications.show({
+        title: '清空失敗',
+        message: error instanceof Error ? error.message : '無法清空本機課表',
+        color: 'red',
+      })
+    } finally {
+      setIsGuestMutationPending(false)
+    }
+  }
+
+  if (!isAuthResolved) {
+    return (
+      <div className={styles.card}>
+        <Text>正在確認登入狀態...</Text>
+      </div>
+    )
+  }
+
+  if ((isSemestersLoading && semesterOptions.length === 0) || (isAuthenticated && isTimetableLoading)) {
     return (
       <div className={styles.card}>
         <Text>課表載入中...</Text>
@@ -244,133 +318,183 @@ const Timetable: React.FC = () => {
     )
   }
 
-  if (isAuthenticated && semesterOptions.length === 0) {
+  if (semesterOptions.length === 0) {
     return (
       <div className={styles.card}>
-        <Text c='dimmed'>目前沒有可選學期。</Text>
+        <Text c='dimmed'>
+          {hasSemestersError ? '無法載入學期資料，請稍後再試。' : '目前沒有可選學期。'}
+        </Text>
       </div>
     )
   }
 
   return (
-    <div className={styles.timetableLockWrapper}>
-      <Stack gap='md' className={!isAuthenticated ? styles.timetableLockedContent : undefined}>
-      <SwapConflictModal
-        opened={isSwapDialogOpened}
-        targetCourse={swapTargetCourse}
-        conflicts={swapConflicts}
-        addedCourseNameMap={addedCourseNameMap}
-        isSubmitting={isSwapSubmitting}
+    <>
+      <ConfirmModal
+        opened={clearGuestSemesterSnapshot !== null}
+        onClose={() => setClearGuestSemesterSnapshot(null)}
+        title='清空目前學期課表？'
+        message={`只會清空 ${clearGuestSemesterSnapshot?.semester ?? '目前學期'} 的本機課表，不影響其他學期或收藏資料。`}
+        confirmText='清空課表'
+        cancelText='取消'
+        loading={isGuestMutationPending}
+        onConfirm={handleClearGuestSemester}
+      />
+
+      <ConfirmModal
+        opened={removeTarget !== null}
         onClose={() => {
-          setIsSwapDialogOpened(false)
-          setSwapContext(null)
+          if (!isGuestMutationPending && !removeCourseMutation.isPending) {
+            setRemoveTarget(null)
+          }
         }}
-        onConfirm={handleConfirmSwap}
+        title='從課表移除課程？'
+        message={`確定要從 ${selectedSemester ?? '目前學期'} 課表移除整門「${removeTarget?.course.name ?? ''}」嗎？`}
+        confirmText='移除課程'
+        cancelText='取消'
+        loading={isGuestMutationPending || removeCourseMutation.isPending}
+        onConfirm={handleConfirmRemoveCourse}
       />
 
-      <div className={styles.card}>
-        <TimetableHeader
-          semesterOptions={semesterOptions}
-          selectedSemester={selectedSemester}
-          onSemesterChange={setSelectedSemester}
-          isDisabled={isSwapDialogOpened || !isAuthenticated}
-          itemsCount={items.length}
-          selectableCount={selectableInterestCourses.length}
-          missingTimeslotCount={missingTimeslotCountInCurrentSemester}
-          ewantCount={ewantItemsInSelectedSemester.length}
-          collapsed={isCourseListCollapsed}
-          onToggleCollapse={() => setIsCourseListCollapsed((v) => !v)}
-        />
-
-        <Collapse in={!isCourseListCollapsed}>
-          <TimetableCourseLists
-            selectableInterestCourses={selectableInterestCourses}
-            addedItemsInSelectedSemester={scheduledItemsInSelectedSemester}
-            ewantItemsInSelectedSemester={ewantItemsInSelectedSemester}
-            isAdding={addCourseMutation.isPending}
-            isRemoving={removeCourseMutation.isPending}
-            onAddCourse={(course) => {
-              void handleAddCourse(course)
-            }}
-            onRemoveCourse={(item) => {
-              if (!selectedSemester) return
-              removeCourseMutation.mutate({
-                timetableId: item.timetableId,
-                courseId: item.course.id,
-                semester: selectedSemester,
-              })
-            }}
-          />
-        </Collapse>
-      </div>
-
-      {conflicts.length > 0 && (
-        <div className={`${styles.alert} ${styles.alertRed}`}>
-          <Text fw={700} size='sm' className={styles.alertTitle}>目前課表有撞課</Text>
-          <Stack gap={4}>
-            {conflicts.slice(0, 6).map((conflict) => (
-              <Text key={`${conflict.dayLabel}-${conflict.period}`} size='sm'>
-                星期{conflict.dayLabel} 第{conflict.period}節：{conflict.courses.join(' / ')}
-              </Text>
-            ))}
-            {missingTimeslotCountInCurrentSemester > 0 && (
-              <Text size='sm' c='dimmed'>
-                缺時段課程 {missingTimeslotCountInCurrentSemester} 門，不參與衝堂判斷。
-              </Text>
-            )}
-            {ewantItemsInSelectedSemester.length > 0 && (
-              <Text size='sm' c='dimmed'>
-                遠距課程 {ewantItemsInSelectedSemester.length} 門，已移到下方獨立區塊，不顯示在時間格中。
-              </Text>
-            )}
-            {conflicts.length > 6 && (
-              <Text size='sm' c='dimmed'>
-                還有 {conflicts.length - 6} 個衝堂時段...
-              </Text>
-            )}
-          </Stack>
-        </div>
-      )}
-
-      {conflicts.length === 0 && missingTimeslotCountInCurrentSemester > 0 && (
-        <div className={`${styles.alert} ${styles.alertOrange}`}>
-          <Text fw={700} size='sm' className={styles.alertTitle}>缺少時段資料</Text>
-          <Text size='sm'>
-            本學期有 {missingTimeslotCountInCurrentSemester} 門課資料較舊，平台尚未更新時段資料。這些課程不會顯示在課表格，也不參與衝堂判斷。
-          </Text>
-        </div>
-      )}
-
-      {ewantItemsInSelectedSemester.length > 0 && (
-        <div className={`${styles.alert} ${styles.alertBlue}`}>
-          <Text fw={700} size='sm' className={styles.alertTitle}>遠距課程已獨立顯示</Text>
-          <Text size='sm'>
-            本學期有 {ewantItemsInSelectedSemester.length} 門 EWANT 遠距課程，已集中顯示在「遠距課程」區塊，不會直接排進時間格，也不參與衝堂判斷。
-          </Text>
-        </div>
-      )}
-
-      <TimetableGridTable
-        periodOrder={periodOrder}
-        weekdaysToRender={weekdaysToRender}
-        grid={grid}
+      <TimetablePlannerModal
+        opened={isPlannerOpened}
+        onClose={() => setIsPlannerOpened(false)}
+        semester={selectedSemester}
+        initialSlot={plannerInitialSlot}
       />
-      </Stack>
 
-      {!isAuthenticated && (
-        <div className={styles.timetableLoginOverlay}>
-          <div className={styles.timetableOverlayInner}>
-            <div className={styles.overlayCard}>
-              <Text fw={700}>登入後即可使用排課表功能</Text>
-              <Text c='dimmed' size='sm'>
-                登入後，即可使用排課、檢查衝堂，並依當前時段提示目前所在欄位，提醒上課時間。
+      <Stack gap='md'>
+        {!isAuthenticated && (
+          <div className={styles.localTimetableNotice}>
+            <div className={styles.localTimetableNoticeIcon} aria-hidden='true'>
+              <FaLaptop size={18} />
+            </div>
+            <div className={styles.localTimetableNoticeContent}>
+              <Text fw={800} size='sm'>
+                這份課表保存在此裝置
               </Text>
-              <AuthButton className={styles.timetableOverlayAuthButton} />
+              <Text size='xs' c='dimmed'>
+                訪客模式不會寫入帳號；登入後可選擇保存，並跨裝置同步。
+              </Text>
             </div>
           </div>
+        )}
+
+        {guestTimetable.error && !isAuthenticated && (
+          <div className={`${styles.alert} ${styles.alertRed}`}>
+            <Text fw={700} size='sm' className={styles.alertTitle}>無法讀取本機課表</Text>
+            <Text size='sm'>{guestTimetable.error.message}</Text>
+          </div>
+        )}
+
+        {isAuthenticated && (hasAllAddedItemsError || hasTimetableError) && (
+          <div className={`${styles.alert} ${styles.alertRed}`}>
+            <Text fw={700} size='sm' className={styles.alertTitle}>帳號課表載入不完整</Text>
+            <Text size='sm'>目前清單或課表格可能不是最新資料，請重試後再進行調整。</Text>
+            <Button
+              size='xs'
+              variant='light'
+              color='red'
+              mt='xs'
+              onClick={() => void Promise.all([refetchAllAddedItems(), refetchTimetable()])}
+            >
+              重新載入
+            </Button>
+          </div>
+        )}
+
+        <div className={styles.card}>
+          <TimetableHeader
+            semesterOptions={semesterOptions}
+            selectedSemester={selectedSemester}
+            onSemesterChange={setSelectedSemester}
+            isDisabled={isGuestMutationPending || removeCourseMutation.isPending}
+            isGuest={!isAuthenticated}
+            itemsCount={items.length}
+            missingTimeslotCount={missingTimeslotCountInCurrentSemester}
+            ewantCount={ewantItemsInSelectedSemester.length}
+            collapsed={isCourseListCollapsed}
+            onToggleCollapse={() => setIsCourseListCollapsed((isCollapsed) => !isCollapsed)}
+            onClearGuestSemester={() => {
+              if (!selectedSemester) return
+              setClearGuestSemesterSnapshot({
+                semester: selectedSemester,
+                courseIds: guestItems.map((item) => item.course.id),
+              })
+            }}
+            onOpenCourseSearch={() => {
+              setPlannerInitialSlot(null)
+              setIsPlannerOpened(true)
+            }}
+          />
+
+          <Collapse in={!isCourseListCollapsed}>
+            <TimetableCourseLists
+              addedItemsInSelectedSemester={scheduledItemsInSelectedSemester}
+              ewantItemsInSelectedSemester={ewantItemsInSelectedSemester}
+              isRemoving={isGuestMutationPending || removeCourseMutation.isPending}
+              onRemoveCourse={setRemoveTarget}
+            />
+          </Collapse>
         </div>
-      )}
-    </div>
+
+        {conflicts.length > 0 && (
+          <div className={`${styles.alert} ${styles.alertRed}`}>
+            <Text fw={700} size='sm' className={styles.alertTitle}>目前課表有撞課</Text>
+            <Stack gap={4}>
+              {conflicts.slice(0, 6).map((conflict) => (
+                <Text key={`${conflict.dayLabel}-${conflict.period}`} size='sm'>
+                  星期{conflict.dayLabel} 第{conflict.period}節：{conflict.courses.join(' / ')}
+                </Text>
+              ))}
+              {missingTimeslotCountInCurrentSemester > 0 && (
+                <Text size='sm' c='dimmed'>
+                  缺時段課程 {missingTimeslotCountInCurrentSemester} 門，不參與衝堂判斷。
+                </Text>
+              )}
+              {ewantItemsInSelectedSemester.length > 0 && (
+                <Text size='sm' c='dimmed'>
+                  遠距課程 {ewantItemsInSelectedSemester.length} 門，已移到獨立區塊，不顯示在時間格中。
+                </Text>
+              )}
+              {conflicts.length > 6 && (
+                <Text size='sm' c='dimmed'>還有 {conflicts.length - 6} 個衝堂時段...</Text>
+              )}
+            </Stack>
+          </div>
+        )}
+
+        {conflicts.length === 0 && missingTimeslotCountInCurrentSemester > 0 && (
+          <div className={`${styles.alert} ${styles.alertOrange}`}>
+            <Text fw={700} size='sm' className={styles.alertTitle}>缺少時段資料</Text>
+            <Text size='sm'>
+              本學期有 {missingTimeslotCountInCurrentSemester} 門課缺少時段資料。這些課程不會顯示在課表格，也不參與衝堂判斷。
+            </Text>
+          </div>
+        )}
+
+        {ewantItemsInSelectedSemester.length > 0 && (
+          <div className={`${styles.alert} ${styles.alertBlue}`}>
+            <Text fw={700} size='sm' className={styles.alertTitle}>遠距課程已獨立顯示</Text>
+            <Text size='sm'>
+              本學期有 {ewantItemsInSelectedSemester.length} 門 EWANT 遠距課程，已集中顯示在「遠距課程」區塊，不會排進時間格，也不參與衝堂判斷。
+            </Text>
+          </div>
+        )}
+
+        <Stack gap='xs'>
+          <Text size='sm' c='dimmed'>點擊課程可查看評價或確認移除；點擊空白格的＋可搜尋這個時段的課程。</Text>
+          <TimetableGridTable
+            periodOrder={TIMETABLE_PERIOD_ORDER}
+            weekdaysToRender={weekdaysToRender}
+            grid={grid}
+            onCourseClick={handleGridCourseClick}
+            onEmptySlotClick={handleEmptySlotClick}
+            isCourseActionDisabled={isGuestMutationPending || removeCourseMutation.isPending}
+          />
+        </Stack>
+      </Stack>
+    </>
   )
 }
 

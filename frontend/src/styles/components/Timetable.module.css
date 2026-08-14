@@ -13,6 +13,109 @@
   text-align: left;
 }
 
+.plannerLayout {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.7fr);
+  gap: 16px;
+  min-width: 0;
+}
+
+.plannerSearchPane,
+.plannerPreviewPane {
+  min-width: 0;
+}
+
+.plannerPreviewScroll {
+  max-height: 620px;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.plannerSearchInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.courseExternalLinkButton {
+  flex: 0 0 auto;
+  color: #111 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.courseExternalLinkButton:hover {
+  color: black !important;
+  background: var(--mantine-color-gray-1) !important;
+}
+
+.courseExternalLinkButton:focus-visible {
+  outline: 2px solid black;
+  outline-offset: 2px;
+}
+
+.fixedFilterNotice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1.5px solid var(--mantine-primary-color-filled);
+  border-radius: 8px;
+  background: var(--mantine-primary-color-light);
+}
+
+.fixedFilterBadge {
+  flex: 0 0 auto;
+}
+
+.plannerCategoryTabs {
+  min-width: 0;
+  position: relative;
+}
+
+.plannerCategoryTabs::before,
+.plannerCategoryTabs::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 1px;
+  z-index: 2;
+  width: 32px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.plannerCategoryTabs::before {
+  left: 0;
+  background: linear-gradient(to right, var(--mantine-color-body), transparent);
+}
+
+.plannerCategoryTabs::after {
+  right: 0;
+  background: linear-gradient(to left, var(--mantine-color-body), transparent);
+}
+
+.plannerCategoryTabsHasLeftOverflow::before,
+.plannerCategoryTabsHasRightOverflow::after {
+  opacity: 1;
+}
+
+.plannerCategoryTabsList {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  touch-action: pan-x;
+  scrollbar-width: none;
+}
+
+.plannerCategoryTabsList::-webkit-scrollbar {
+  display: none;
+}
+
+.plannerCategoryTabsList button {
+  flex: 0 0 auto;
+}
+
 /* ── Cards ── */
 .card {
   border: 2px solid black;
@@ -77,14 +180,29 @@
   flex-wrap: wrap;
 }
 
-.nowCourseLink {
+.nowCourseLink,
+.nowCourseButton {
   font-size: 13px;
   font-weight: 600;
   color: #111827;
   text-decoration: none;
 }
 
-.nowCourseLink:hover {
+.nowCourseButton {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.nowCourseButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.nowCourseLink:hover,
+.nowCourseButton:hover:not(:disabled) {
   text-decoration: underline;
 }
 
@@ -107,6 +225,38 @@
   box-shadow: 5px 5px 0 black;
   max-width: 400px;
   width: 100%;
+}
+
+.localTimetableNotice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 2px solid black;
+  border-radius: 10px;
+  background: #fffdf7;
+  box-shadow: 3px 3px 0 black;
+}
+
+.localTimetableNoticeIcon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border: 1.5px solid black;
+  border-radius: 8px;
+  color: var(--mantine-primary-color-filled);
+  background: var(--mantine-primary-color-light);
+}
+
+.localTimetableNoticeContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.localTimetableNoticeAction {
+  flex: 0 0 auto;
 }
 
 /* ── Alert ── */
@@ -137,7 +287,7 @@
 .listGrid {
   margin-top: 16px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -146,10 +296,6 @@
   border-bottom: 4px solid transparent;
   border-radius: 6px;
   padding-bottom: 4px;
-}
-
-.favoritePanel {
-  border-bottom-color: #16a34a;
 }
 
 .addedPanel {
@@ -269,9 +415,20 @@
   background: #ffe8cc !important;
 }
 
+.selectedSearchCell {
+  background: var(--mantine-primary-color-light) !important;
+  box-shadow: inset 0 0 0 2px var(--mantine-primary-color-filled);
+}
+
+.interactiveEmptyCell {
+  padding: 0 !important;
+}
+
 .courseInfoBlock {
   text-align: left;
   min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .courseInfoLink {
@@ -282,15 +439,88 @@
   text-decoration: none;
 }
 
-.tableCourseLink {
+.tableCourseLink,
+.tableCourseButton {
   display: block;
+  width: 100%;
   color: inherit;
   text-decoration: none;
   text-align: center;
   overflow: hidden;
 }
 
+.tableCourseButton {
+  padding: 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.tableCourseButton:hover:not(:disabled),
+.tableCourseButton:focus-visible {
+  background: var(--mantine-color-red-0);
+  box-shadow: inset 0 0 0 1px var(--mantine-color-red-4);
+}
+
+.tableCourseButton:focus-visible {
+  outline: 2px solid var(--mantine-color-red-6);
+  outline-offset: 1px;
+}
+
+.tableCourseButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.emptySlotButton {
+  width: 100%;
+  height: 100%;
+  min-height: 100px;
+  padding: 0;
+  border: 1px dashed transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--mantine-color-gray-5);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.emptySlotIcon {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  opacity: 0.65;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.emptySlotButton:hover:not(:disabled),
+.emptySlotButton:focus-visible {
+  border-color: var(--mantine-primary-color-filled);
+  background: var(--mantine-primary-color-light);
+  color: var(--mantine-primary-color-filled);
+}
+
+.emptySlotButton:hover:not(:disabled) .emptySlotIcon,
+.emptySlotButton:focus-visible .emptySlotIcon {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+.emptySlotButton:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 1px;
+}
+
+.emptySlotButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .courseNameText {
+  display: block;
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -299,6 +529,7 @@
 }
 
 .courseMetaText {
+  display: block;
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -313,6 +544,49 @@
 }
 
 @media (max-width: 900px) {
+  .plannerLayout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .plannerCategoryTabsList {
+    justify-content: center;
+  }
+
+  .plannerCategoryTabsList button {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding-inline: 8px;
+  }
+
+  .plannerPreviewPane {
+    margin-top: 8px;
+    padding-top: 20px;
+    border-top: 2px solid black;
+  }
+
+  .plannerPreviewScroll {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .fixedFilterNotice {
+    align-items: flex-start;
+  }
+
+  .localTimetableNotice {
+    flex-wrap: wrap;
+  }
+
+  .localTimetableNoticeAction {
+    width: 100%;
+  }
+
+  .semesterSelect {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .toolbar {
     flex-direction: column;
     align-items: flex-start;
@@ -333,6 +607,10 @@
   .conflictCell {
     min-width: 40px;
     height: 96px;
+  }
+
+  .emptySlotButton {
+    min-height: 96px;
   }
 
   .timeColSpec {
