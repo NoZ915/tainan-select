@@ -14,6 +14,7 @@ import {
   parseGuestTimetableStorage,
   readGuestTimetableRawValue,
   removeGuestCourse,
+  removeGuestCourseSnapshot,
   subscribeGuestTimetable,
   swapGuestCourse,
 } from '../../utils/guestTimetableStorage'
@@ -49,6 +50,10 @@ export type UseGuestTimetableResult = {
   removeCourse: (
     semester: string,
     courseId: number,
+    canRemove?: () => boolean,
+  ) => Promise<boolean>
+  removeCourseSnapshot: (
+    item: GuestTimetableItem,
     canRemove?: () => boolean,
   ) => Promise<boolean>
   clearSemester: (
@@ -114,6 +119,7 @@ export const useGuestTimetable = (): UseGuestTimetableResult => {
     isCourseSnapshotCurrent: isGuestCourseSnapshotCurrent,
     addCourse: addGuestCourse,
     removeCourse: removeGuestCourse,
+    removeCourseSnapshot: removeGuestCourseSnapshot,
     clearSemester: clearGuestSemester,
     clearAll: clearGuestTimetable,
     swapCourse: swapGuestCourse,

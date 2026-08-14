@@ -147,7 +147,7 @@ const normalizeGuestTimetableStorage = (
   ),
 })
 
-const haveSameGuestTimetableCourses = (
+const haveSameGuestTimetableSnapshots = (
   firstStorage: GuestTimetableStorage,
   secondStorage: GuestTimetableStorage,
 ): boolean => {
@@ -162,8 +162,12 @@ const haveSameGuestTimetableCourses = (
     const secondItems = secondStorage.semesters[semester]
     if (!secondItems || firstItems.length !== secondItems.length) return false
 
-    const secondCourseIds = new Set(secondItems.map((item) => item.course.id))
-    return firstItems.every((item) => secondCourseIds.has(item.course.id))
+    const secondAddedAtByCourseId = new Map(
+      secondItems.map((item) => [item.course.id, item.addedAt]),
+    )
+    return firstItems.every(
+      (item) => secondAddedAtByCourseId.get(item.course.id) === item.addedAt,
+    )
   })
 }
 
@@ -325,6 +329,14 @@ export const removeGuestCourse = (
   if (canRemove && !canRemove()) return false
 
   const storage = getGuestTimetable()
+  return removeGuestCourseFromStorage(storage, semester, courseId)
+})
+
+const removeGuestCourseFromStorage = (
+  storage: GuestTimetableStorage,
+  semester: string,
+  courseId: number,
+): boolean => {
   const currentItems = storage.semesters[semester] ?? []
   const nextItems = currentItems.filter((item) => item.course.id !== courseId)
 
@@ -340,7 +352,27 @@ export const removeGuestCourse = (
   writeGuestTimetable({ ...storage, semesters: nextSemesters })
 
   return true
-})
+}
+
+export const removeGuestCourseSnapshot = (
+  item: GuestTimetableItem,
+  canRemove?: () => boolean,
+): Promise<boolean> => {
+  assertValidGuestTimetableItem(item)
+
+  return withGuestTimetableWriteLock(() => {
+    if (canRemove && !canRemove()) return false
+
+    const storage = getGuestTimetable()
+    const snapshotMatches = (storage.semesters[item.course.semester] ?? []).some(
+      (currentItem) => currentItem.course.id === item.course.id
+        && currentItem.addedAt === item.addedAt,
+    )
+    if (!snapshotMatches) return false
+
+    return removeGuestCourseFromStorage(storage, item.course.semester, item.course.id)
+  })
+}
 
 export const clearGuestSemester = (
   semester: string,
@@ -376,7 +408,7 @@ export const clearGuestTimetable = (
     .some((items) => items.length > 0)
   if (!hasCurrentCourses) return 'already-empty'
 
-  if (!haveSameGuestTimetableCourses(expectedStorage, currentStorage)) {
+  if (!haveSameGuestTimetableSnapshots(expectedStorage, currentStorage)) {
     return 'changed'
   }
 

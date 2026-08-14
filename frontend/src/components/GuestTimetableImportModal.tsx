@@ -143,7 +143,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
     summary: guestSummary,
     error: guestStorageError,
     isCourseSnapshotCurrent,
-    removeCourse,
+    removeCourseSnapshot,
     clearAll,
   } = useGuestTimetable()
   const [phase, setPhase] = useState<ImportPhase>('idle')
@@ -351,14 +351,18 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
           }
 
           try {
-            const removed = await removeCourse(
-              semester,
-              item.course.id,
+            const removed = await removeCourseSnapshot(
+              item,
               () => isImportContextCurrent(importContext),
             )
             if (!removed && !isImportContextCurrent(importContext)) {
               sessionChanged = true
               break
+            }
+            if (!removed) {
+              cleanupErrors.push(
+                `「${item.course.name}」的本機快照已由其他分頁變更，因此未移除其他資料。`,
+              )
             }
           } catch (error) {
             cleanupErrors.push(
@@ -446,6 +450,31 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
     [pendingSwap],
   )
 
+  const discardStaleConflictDetail = (conflictDetail: ImportConflictDetail): void => {
+    setImportConflictDetails((currentDetails) => currentDetails.filter(
+      (detail) => !(
+        detail.semester === conflictDetail.semester
+        && detail.courseId === conflictDetail.courseId
+      ),
+    ))
+    setImportSummary((currentSummary) => ({
+      ...currentSummary,
+      conflicted: Math.max(currentSummary.conflicted - 1, 0),
+      skipped: currentSummary.skipped + 1,
+    }))
+    setPendingSwap((currentPendingSwap) => (
+      currentPendingSwap?.semester === conflictDetail.semester
+        && currentPendingSwap.courseId === conflictDetail.courseId
+        ? null
+        : currentPendingSwap
+    ))
+    notifications.show({
+      title: '本機課程已變更',
+      message: `「${conflictDetail.courseName}」已由其他分頁移除或重新加入，本次不會處理。`,
+      color: 'blue',
+    })
+  }
+
   const handleConflictCourseAction = async (
     conflictDetail: ImportConflictDetail,
   ): Promise<void> => {
@@ -464,6 +493,11 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
         requestContext,
       )
 
+      if (!await isCourseSnapshotCurrent(conflictDetail.item)) {
+        discardStaleConflictDetail(conflictDetail)
+        return
+      }
+
       try {
         const result = await addTimetableCourse(
           timetableResponse.timetable.id,
@@ -481,15 +515,19 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
           return
         }
 
+        let localSnapshotChanged = false
         try {
-          const removed = await removeCourse(
-            conflictDetail.semester,
-            conflictDetail.courseId,
+          const removed = await removeCourseSnapshot(
+            conflictDetail.item,
             isRequestSessionCurrent,
           )
           if (!removed && !isRequestSessionCurrent()) {
             setActionError('登入帳號已變更；帳號課表可能已更新，本機待處理資料會繼續保留。')
             return
+          }
+          if (!removed) {
+            localSnapshotChanged = true
+            setActionError('帳號課表已更新；本機快照已由其他分頁變更，因此未移除其他資料。')
           }
         } catch (error) {
           setActionError(
@@ -518,7 +556,9 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
         ])
         notifications.show({
           title: result.alreadyExists ? '課程已在課表中' : '已加入課表',
-          message: `「${conflictDetail.courseName}」已完成處理，本機待處理資料已清除。`,
+          message: localSnapshotChanged
+            ? `「${conflictDetail.courseName}」已完成帳號處理，其他分頁的本機資料未受影響。`
+            : `「${conflictDetail.courseName}」已完成處理，本機待處理資料已清除。`,
           color: result.alreadyExists ? 'blue' : 'green',
         })
       } catch (error) {
@@ -570,6 +610,11 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
     const requestAuthSessionSnapshot = captureAuthStatusRequestSnapshot()
     const requestAuthSessionEpoch = requestAuthSessionSnapshot?.epoch ?? ''
     try {
+      if (!await isCourseSnapshotCurrent(pendingSwap.item)) {
+        discardStaleConflictDetail(pendingSwap)
+        return
+      }
+
       const result = await swapTimetableCourse(
         pendingSwap.timetableId,
         pendingSwap.courseId,
@@ -579,6 +624,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
 
       let timetableRefreshFailed = false
       let refreshedTimetable: TimetableResponse | null = null
+      let localSnapshotChanged = false
       try {
         refreshedTimetable = await getTimetableBySemester(
           pendingSwap.semester,
@@ -612,15 +658,17 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
       }
 
       try {
-        const removed = await removeCourse(
-          pendingSwap.semester,
-          pendingSwap.courseId,
+        const removed = await removeCourseSnapshot(
+          pendingSwap.item,
           isRequestSessionCurrent,
         )
         if (!removed && !isRequestSessionCurrent()) {
           setPendingSwap(null)
           setActionError('登入帳號已變更；帳號課表可能已完成交換，本機待處理資料會繼續保留。')
           return
+        }
+        if (!removed) {
+          localSnapshotChanged = true
         }
       } catch (error) {
         setActionError(
@@ -653,14 +701,21 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
         alreadyExists: currentSummary.alreadyExists + (result.alreadyExists ? 1 : 0),
         conflicted: Math.max(currentSummary.conflicted - 1, 0),
       }))
-      if (timetableRefreshFailed) {
-        setActionError('課程已完成交換，但課表畫面更新失敗，請重新整理後確認。')
-      }
+      setActionError([
+        ...(localSnapshotChanged
+          ? ['帳號課表已完成交換；本機快照已由其他分頁變更，因此未移除其他資料。']
+          : []),
+        ...(timetableRefreshFailed
+          ? ['課表畫面更新失敗，請重新整理後確認。']
+          : []),
+      ].join(' ') || null)
       notifications.show({
         title: result.alreadyExists ? '課程已在課表中' : '已完成交換',
-        message: result.alreadyExists
-          ? `「${pendingSwap.courseName}」已在帳號課表中，本機待處理資料已清除。`
-          : `已移除 ${result.removedCourseIds.length} 門衝堂課，並加入「${pendingSwap.courseName}」。`,
+        message: localSnapshotChanged
+          ? `「${pendingSwap.courseName}」已完成帳號處理，其他分頁的本機資料未受影響。`
+          : result.alreadyExists
+            ? `「${pendingSwap.courseName}」已在帳號課表中，本機待處理資料已清除。`
+            : `已移除 ${result.removedCourseIds.length} 門衝堂課，並加入「${pendingSwap.courseName}」。`,
         color: result.alreadyExists ? 'blue' : 'green',
       })
       setPendingSwap(null)
@@ -809,7 +864,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
           <Text>已存在：{importSummary.alreadyExists}</Text>
           <Text>發生衝堂：{importSummary.conflicted}</Text>
           <Text>匯入失敗：{importSummary.failed}</Text>
-          <Text>已由其他分頁移除：{importSummary.skipped}</Text>
+          <Text>本機快照已變更：{importSummary.skipped}</Text>
           {importConflictDetails.length > 0 && (
             <Stack gap='xs' mt='xs'>
               <div>
