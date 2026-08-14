@@ -1,6 +1,20 @@
 ﻿import { RequestHandler, Response } from "express";
 import TimetableService, { TimetableServiceError } from "../services/timetableService";
 
+const parsePositiveSafeInteger = (value: unknown): number | null => {
+  if (
+    (typeof value !== "string" && typeof value !== "number")
+    || String(value).trim() === ""
+  ) {
+    return null;
+  }
+
+  const parsedValue = Number(value);
+  return Number.isSafeInteger(parsedValue) && parsedValue > 0
+    ? parsedValue
+    : null;
+};
+
 const handleTimetableError = (res: Response, err: unknown): void => {
   if (err instanceof TimetableServiceError) {
     res.status(err.status).json({
@@ -51,9 +65,9 @@ export const addTimetableCourse: RequestHandler = async (req, res): Promise<void
       return;
     }
 
-    const timetableId = parseInt(req.params.timetableId);
-    const courseId = Number(req.body?.courseId);
-    if (Number.isNaN(timetableId) || Number.isNaN(courseId)) {
+    const timetableId = parsePositiveSafeInteger(req.params.timetableId);
+    const courseId = parsePositiveSafeInteger(req.body?.courseId);
+    if (timetableId === null || courseId === null) {
       res.status(400).json({ message: "參數格式錯誤" });
       return;
     }
@@ -80,8 +94,8 @@ export const batchAddTimetableFromInterests: RequestHandler = async (req, res): 
       return;
     }
 
-    const timetableId = parseInt(req.params.timetableId);
-    if (Number.isNaN(timetableId)) {
+    const timetableId = parsePositiveSafeInteger(req.params.timetableId);
+    if (timetableId === null) {
       res.status(400).json({ message: "參數格式錯誤" });
       return;
     }
@@ -101,14 +115,40 @@ export const swapTimetableCourse: RequestHandler = async (req, res): Promise<voi
       return;
     }
 
-    const timetableId = parseInt(req.params.timetableId);
-    const courseId = Number(req.body?.courseId);
-    if (Number.isNaN(timetableId) || Number.isNaN(courseId)) {
-      res.status(400).json({ message: "參數格式錯誤" });
+    const timetableId = parsePositiveSafeInteger(req.params.timetableId);
+    const courseId = parsePositiveSafeInteger(req.body?.courseId);
+    const rawConflictCourseIds = req.body?.conflictCourseIds;
+    if (rawConflictCourseIds === undefined) {
+      res.status(409).json({
+        code: "CLIENT_UPDATE_REQUIRED",
+        message: "課表交換功能已更新，請重新整理頁面後再試",
+      });
       return;
     }
 
-    const result = await TimetableService.swapCourse(timetableId, user_id, courseId);
+    const parsedConflictCourseIds = Array.isArray(rawConflictCourseIds)
+      ? rawConflictCourseIds.map(parsePositiveSafeInteger)
+      : [];
+    const hasInvalidConflictCourseIds = !Array.isArray(rawConflictCourseIds)
+      || parsedConflictCourseIds.some((value) => value === null);
+    if (
+      timetableId === null
+      || courseId === null
+      || hasInvalidConflictCourseIds
+    ) {
+      res.status(400).json({ message: "參數格式錯誤" });
+      return;
+    }
+    const conflictCourseIds = parsedConflictCourseIds.filter(
+      (value): value is number => value !== null
+    );
+
+    const result = await TimetableService.swapCourse(
+      timetableId,
+      user_id,
+      courseId,
+      conflictCourseIds
+    );
     res.status(200).json(result);
   } catch (err) {
     handleTimetableError(res, err);
@@ -123,9 +163,9 @@ export const removeTimetableCourse: RequestHandler = async (req, res): Promise<v
       return;
     }
 
-    const timetableId = parseInt(req.params.timetableId);
-    const courseId = parseInt(req.params.courseId);
-    if (Number.isNaN(timetableId) || Number.isNaN(courseId)) {
+    const timetableId = parsePositiveSafeInteger(req.params.timetableId);
+    const courseId = parsePositiveSafeInteger(req.params.courseId);
+    if (timetableId === null || courseId === null) {
       res.status(400).json({ message: "參數格式錯誤" });
       return;
     }

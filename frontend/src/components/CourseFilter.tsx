@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Container, Tabs, Input, Button, Select, MultiSelect, Accordion } from '@mantine/core'
 import { SearchParams, FilterOption } from '../types/courseType'
 import { FaSearch } from 'react-icons/fa'
@@ -10,11 +10,12 @@ import periodTimeMap from '../utils/periodTimeMap'
 
 interface CourseFilterProps {
     searchParams: SearchParams;
-    onSearch: (searchParams: SearchParams) => void;
+    onSearch: (searchParams: SearchParams, options?: { replace?: boolean }) => void;
     onClick: (page: number) => void;
 };
 
 const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onClick }) => {
+    const onSearchRef = useRef(onSearch)
     const [searchText, setSearchText] = useState(searchParams.search)
     const [activeTab, setActiveTab] = useState(searchParams.category)
     const [academy, setAcademy] = useState(searchParams.academy)
@@ -24,6 +25,10 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
     const [periods, setPeriods] = useState<string[]>(searchParams.periods)
     const [semesters, setSemesters] = useState<string[]>(searchParams.semesters)
     const [advancedAccordionValue, setAdvancedAccordionValue] = useState<string | null>(null)
+
+    useEffect(() => {
+        onSearchRef.current = onSearch
+    }, [onSearch])
 
     useEffect(() => {
         setSearchText(searchParams.search)
@@ -44,9 +49,105 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
         { label: '師培', value: 'teacher' },
         { label: 'EWANT', value: 'ewant' },
     ]
-    const { data: departmentList, isLoading: isLoadingDepartments } = useGetDepartments()
-    const { data: academyList, isLoading: isLoadingAcademies } = useGetAcademies()
+    const showOrganizationFilters = activeTab === 'university' || activeTab === 'graduate'
+    const optionSemesterFilter = semesters.length > 0 ? semesters.join(',') : undefined
+    const { data: departmentList, isLoading: isLoadingDepartments } = useGetDepartments(
+        showOrganizationFilters,
+        {
+            semester: optionSemesterFilter,
+            category: activeTab,
+            academy: academy || undefined,
+        },
+    )
+    const { data: academyList, isLoading: isLoadingAcademies } = useGetAcademies(
+        showOrganizationFilters,
+        {
+            semester: optionSemesterFilter,
+            category: activeTab,
+        },
+    )
     const { data: semesterList } = useGetSemesters()
+    const organizationOptionContextMatchesUrl = activeTab === searchParams.category
+        && semesters.join(',') === searchParams.semesters.join(',')
+
+    useEffect(() => {
+        if (!showOrganizationFilters) {
+            if (!academy && !department) return
+
+            setAcademy('')
+            setDepartment('')
+            if (
+                organizationOptionContextMatchesUrl
+                && (searchParams.academy || searchParams.department)
+            ) {
+                onSearchRef.current(
+                    {
+                        ...searchParams,
+                        page: 1,
+                        academy: '',
+                        department: '',
+                    },
+                    { replace: true },
+                )
+            }
+            return
+        }
+
+        if (
+            academy
+            && !isLoadingAcademies
+            && academyList
+            && !academyList.academies.includes(academy)
+        ) {
+            setAcademy('')
+            setDepartment('')
+            if (
+                organizationOptionContextMatchesUrl
+                && (searchParams.academy || searchParams.department)
+            ) {
+                onSearchRef.current(
+                    {
+                        ...searchParams,
+                        page: 1,
+                        academy: '',
+                        department: '',
+                    },
+                    { replace: true },
+                )
+            }
+            return
+        }
+
+        if (
+            department
+            && !isLoadingDepartments
+            && departmentList
+            && !departmentList.departments.includes(department)
+        ) {
+            setDepartment('')
+            if (organizationOptionContextMatchesUrl && searchParams.department) {
+                onSearchRef.current(
+                    {
+                        ...searchParams,
+                        page: 1,
+                        department: '',
+                    },
+                    { replace: true },
+                )
+            }
+        }
+    }, [
+        academy,
+        academyList,
+        department,
+        departmentList,
+        isLoadingAcademies,
+        isLoadingDepartments,
+        organizationOptionContextMatchesUrl,
+        searchParams,
+        showOrganizationFilters,
+    ])
+
     const weekdayOptions = [
         { value: '1', label: '星期一' },
         { value: '2', label: '星期二' },
@@ -143,7 +244,7 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
                     onChange={(e) => setSearchText(e.target.value)}
                 />
 
-                {(activeTab === 'university' || activeTab === 'graduate') && !isLoadingDepartments && !isLoadingAcademies && (
+                {showOrganizationFilters && (
                     <>
                         <Select
                             placeholder='選擇學院'
@@ -152,8 +253,14 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
                             size='md'
                             classNames={{ input: style.selectInput }}
                             className={style.select}
-                            onChange={(value) => setAcademy(value!)}
+                            onChange={(value) => {
+                                setAcademy(value ?? '')
+                                setDepartment('')
+                            }}
+                            disabled={isLoadingAcademies}
                             searchable
+                            clearable
+                            nothingFoundMessage='找不到符合的學院'
                         />
                         <Select
                             placeholder='選擇系所'
@@ -162,8 +269,11 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
                             size='md'
                             classNames={{ input: style.selectInput }}
                             className={style.select}
-                            onChange={(value) => setDepartment(value!)}
+                            onChange={(value) => setDepartment(value ?? '')}
+                            disabled={isLoadingDepartments}
                             searchable
+                            clearable
+                            nothingFoundMessage='找不到符合的系所'
                         />
                     </>
                 )}
@@ -232,7 +342,11 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
                     </Accordion>
                 )}
 
-                <Button className={style.searchButton} onClick={() => handleClick()}>
+                <Button
+                    className={style.searchButton}
+                    disabled={showOrganizationFilters && (isLoadingAcademies || isLoadingDepartments)}
+                    onClick={() => handleClick()}
+                >
                     搜尋
                 </Button>
             </Container>

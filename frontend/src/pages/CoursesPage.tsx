@@ -104,7 +104,7 @@ const CoursesPage: React.FC = () => {
 	}
 
 	// 還要研究這部分
-	const updateURL = (params: SearchParams) => {
+	const updateURL = (params: SearchParams, options: { replace?: boolean } = {}) => {
 		const newQueryParams = new URLSearchParams()
 		if (params.page > 1) newQueryParams.set('page', params.page.toString())
 		if (params.search) newQueryParams.set('search', params.search)
@@ -117,7 +117,7 @@ const CoursesPage: React.FC = () => {
 		if (params.semesters.length > 0) newQueryParams.set('semesters', params.semesters.join(','))
 		if (params.sortBy) newQueryParams.set('sortBy', params.sortBy)
 
-		navigate(`?${newQueryParams.toString()}`)
+		navigate(`?${newQueryParams.toString()}`, { replace: options.replace ?? false })
 	}
 
 	// 排序功能
@@ -157,8 +157,8 @@ const CoursesPage: React.FC = () => {
 		<div>
 			<CourseFilter
 				searchParams={searchParams}
-				onSearch={(params) => {
-					updateURL(params)
+				onSearch={(params, options) => {
+					updateURL(params, options)
 				}}
 				onClick={setPage}
 			/>

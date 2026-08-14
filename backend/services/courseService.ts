@@ -1,12 +1,56 @@
-import { Course, CourseDetailResponse } from "../types/course";
+import {
+  Course,
+  CourseDetailResponse,
+  CourseListResult,
+  CourseOptionFilters,
+  CourseWithTimeslots,
+} from "../types/course";
 import { PaginationParams } from "../types/course";
 import CourseRepository from "../repositories/courseRepository";
+import CourseScheduleRepository from "../repositories/courseScheduleRepository";
 import InterestRepository from "../repositories/interestRepository";
 import CourseRelatedPostService from "./courseRelatedPostService";
+import {
+  isEwantDepartment,
+  normalizeCourseSchedule,
+  normalizeCourseSchedules,
+} from "../utils/courseSchedule";
 
 class CourseService {
-  async getAllCourses(params: PaginationParams): Promise<{ courses: Course[], total: number }> {
-    return await CourseRepository.getAllCourses(params);
+  async getAllCourses(params: PaginationParams): Promise<CourseListResult>;
+  async getAllCourses(params: PaginationParams, includeTimeslots: false): Promise<CourseListResult>;
+  async getAllCourses(params: PaginationParams, includeTimeslots: true): Promise<CourseListResult<CourseWithTimeslots>>;
+  async getAllCourses(
+    params: PaginationParams,
+    includeTimeslots = false
+  ): Promise<CourseListResult<Course | CourseWithTimeslots>> {
+    const result = await CourseRepository.getAllCourses(params);
+    if (!includeTimeslots) return result;
+
+    const courseIds = result.courses.map((course) => course.id);
+    const schedules = await CourseScheduleRepository.getByCourseIds(courseIds);
+    const timeslotsByCourseId = schedules.reduce<Map<number, CourseWithTimeslots["timeslots"]>>(
+      (map, schedule) => {
+        const normalized = normalizeCourseSchedule(schedule);
+        if (!normalized) return map;
+
+        const current = map.get(schedule.course_id) ?? [];
+        current.push(normalized);
+        map.set(schedule.course_id, current);
+        return map;
+      },
+      new Map()
+    );
+
+    return {
+      ...result,
+      courses: result.courses.map((course) => ({
+        ...(course.toJSON() as Course),
+        timeslots: isEwantDepartment(course.department)
+          ? []
+          : timeslotsByCourseId.get(course.id) ?? [],
+      })),
+    };
   }
 
   async getCourse(user_id: number|undefined, course_id: number): Promise<CourseDetailResponse | null>{
@@ -19,17 +63,23 @@ class CourseService {
       if(interest !== null) hasUserAddInterest = true;
     };
 
-    const related_posts = await CourseRelatedPostService.getByCourseId(course_id);
+    const [related_posts, schedules] = await Promise.all([
+      CourseRelatedPostService.getByCourseId(course_id),
+      CourseScheduleRepository.getByCourseId(course_id),
+    ]);
+    const timeslots = isEwantDepartment(course.department)
+      ? []
+      : normalizeCourseSchedules(schedules);
 
-    return { course, hasUserAddInterest, related_posts };
+    return { course, timeslots, hasUserAddInterest, related_posts };
   }
 
-  async getAllDepartments(): Promise<string[]>{
-    return await CourseRepository.getAllDepartments();
+  async getAllDepartments(filters: CourseOptionFilters = {}): Promise<string[]>{
+    return await CourseRepository.getAllDepartments(filters);
   }
 
-  async getAllAcademies(): Promise<string[]>{
-    return await CourseRepository.getAllAcademies();
+  async getAllAcademies(filters: CourseOptionFilters = {}): Promise<string[]>{
+    return await CourseRepository.getAllAcademies(filters);
   }
 
   async getAllSemesters(): Promise<string[]>{
