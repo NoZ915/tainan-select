@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Button, Collapse, Stack, Text } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { FaLaptop } from 'react-icons/fa'
+import { FaCloudUploadAlt, FaLaptop } from 'react-icons/fa'
 
 import { useAuthStore } from '../../stores/authStore'
 import { useGetSemesters } from '../../hooks/semesters/useGetSemesters'
@@ -18,6 +18,7 @@ import {
   TIMETABLE_PERIOD_ORDER,
 } from '../../utils/timetable'
 import { getUserCacheScope } from '../../utils/userCacheScope'
+import { requestGuestTimetableImportPrompt } from '../../utils/guestTimetableImportSession'
 import styles from '../../styles/components/Timetable.module.css'
 import ConfirmModal from '../ConfirmModal'
 
@@ -364,19 +365,33 @@ const Timetable: React.FC = () => {
       />
 
       <Stack gap='md'>
-        {!isAuthenticated && (
+        {(!isAuthenticated || guestTimetable.summary.totalCourses > 0) && (
           <div className={styles.localTimetableNotice}>
             <div className={styles.localTimetableNoticeIcon} aria-hidden='true'>
               <FaLaptop size={18} />
             </div>
             <div className={styles.localTimetableNoticeContent}>
               <Text fw={800} size='sm'>
-                這份課表保存在此裝置
+                {isAuthenticated
+                  ? `本機還有 ${guestTimetable.summary.totalCourses} 門課尚未處理`
+                  : '這份課表保存在此裝置'}
               </Text>
               <Text size='xs' c='dimmed'>
-                訪客模式不會寫入帳號；登入後可選擇保存，並跨裝置同步。
+                {isAuthenticated
+                  ? `涵蓋 ${guestTimetable.summary.semesterCount} 個學期，可隨時保存到帳號或清除本機資料。`
+                  : '訪客模式不會寫入帳號；登入後可選擇保存，並跨裝置同步。'}
               </Text>
             </div>
+            {isAuthenticated && guestTimetable.summary.totalCourses > 0 && (
+              <Button
+                size='xs'
+                leftSection={<FaCloudUploadAlt size={14} />}
+                onClick={requestGuestTimetableImportPrompt}
+                className={styles.localTimetableNoticeAction}
+              >
+                處理本機課表
+              </Button>
+            )}
           </div>
         )}
 
