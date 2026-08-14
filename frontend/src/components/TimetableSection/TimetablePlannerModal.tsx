@@ -519,6 +519,7 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
           expectedSessionScope: requestUserCacheScope,
         })
         let guestCleanupFailed = false
+        let localSnapshotChanged = false
         if (result.added || result.alreadyExists) {
           updateAccountTimetableCache(timetableId, item, [], requestUserCacheScope)
           void invalidateAccountTimetable(requestUserCacheScope)
@@ -533,12 +534,14 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
               guestCleanupFailed = true
             } else {
               try {
-                const removed = await guestTimetable.removeCourse(
-                  item.course.semester,
-                  item.course.id,
+                const removed = await guestTimetable.removeCourseSnapshot(
+                  item,
                   isRequestSessionCurrent,
                 )
-                if (!removed && !isRequestSessionCurrent()) guestCleanupFailed = true
+                if (!removed) {
+                  if (!isRequestSessionCurrent()) guestCleanupFailed = true
+                  else localSnapshotChanged = true
+                }
               } catch {
                 guestCleanupFailed = true
               }
@@ -549,10 +552,12 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
           title: result.alreadyExists ? '已存在' : '已加入課表',
           message: guestCleanupFailed
             ? '帳號課表已更新，但無法清除這門課的本機待處理資料。'
-            : result.alreadyExists
-              ? '這門課已經在課表中'
-              : `課程已加入 ${semester} 課表`,
-          color: guestCleanupFailed ? 'orange' : result.alreadyExists ? 'blue' : 'green',
+            : localSnapshotChanged
+              ? '課程已加入帳號課表；本機快照已由其他分頁變更，因此未移除其他資料。'
+              : result.alreadyExists
+                ? '這門課已經在課表中'
+                : `課程已加入 ${semester} 課表`,
+          color: guestCleanupFailed ? 'orange' : localSnapshotChanged ? 'blue' : result.alreadyExists ? 'blue' : 'green',
         })
       } catch (error) {
         const conflictCourseIds = getConflictIdsFromApiError(error)
@@ -714,6 +719,7 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
           { expectedSessionScope: requestUserCacheScope },
         )
         let guestCleanupFailed = false
+        let localSnapshotChanged = false
         updateAccountTimetableCache(
           pendingSwap.timetableId,
           pendingSwap.item,
@@ -735,12 +741,14 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
             guestCleanupFailed = true
           } else {
             try {
-              const removed = await guestTimetable.removeCourse(
-                pendingSwap.item.course.semester,
-                pendingSwap.item.course.id,
+              const removed = await guestTimetable.removeCourseSnapshot(
+                pendingSwap.item,
                 isRequestSessionCurrent,
               )
-              if (!removed && !isRequestSessionCurrent()) guestCleanupFailed = true
+              if (!removed) {
+                if (!isRequestSessionCurrent()) guestCleanupFailed = true
+                else localSnapshotChanged = true
+              }
             } catch {
               guestCleanupFailed = true
             }
@@ -750,10 +758,12 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
           title: result.alreadyExists ? '課程已在課表中' : '已完成交換',
           message: guestCleanupFailed
             ? '帳號課表已更新，但無法清除這門課的本機待處理資料。'
-            : result.alreadyExists
-              ? '這門課已經在課表中，未調整原有課表。'
-              : `已移除 ${result.removedCourseIds.length} 門衝堂課，並加入 ${pendingSwap.item.course.name}`,
-          color: guestCleanupFailed ? 'orange' : result.alreadyExists ? 'blue' : 'green',
+            : localSnapshotChanged
+              ? '已完成帳號課表交換；本機快照已由其他分頁變更，因此未移除其他資料。'
+              : result.alreadyExists
+                ? '這門課已經在課表中，未調整原有課表。'
+                : `已移除 ${result.removedCourseIds.length} 門衝堂課，並加入 ${pendingSwap.item.course.name}`,
+          color: guestCleanupFailed ? 'orange' : localSnapshotChanged ? 'blue' : result.alreadyExists ? 'blue' : 'green',
         })
       }
 
