@@ -1,4 +1,4 @@
-import { Course, CourseDetailResponse } from "../types/course";
+import { Course, CourseDetailResponse, CourseOptionFilters } from "../types/course";
 import { PaginationParams } from "../types/course";
 import CourseRepository from "../repositories/courseRepository";
 import InterestRepository from "../repositories/interestRepository";
@@ -24,12 +24,12 @@ class CourseService {
     return { course, hasUserAddInterest, related_posts };
   }
 
-  async getAllDepartments(): Promise<string[]>{
-    return await CourseRepository.getAllDepartments();
+  async getAllDepartments(filters: CourseOptionFilters = {}): Promise<string[]>{
+    return await CourseRepository.getAllDepartments(filters);
   }
 
-  async getAllAcademies(): Promise<string[]>{
-    return await CourseRepository.getAllAcademies();
+  async getAllAcademies(filters: CourseOptionFilters = {}): Promise<string[]>{
+    return await CourseRepository.getAllAcademies(filters);
   }
 
   async getAllSemesters(): Promise<string[]>{
