@@ -138,17 +138,19 @@ class ReviewRepository {
 
   async upsertReview(input: CreateReviewInput): Promise<void> {
     const transaction = await db.sequelize.transaction();
-    const existingReview = await ReviewModel.findOne({
-      where: { user_id: input.user_id, course_id: input.course_id },
-      transaction
-    });
-
-    if (existingReview) {
-      await existingReview.update(input);
-      return;
-    }
 
     try {
+      const existingReview = await ReviewModel.findOne({
+        where: { user_id: input.user_id, course_id: input.course_id },
+        transaction
+      });
+
+      if (existingReview) {
+        await existingReview.update(input, { transaction });
+        await transaction.commit();
+        return;
+      }
+
       await ReviewModel.create(input, { transaction });
       await CourseRepository.incrementCount(
         input.course_id,
