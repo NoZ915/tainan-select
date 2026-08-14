@@ -1,6 +1,12 @@
 import { User } from './userType'
 
-export interface AuthStatusResponse{
-    authenticated: boolean,
+export type AuthStatusResponse =
+  | {
+    authenticated: true
+    session_scope: string
     user: User
-}
+  }
+  | {
+    authenticated: false
+    user?: never
+  }

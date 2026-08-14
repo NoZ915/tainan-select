@@ -1,5 +1,7 @@
 import { Accordion, Anchor, Button, Group, Modal, Stack, Text } from '@mantine/core'
 import { useLocation } from 'react-router-dom'
+import { notifications } from '@mantine/notifications'
+import { beginOAuthAuthSessionTransition } from '../utils/userCacheScope'
 
 interface LoginModalProps {
   opened: boolean;
@@ -11,10 +13,22 @@ const LoginModal: React.FC<LoginModalProps> = ({ opened, onClose, title }) => {
   const location = useLocation()
   const blockedRedirectPaths = ['/mailError']
   const path = blockedRedirectPaths.includes(location.pathname) ? '/' : location.pathname
-  const handleLogin = () => {
+  const handleLogin = async (): Promise<void> => {
+    const transitionOwner = await beginOAuthAuthSessionTransition()
+    if (!transitionOwner) {
+      notifications.show({
+        title: '登入狀態正在更新',
+        message: '其他分頁正在處理登入或登出，請稍後再試。',
+        color: 'orange',
+      })
+      return
+    }
+
     onClose()
-    localStorage.setItem('redirect_path', path)
-    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google`
+    sessionStorage.setItem('redirect_path', path)
+    const loginUrl = new URL(`${import.meta.env.VITE_API_BASE_URL}/auth/google`)
+    loginUrl.searchParams.set('owner', transitionOwner)
+    window.location.href = loginUrl.toString()
   }
 
   return (
@@ -63,7 +77,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ opened, onClose, title }) => {
         <Button variant='light' onClick={onClose}>
           取消
         </Button>
-        <Button variant='filled' onClick={handleLogin}>
+        <Button variant='filled' onClick={() => void handleLogin()}>
           確定
         </Button>
       </Group>

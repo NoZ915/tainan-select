@@ -13,20 +13,12 @@ interface AuthButtonProps {
 
 const AuthButton: React.FC<AuthButtonProps> = ({ className, onClick }) => {
   const { isAuthenticated, user } = useAuthStore()
-  const { mutate: logoutUser } = useLogoutUser()
+  const { mutate: logoutUser, isPending: isLoggingOut } = useLogoutUser()
 
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
 
-  const handleLogout = async () => {
-    setIsLoggingOut(true)
-    try {
-      logoutUser()
-    } catch (error) {
-      console.error('登出失敗', error)
-    } finally {
-      setIsLoggingOut(false)
-    }
+  const handleLogout = () => {
+    logoutUser()
   }
 
   return (
@@ -34,7 +26,13 @@ const AuthButton: React.FC<AuthButtonProps> = ({ className, onClick }) => {
       {isAuthenticated ? (
         <>
           <Text component={Link} to='/profile' onClick={onClick}>{user?.name}</Text>
-          <Button onClick={handleLogout} variant='outline' color='brick-red.6' className={styles.logoutButton}>
+          <Button
+            onClick={handleLogout}
+            loading={isLoggingOut}
+            variant='outline'
+            color='brick-red.6'
+            className={styles.logoutButton}
+          >
             {isLoggingOut ? '登出中...' : '登出'}
           </Button>
         </>

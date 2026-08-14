@@ -3,6 +3,8 @@ import { notifications } from '@mantine/notifications'
 import { addTimetableCourse } from '../../apis/timetableAPI'
 import { ApiError } from '../../apis/axiosInstance'
 import { QUERY_KEYS } from '../queryKeys'
+import { useAuthStore } from '../../stores/authStore'
+import { getUserCacheScope } from '../../utils/userCacheScope'
 
 type AddPayload = {
   timetableId: number
@@ -14,10 +16,20 @@ export const useAddTimetableCourse = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ timetableId, courseId }: AddPayload) => addTimetableCourse(timetableId, courseId),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TIMETABLE, variables.semester] })
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TIMETABLE_ALL_ITEMS] })
+    mutationFn: async ({ timetableId, courseId }: AddPayload) => {
+      const userCacheScope = getUserCacheScope(useAuthStore.getState().user)
+      const result = await addTimetableCourse(timetableId, courseId, {
+        expectedSessionScope: userCacheScope,
+      })
+      return { result, userCacheScope }
+    },
+    onSuccess: ({ result: data, userCacheScope }, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.TIMETABLE, variables.semester, userCacheScope],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.TIMETABLE_ALL_ITEMS, userCacheScope],
+      })
 
       if (data.added) {
         notifications.show({
