@@ -1,6 +1,5 @@
 ﻿import { Link } from 'react-router-dom'
 import { Button, Group, Modal, Stack, Text } from '@mantine/core'
-import { TimetableConflict } from '../../types/timetableType'
 
 type SwapTargetCourse = {
   id: number
@@ -10,9 +9,11 @@ type SwapTargetCourse = {
 type SwapConflictModalProps = {
   opened: boolean
   targetCourse: SwapTargetCourse | null
-  conflicts: TimetableConflict[]
+  conflictCourseIds: number[]
   addedCourseNameMap: Map<number, string>
   isSubmitting: boolean
+  zIndex?: number
+  showCourseLinks?: boolean
   onClose: () => void
   onConfirm: () => void
 }
@@ -20,21 +21,21 @@ type SwapConflictModalProps = {
 const SwapConflictModal: React.FC<SwapConflictModalProps> = ({
   opened,
   targetCourse,
-  conflicts,
+  conflictCourseIds,
   addedCourseNameMap,
   isSubmitting,
+  zIndex = 1300,
+  showCourseLinks = true,
   onClose,
   onConfirm,
 }) => {
-  const conflictCourseIds = Array.from(new Set(conflicts.map((item) => item.conflictWithCourseId)))
-
   return (
     <Modal
       opened={opened}
       onClose={onClose}
       title='偵測到衝堂，是否交換課程？'
       centered
-      zIndex={1300}
+      zIndex={zIndex}
       radius='md'
       padding='lg'
     >
@@ -46,9 +47,13 @@ const SwapConflictModal: React.FC<SwapConflictModalProps> = ({
           <Text key={conflictCourseId} size='sm' c='dimmed'>
             -
             {' '}
-            <Text component={Link} to={`/course/${conflictCourseId}`} span inherit>
-              {addedCourseNameMap.get(conflictCourseId) ?? `課程 ${conflictCourseId}`}
-            </Text>
+            {showCourseLinks ? (
+              <Text component={Link} to={`/course/${conflictCourseId}`} span inherit>
+                {addedCourseNameMap.get(conflictCourseId) ?? `課程 ${conflictCourseId}`}
+              </Text>
+            ) : (
+              addedCourseNameMap.get(conflictCourseId) ?? `課程 ${conflictCourseId}`
+            )}
           </Text>
         ))}
         <Text size='sm'>確定要移除衝堂課程並加入新課嗎？</Text>
