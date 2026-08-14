@@ -10,6 +10,8 @@ export interface Course {
   course_room?: string;
   course_time?: string;
   course_url?: string;
+  cour_no?: string;
+  course_dep_code?: string;
   credit_hours: number;
   semester: string;
   created_at: Date;

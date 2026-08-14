@@ -8,6 +8,7 @@ import Course from "../models/Course";
 import { googleRequestCURL } from "./googleRequestCURL";
 import { normalizeCourseTime, parseCourseTime } from "../utils/parseCourseTime";
 import { normalizeCourseType } from "../utils/normalizeCourseType";
+import { parseCourseIdentityFromUrl } from "../utils/courseIdentity";
 import CourseScheduleModel from "../models/CourseSchedule";
 
 const courses: string[] = [];
@@ -170,70 +171,98 @@ async function runScraper(): Promise<void> {
           const rawCourseType = coursePage$("#Label16").text();
           const courseType = normalizeCourseType(rawCourseType);
 
-          const existingCourse = await Course.findOne({
-            where: {
-              department: course.department,
-              course_name: course.courseName,
-              instructor: course.instructor,
-            },
-          });
+          // cour_no + course_dep_code 是課程網址帶的開課序號，用來識別「同系所同課名同老師」
+          // 也可能是不同班次的情況（例如必修課同老師連開兩班）；解析失敗時退回舊比對方式。
+          const identity = parseCourseIdentityFromUrl(course.courseURL);
+
+          const existingCourse = identity
+            ? await Course.findOne({
+                where: {
+                  cour_no: identity.cour_no,
+                  course_dep_code: identity.course_dep_code,
+                  semester: course.semester,
+                },
+              })
+            : await Course.findOne({
+                where: {
+                  department: course.department,
+                  course_name: course.courseName,
+                  instructor: course.instructor,
+                },
+              });
 
           if (existingCourse) {
-            await existingCourse.update({
-              semester: course.semester,
-              academy: course.academy,
-              instructor_url: course.instructorURL,
-              course_room: courseRoom,
-              course_time: courseTime,
-              course_url: course.courseURL,
-              credit_hours: parseInt(course.creditHours),
-              course_type: courseType,
-              updated_at: new Date(),
-            });
+            await db.sequelize.transaction(async (transaction) => {
+              await existingCourse.update(
+                {
+                  semester: course.semester,
+                  academy: course.academy,
+                  instructor_url: course.instructorURL,
+                  course_room: courseRoom,
+                  course_time: courseTime,
+                  course_url: course.courseURL,
+                  cour_no: identity?.cour_no ?? existingCourse.cour_no,
+                  course_dep_code: identity?.course_dep_code ?? existingCourse.course_dep_code,
+                  credit_hours: parseInt(course.creditHours),
+                  course_type: courseType,
+                  updated_at: new Date(),
+                },
+                { transaction }
+              );
 
-            // 刪除舊的 CourseSchedule 再新增
-            await CourseScheduleModel.destroy({ where: { course_id: existingCourse.id } });
-            const schedules = parseCourseTime(courseTime);
-            await CourseScheduleModel.bulkCreate(
-              schedules.map(s => ({
-                course_id: existingCourse.id,
-                day: Number(s.day),
-                start_period: s.startPeriod,
-                span: s.span
-              }))
-            );
+              // 刪除舊的 CourseSchedule 再新增
+              await CourseScheduleModel.destroy({ where: { course_id: existingCourse.id }, transaction });
+              const schedules = parseCourseTime(courseTime);
+              await CourseScheduleModel.bulkCreate(
+                schedules.map(s => ({
+                  course_id: existingCourse.id,
+                  day: Number(s.day),
+                  start_period: s.startPeriod,
+                  span: s.span
+                })),
+                { transaction }
+              );
+            });
 
           } else {
-            const createdCourse = await Course.create({
-              course_name: course.courseName,
-              department: course.department,
-              academy: course.academy,
-              instructor: course.instructor,
-              instructor_url: course.instructorURL,
-              course_room: courseRoom,
-              course_time: courseTime,
-              course_url: course.courseURL,
-              credit_hours: parseInt(course.creditHours),
-              semester: course.semester,
-              id: undefined as any, // 明確設為 undefined，讓資料庫生成
-              created_at: new Date(), // 提供當前時間
-              updated_at: new Date(), // 提供當前時間
-              course_type: courseType,
-              interests_count: 0,
-              review_count: 0,
-              view_count: 0,
-              dcard_related_post_count: 0,
-            });
+            await db.sequelize.transaction(async (transaction) => {
+              const createdCourse = await Course.create(
+                {
+                  course_name: course.courseName,
+                  department: course.department,
+                  academy: course.academy,
+                  instructor: course.instructor,
+                  instructor_url: course.instructorURL,
+                  course_room: courseRoom,
+                  course_time: courseTime,
+                  course_url: course.courseURL,
+                  cour_no: identity?.cour_no,
+                  course_dep_code: identity?.course_dep_code,
+                  credit_hours: parseInt(course.creditHours),
+                  semester: course.semester,
+                  id: undefined as any, // 明確設為 undefined，讓資料庫生成
+                  created_at: new Date(), // 提供當前時間
+                  updated_at: new Date(), // 提供當前時間
+                  course_type: courseType,
+                  interests_count: 0,
+                  review_count: 0,
+                  view_count: 0,
+                  dcard_related_post_count: 0,
+                },
+                { transaction }
+              );
 
-            const schedules = parseCourseTime(courseTime);
-            await CourseScheduleModel.bulkCreate(
-              schedules.map(s => ({
-                course_id: createdCourse.id,
-                day: Number(s.day),
-                start_period: s.startPeriod,
-                span: s.span,
-              }))
-            );
+              const schedules = parseCourseTime(courseTime);
+              await CourseScheduleModel.bulkCreate(
+                schedules.map(s => ({
+                  course_id: createdCourse.id,
+                  day: Number(s.day),
+                  start_period: s.startPeriod,
+                  span: s.span,
+                })),
+                { transaction }
+              );
+            });
           }
         } catch (error) {
           failed++;
