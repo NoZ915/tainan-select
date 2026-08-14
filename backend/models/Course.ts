@@ -19,6 +19,8 @@ class CourseModel extends Model<
   declare course_room?: string;
   declare course_time?: string;
   declare course_url?: string;
+  declare cour_no?: string;
+  declare course_dep_code?: string;
   declare credit_hours: number;
   declare semester: string;
   declare created_at: Date;
@@ -63,6 +65,12 @@ CourseModel.init(
     },
     course_url: {
       type: DataTypes.TEXT,
+    },
+    cour_no: {
+      type: DataTypes.STRING(20),
+    },
+    course_dep_code: {
+      type: DataTypes.STRING(20),
     },
     credit_hours: {
       type: DataTypes.TINYINT,
