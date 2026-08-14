@@ -69,51 +69,11 @@
 
 .plannerCategoryTabs {
   min-width: 0;
-  position: relative;
-}
-
-.plannerCategoryTabs::before,
-.plannerCategoryTabs::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 1px;
-  z-index: 2;
-  width: 32px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.18s ease;
-}
-
-.plannerCategoryTabs::before {
-  left: 0;
-  background: linear-gradient(to right, var(--mantine-color-body), transparent);
-}
-
-.plannerCategoryTabs::after {
-  right: 0;
-  background: linear-gradient(to left, var(--mantine-color-body), transparent);
-}
-
-.plannerCategoryTabsHasLeftOverflow::before,
-.plannerCategoryTabsHasRightOverflow::after {
-  opacity: 1;
 }
 
 .plannerCategoryTabsList {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  overscroll-behavior-inline: contain;
-  touch-action: pan-x;
-  scrollbar-width: none;
-}
-
-.plannerCategoryTabsList::-webkit-scrollbar {
-  display: none;
-}
-
-.plannerCategoryTabsList button {
-  flex: 0 0 auto;
+  flex-wrap: wrap;
+  row-gap: 4px;
 }
 
 /* ── Cards ── */

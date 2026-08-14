@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState, WheelEvent } from 'react'
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActionIcon,
   Badge,
@@ -148,7 +148,7 @@ const hasApiErrorCode = (error: unknown, code: string): boolean => {
 const showGuestAddSuccess = (item: GuestTimetableItem): void => {
   const hasMissingTimeslots = !isEwantCourse(item.course) && item.timeslots.length === 0
   notifications.show({
-    title: '已加入本機課表',
+    title: '已加入裝置上的課表',
     message: hasMissingTimeslots
       ? '此課程缺少時段資料，已加入課表，但不參與衝堂判斷。此課表只保存在目前瀏覽器。'
       : '此課表只保存在目前瀏覽器。',
@@ -185,11 +185,9 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
   const [removeTarget, setRemoveTarget] = useState<TimetableItem | null>(null)
   const [isGuestRemovePending, setIsGuestRemovePending] = useState(false)
   const [initializedContextKey, setInitializedContextKey] = useState<string | null>(null)
-  const [categoryTabOverflow, setCategoryTabOverflow] = useState({ left: false, right: false })
   const autoAddContextRef = useRef<string | null>(null)
   const addLockRef = useRef(false)
   const searchPaneRef = useRef<HTMLDivElement | null>(null)
-  const categoryTabsListRef = useRef<HTMLDivElement | null>(null)
 
   const requestedContextKey = `${semester ?? ''}:${initialCourse?.course.id ?? ''}:${initialSlot?.dayOfWeek ?? ''}:${initialSlot?.period ?? ''}`
 
@@ -415,50 +413,6 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
     }
   }
 
-  const updateCategoryTabOverflow = useCallback((): void => {
-    const tabsList = categoryTabsListRef.current
-    if (!tabsList) return
-
-    const maxScrollLeft = tabsList.scrollWidth - tabsList.clientWidth
-    const nextOverflow = {
-      left: tabsList.scrollLeft > 1,
-      right: tabsList.scrollLeft < maxScrollLeft - 1,
-    }
-    setCategoryTabOverflow((currentOverflow) => (
-      currentOverflow.left === nextOverflow.left
-      && currentOverflow.right === nextOverflow.right
-        ? currentOverflow
-        : nextOverflow
-    ))
-  }, [])
-
-  useEffect(() => {
-    if (!opened) return
-
-    const animationFrame = window.requestAnimationFrame(updateCategoryTabOverflow)
-    const resizeObserver = new ResizeObserver(updateCategoryTabOverflow)
-    if (categoryTabsListRef.current) resizeObserver.observe(categoryTabsListRef.current)
-
-    return () => {
-      window.cancelAnimationFrame(animationFrame)
-      resizeObserver.disconnect()
-    }
-  }, [opened, updateCategoryTabOverflow])
-
-  const handleCategoryTabsWheel = (event: WheelEvent<HTMLDivElement>): void => {
-    const tabsList = event.currentTarget
-    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return
-
-    const maxScrollLeft = tabsList.scrollWidth - tabsList.clientWidth
-    const canScroll = event.deltaY < 0
-      ? tabsList.scrollLeft > 0
-      : tabsList.scrollLeft < maxScrollLeft
-    if (!canScroll) return
-
-    event.preventDefault()
-    tabsList.scrollLeft += event.deltaY
-  }
-
   const handleAddCourse = useCallback(async (item: GuestTimetableItem): Promise<void> => {
     if (
       !semester
@@ -498,7 +452,7 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
         if (result.alreadyExists) {
           notifications.show({
             title: '已存在',
-            message: '這門課已經在本機課表中',
+            message: '這門課已經在裝置上的課表中',
             color: 'blue',
           })
         } else {
@@ -551,9 +505,9 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
         notifications.show({
           title: result.alreadyExists ? '已存在' : '已加入課表',
           message: guestCleanupFailed
-            ? '帳號課表已更新，但無法清除這門課的本機待處理資料。'
+            ? '帳號課表已更新，但無法清除這門課的裝置上尚未處理的資料。'
             : localSnapshotChanged
-              ? '課程已加入帳號課表；本機快照已由其他分頁變更，因此未移除其他資料。'
+              ? '課程已加入帳號課表；這門課在其他分頁被變更過，因此未移除裝置上的資料。'
               : result.alreadyExists
                 ? '這門課已經在課表中'
                 : `課程已加入 ${semester} 課表`,
@@ -677,14 +631,14 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
       await guestTimetable.removeCourse(semester, removeTarget.course.id)
       notifications.show({
         title: '已移除課程',
-        message: '課程已從本機課表移除',
+        message: '課程已從裝置上的課表移除',
         color: 'green',
       })
       setRemoveTarget(null)
     } catch (error) {
       notifications.show({
         title: '移除失敗',
-        message: error instanceof Error ? error.message : '無法更新本機課表',
+        message: error instanceof Error ? error.message : '無法更新裝置上的課表',
         color: 'red',
       })
     } finally {
@@ -705,7 +659,7 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
         notifications.show({
           title: result.alreadyExists ? '課程已在課表中' : '已完成交換',
           message: result.alreadyExists
-            ? '這門課已經在本機課表中，未調整原有課表。'
+            ? '這門課已經在裝置上的課表中，未調整原有課表。'
             : `已移除 ${result.removedCourseIds.length} 門衝堂課，並加入 ${pendingSwap.item.course.name}。此課表只保存在目前瀏覽器。`,
           color: result.alreadyExists ? 'blue' : 'green',
         })
@@ -757,9 +711,9 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
         notifications.show({
           title: result.alreadyExists ? '課程已在課表中' : '已完成交換',
           message: guestCleanupFailed
-            ? '帳號課表已更新，但無法清除這門課的本機待處理資料。'
+            ? '帳號課表已更新，但無法清除這門課的裝置上尚未處理的資料。'
             : localSnapshotChanged
-              ? '已完成帳號課表交換；本機快照已由其他分頁變更，因此未移除其他資料。'
+              ? '已完成帳號課表交換；這門課在其他分頁被變更過，因此未移除裝置上的資料。'
               : result.alreadyExists
                 ? '這門課已經在課表中，未調整原有課表。'
                 : `已移除 ${result.removedCourseIds.length} 門衝堂課，並加入 ${pendingSwap.item.course.name}`,
@@ -816,18 +770,9 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
             <Tabs
               value={category}
               onChange={handleCategoryChange}
-              className={[
-                styles.plannerCategoryTabs,
-                categoryTabOverflow.left ? styles.plannerCategoryTabsHasLeftOverflow : '',
-                categoryTabOverflow.right ? styles.plannerCategoryTabsHasRightOverflow : '',
-              ].filter(Boolean).join(' ')}
+              className={styles.plannerCategoryTabs}
             >
-              <Tabs.List
-                ref={categoryTabsListRef}
-                className={styles.plannerCategoryTabsList}
-                onScroll={updateCategoryTabOverflow}
-                onWheel={handleCategoryTabsWheel}
-              >
+              <Tabs.List className={styles.plannerCategoryTabsList}>
                 {plannerFilterOptions.map((option) => (
                   <Tabs.Tab key={option.value} value={option.value}>
                     {option.label}
@@ -1013,7 +958,7 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
                 <Text fw={800}>目前課表</Text>
                 <Text size='sm' c='dimmed'>點擊課程格可查看評價或移除整門課；點擊空白格的＋可改用該時段篩選。</Text>
               </div>
-              <Badge variant='light'>已排 {existingItems.length} 門</Badge>
+              <Badge variant='light' style={{ flexShrink: 0 }}>已排 {existingItems.length} 門</Badge>
             </Group>
 
             {guestTimetable.error && !isAuthenticated && (
