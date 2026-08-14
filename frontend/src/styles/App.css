@@ -53,9 +53,15 @@ body {
 }
 
 /* iOS Safari/Chrome auto-zooms on focus when an input's font-size is under 16px,
-   and nothing resets that zoom afterward — this keeps every input/select/textarea
-   (including Mantine's Select search field) at or above the threshold on mobile. */
+   and nothing resets that zoom afterward. Mantine's inputs read their font-size
+   from --input-fz (via a hashed class with higher specificity than a bare `input`
+   selector, so overriding the element directly gets overridden right back) —
+   setting the variable is what actually reaches Select/TextInput/Combobox. */
 @media (max-width: 768px) {
+  :root {
+    --input-fz: 16px;
+  }
+
   input,
   select,
   textarea {
