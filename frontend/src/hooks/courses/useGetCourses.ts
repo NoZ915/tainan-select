@@ -5,7 +5,7 @@ import { QUERY_KEYS } from '../queryKeys'
 
 export const useGetCourses = (searchParams: SearchParams, enabled = true) => {
   return useQuery({
-    queryKey: [QUERY_KEYS.COURSES, ...Object.values(searchParams)],
+    queryKey: [QUERY_KEYS.COURSES, searchParams],
     queryFn: () => getCourses(searchParams),
     placeholderData: (prev) => prev,
     enabled,

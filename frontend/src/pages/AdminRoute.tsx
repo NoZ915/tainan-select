@@ -1,12 +1,14 @@
 import { Loader, Text } from '@mantine/core'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useGetAdminStatus } from '../hooks/admin/useGetAdminStatus'
+import { useAuthStore } from '../stores/authStore'
 
 const AdminRoute: React.FC = () => {
   const location = useLocation()
+  const isAuthResolved = useAuthStore((state) => state.isAuthResolved)
   const { data, isLoading, isError } = useGetAdminStatus()
 
-  if (isLoading) {
+  if (!isAuthResolved || isLoading) {
     return <Loader mt='xl' />
   }
 

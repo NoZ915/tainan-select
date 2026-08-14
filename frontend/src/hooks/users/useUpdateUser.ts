@@ -3,18 +3,25 @@ import { notifications } from '@mantine/notifications'
 
 import { updateUser } from '../../apis/userAPI'
 import { useAuthStore } from '../../stores/authStore'
+import { getUserCacheScope } from '../../utils/userCacheScope'
 import { QUERY_KEYS } from '../queryKeys'
 
 const useUpdateUserBase = (successMessage: string) => {
-  const login = useAuthStore((state) => state.login)
+  const updateStoredUser = useAuthStore((state) => state.updateUser)
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: updateUser,
-    onSuccess: ({ name, avatar }) => {
+    onMutate: () => ({
+      userCacheScope: getUserCacheScope(useAuthStore.getState().user),
+    }),
+    onSuccess: ({ name, avatar }, _variables, context) => {
       const latestUser = useAuthStore.getState().user
-      if (latestUser) {
-        login({ ...latestUser, name, avatar })
+      if (
+        latestUser
+        && getUserCacheScope(latestUser) === context.userCacheScope
+      ) {
+        updateStoredUser({ ...latestUser, name, avatar })
       }
 
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INFINITY_REVIEWS] })

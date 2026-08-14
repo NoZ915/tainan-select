@@ -1,3 +1,5 @@
+import type { CourseTimeslot } from "./timetable";
+
 export interface Course {
   id: number;
   course_name: string;
@@ -17,6 +19,15 @@ export interface Course {
   view_count?: number;
   review_count?: number;
   dcard_related_post_count?: number;
+}
+
+export interface CourseWithTimeslots extends Course {
+  timeslots: CourseTimeslot[];
+}
+
+export interface CourseListResult<TCourse extends Course = Course> {
+  courses: TCourse[];
+  total: number;
 }
 
 export interface CourseRelatedPost {
@@ -55,6 +66,7 @@ export interface RelatedPostComment {
 
 export interface CourseDetailResponse {
   course: Course;
+  timeslots: CourseTimeslot[];
   hasUserAddInterest: boolean;
   related_posts: CourseRelatedPost[];
 }
@@ -69,6 +81,12 @@ export interface CourseSearchParams {
   periods: string[];
   semesters: string[];
   sortBy?: string;
+}
+
+export interface CourseOptionFilters {
+  category?: string;
+  academy?: string;
+  semesters?: string[];
 }
 
 export interface PaginationParams {

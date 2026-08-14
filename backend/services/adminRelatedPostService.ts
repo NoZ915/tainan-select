@@ -68,10 +68,11 @@ class AdminRelatedPostService {
       .join(" ");
   }
 
-  private async getAllCourseRows(): Promise<RelatedPostCourseRow[]> {
+  private async getAllCourseRows(transaction?: Transaction): Promise<RelatedPostCourseRow[]> {
     return (await CourseModel.findAll({
       attributes: ["id", "course_name", "department", "instructor", "semester"],
       raw: true,
+      transaction,
     })) as RelatedPostCourseRow[];
   }
 
@@ -308,7 +309,7 @@ class AdminRelatedPostService {
     replaceExisting: boolean,
     transaction?: Transaction
   ): Promise<ManualRelatedPostImportResult> {
-    const courses = await this.getAllCourseRows();
+    const courses = await this.getAllCourseRows(transaction);
     const syncedAt = new Date();
     const rows: CourseRelatedPostUpsertInput[] = [];
     const affectedCourseIds = new Set<number>();
@@ -692,7 +693,7 @@ class AdminRelatedPostService {
     }
 
     await db.sequelize.transaction(async (transaction) => {
-      const deleted = await CourseRelatedPostRepository.deleteById(id);
+      const deleted = await CourseRelatedPostRepository.deleteById(id, transaction);
       if (deleted === 0) {
         throw new Error("找不到要刪除的相關貼文");
       }

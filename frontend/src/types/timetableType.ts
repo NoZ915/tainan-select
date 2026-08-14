@@ -13,12 +13,31 @@ export interface TimetableCourse {
   department: string
   instructor: string
   room?: string
+  courseTime?: string
 }
 
 export interface TimetableItem {
   course: TimetableCourse
   timeslots: Timeslot[]
 }
+
+export interface GuestTimetableItem extends TimetableItem {
+  addedAt: string
+}
+
+export interface GuestTimetableStorage {
+  version: 1
+  semesters: Record<string, GuestTimetableItem[]>
+}
+
+export interface TimetableGridCell {
+  courseId: number
+  courseName: string
+  instructor: string
+  room?: string
+}
+
+export type TimetableGrid = Record<string, Partial<Record<number, TimetableGridCell[]>>>
 
 export interface TimetableResponse {
   timetable: {
@@ -53,17 +72,6 @@ export interface TimetableConflict {
     startPeriod: string
     endPeriod: string
   }
-}
-
-export interface BatchAddFromInterestsResponse {
-  summary: {
-    requested: number
-    eligibleSameSemester: number
-    added: number
-    skippedAlreadyExists: number
-    conflicted: number
-  }
-  conflicts: TimetableConflict[]
 }
 
 export interface AddTimetableCourseResponse {

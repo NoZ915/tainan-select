@@ -1,4 +1,5 @@
 import CourseScheduleModel from "../models/CourseSchedule";
+import { Transaction } from "sequelize";
 
 class CourseScheduleRepository {
   async getByCourseId(course_id: number): Promise<CourseScheduleModel[]> {
@@ -8,10 +9,14 @@ class CourseScheduleRepository {
     });
   }
 
-  async getByCourseIds(courseIds: number[]): Promise<CourseScheduleModel[]> {
+  async getByCourseIds(
+    courseIds: number[],
+    transaction?: Transaction
+  ): Promise<CourseScheduleModel[]> {
     if (courseIds.length === 0) return [];
     return await CourseScheduleModel.findAll({
       where: { course_id: courseIds },
+      transaction,
       order: [["course_id", "ASC"], ["day", "ASC"], ["start_period", "ASC"]],
     });
   }

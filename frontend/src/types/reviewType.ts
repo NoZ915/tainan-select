@@ -3,7 +3,6 @@ import { ReviewReactionSummary } from './reactionType'
 
 export interface ReviewsResponse {
   id: number,
-  user_id: number,
   course_id: number;
   gain: number;
   sweetness: number;

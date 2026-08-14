@@ -1,5 +1,6 @@
 import { RequestHandler } from "express";
-import { verifyJwtToken } from "../utils/jwt";
+import jwt from "jsonwebtoken";
+import { getJwtSessionScope, verifyJwtToken } from "../utils/jwt";
 import userService from "../services/userService";
 
 export const statusController: RequestHandler = async (
@@ -12,8 +13,21 @@ export const statusController: RequestHandler = async (
     return;
   }
 
+  let userDetail;
   try {
-    const userDetail = verifyJwtToken(token);
+    userDetail = verifyJwtToken(token);
+  } catch (err) {
+    if (err instanceof jwt.JsonWebTokenError) {
+      res.status(401).json({ authenticated: false, message: "驗證失敗" });
+      return;
+    }
+
+    console.error("登入驗證設定異常:", err);
+    res.status(500).json({ message: "無法確認登入狀態" });
+    return;
+  }
+
+  try {
     const user = await userService.getUserByGoogleSub(userDetail.sub);
     if (!user) {
       res.status(404).json({ authenticated: false, message: "用戶未找到" });
@@ -22,6 +36,7 @@ export const statusController: RequestHandler = async (
     const { id, name, detail, avatar, is_admin, created_at, updated_at } = user;
     res.status(200).json({
       authenticated: true,
+      session_scope: getJwtSessionScope(token),
       user: {
         id,
         name,
@@ -33,7 +48,8 @@ export const statusController: RequestHandler = async (
       },
     });
   } catch (err) {
-    res.status(401).json({ authenticated: false, message: "驗證失敗" });
+    console.error("讀取登入使用者失敗:", err);
+    res.status(500).json({ message: "無法確認登入狀態" });
   }
 };
 
@@ -45,17 +61,44 @@ export const checkAuthStatus: RequestHandler = async (req, res) => {
     return;
   }
 
+  let userDetail;
   try {
-    const userDetail = verifyJwtToken(token);
+    userDetail = verifyJwtToken(token);
+  } catch (err) {
+    if (err instanceof jwt.JsonWebTokenError) {
+      res.json({ authenticated: false });
+      return;
+    }
+
+    console.error("登入驗證設定異常:", err);
+    res.status(500).json({ message: "無法確認登入狀態" });
+    return;
+  }
+
+  try {
     const user = await userService.getUserByGoogleSub(userDetail.sub);
     if (!user) {
       res.json({ authenticated: false });
       return;
     }
 
-    res.json({ authenticated: true });
+    const { id, name, detail, avatar, is_admin, created_at, updated_at } = user;
+    res.json({
+      authenticated: true,
+      session_scope: getJwtSessionScope(token),
+      user: {
+        id,
+        name,
+        detail,
+        avatar,
+        is_admin,
+        created_at,
+        updated_at,
+      },
+    });
   } catch (err) {
-    res.json({ authenticated: false });
+    console.error("讀取登入使用者失敗:", err);
+    res.status(500).json({ message: "無法確認登入狀態" });
   }
 };
 
