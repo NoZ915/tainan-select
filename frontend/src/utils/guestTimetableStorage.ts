@@ -209,6 +209,17 @@ export const isGuestCourseAdded = (
   courseId: number,
 ): boolean => getGuestItemsBySemester(semester).some((item) => item.course.id === courseId)
 
+export const isGuestCourseSnapshotCurrent = (
+  item: GuestTimetableItem,
+): Promise<boolean> => {
+  assertValidGuestTimetableItem(item)
+
+  return withGuestTimetableWriteLock(() => getGuestItemsBySemester(item.course.semester).some(
+    (currentItem) => currentItem.course.id === item.course.id
+      && currentItem.addedAt === item.addedAt,
+  ))
+}
+
 export const getGuestTimetableSummary = (
   storage: GuestTimetableStorage = getGuestTimetable(),
 ): GuestTimetableSummary => {

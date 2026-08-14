@@ -53,6 +53,7 @@ type ImportSummary = {
   alreadyExists: number
   conflicted: number
   failed: number
+  skipped: number
 }
 
 type ImportConflictDetail = {
@@ -79,6 +80,7 @@ const EMPTY_IMPORT_SUMMARY: ImportSummary = {
   alreadyExists: 0,
   conflicted: 0,
   failed: 0,
+  skipped: 0,
 }
 
 const getApiError = (error: unknown): ApiError | null =>
@@ -140,6 +142,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
     storage,
     summary: guestSummary,
     error: guestStorageError,
+    isCourseSnapshotCurrent,
     removeCourse,
     clearAll,
   } = useGuestTimetable()
@@ -207,6 +210,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
       || phase === 'importing'
       || isSwapSubmitting
       || isClearSubmitting
+      || pendingSwap !== null
     ) return
     markHandled()
     setActionError(null)
@@ -319,6 +323,11 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
         }
 
         try {
+          if (!await isCourseSnapshotCurrent(item)) {
+            nextSummary.skipped += 1
+            continue
+          }
+
           const result = await addTimetableCourse(
             timetableId,
             item.course.id,
@@ -397,6 +406,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
         + nextSummary.alreadyExists
         + nextSummary.conflicted
         + nextSummary.failed
+        + nextSummary.skipped
       nextSummary.failed += Math.max(totalCourses - categorizedCourses, 0)
     }
 
@@ -717,9 +727,9 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
         centered
         zIndex={1400}
         scrollAreaComponent={ScrollArea.Autosize}
-        closeOnClickOutside={phase !== 'importing' && !isSwapSubmitting && !isClearSubmitting}
-        closeOnEscape={phase !== 'importing' && !isSwapSubmitting && !isClearSubmitting}
-        withCloseButton={phase !== 'importing' && !isSwapSubmitting && !isClearSubmitting}
+        closeOnClickOutside={phase !== 'importing' && !isSwapSubmitting && !isClearSubmitting && pendingSwap === null}
+        closeOnEscape={phase !== 'importing' && !isSwapSubmitting && !isClearSubmitting && pendingSwap === null}
+        withCloseButton={phase !== 'importing' && !isSwapSubmitting && !isClearSubmitting && pendingSwap === null}
       >
       {visiblePhase === 'idle' && (
         <Stack gap='md'>
@@ -799,6 +809,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
           <Text>已存在：{importSummary.alreadyExists}</Text>
           <Text>發生衝堂：{importSummary.conflicted}</Text>
           <Text>匯入失敗：{importSummary.failed}</Text>
+          <Text>已由其他分頁移除：{importSummary.skipped}</Text>
           {importConflictDetails.length > 0 && (
             <Stack gap='xs' mt='xs'>
               <div>

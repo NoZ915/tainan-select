@@ -365,7 +365,9 @@ const Timetable: React.FC = () => {
       />
 
       <Stack gap='md'>
-        {(!isAuthenticated || guestTimetable.summary.totalCourses > 0) && (
+        {(!isAuthenticated
+          || guestTimetable.summary.totalCourses > 0
+          || guestTimetable.error !== null) && (
           <div className={styles.localTimetableNotice}>
             <div className={styles.localTimetableNoticeIcon} aria-hidden='true'>
               <FaLaptop size={18} />
@@ -373,23 +375,27 @@ const Timetable: React.FC = () => {
             <div className={styles.localTimetableNoticeContent}>
               <Text fw={800} size='sm'>
                 {isAuthenticated
-                  ? `本機還有 ${guestTimetable.summary.totalCourses} 門課尚未處理`
+                  ? guestTimetable.error
+                    ? '無法讀取本機課表'
+                    : `本機還有 ${guestTimetable.summary.totalCourses} 門課尚未處理`
                   : '這份課表保存在此裝置'}
               </Text>
               <Text size='xs' c='dimmed'>
                 {isAuthenticated
-                  ? `涵蓋 ${guestTimetable.summary.semesterCount} 個學期，可隨時保存到帳號或清除本機資料。`
+                  ? guestTimetable.error?.message
+                    ?? `涵蓋 ${guestTimetable.summary.semesterCount} 個學期，可隨時保存到帳號或清除本機資料。`
                   : '訪客模式不會寫入帳號；登入後可選擇保存，並跨裝置同步。'}
               </Text>
             </div>
-            {isAuthenticated && guestTimetable.summary.totalCourses > 0 && (
+            {isAuthenticated
+              && (guestTimetable.summary.totalCourses > 0 || guestTimetable.error !== null) && (
               <Button
                 size='xs'
                 leftSection={<FaCloudUploadAlt size={14} />}
                 onClick={requestGuestTimetableImportPrompt}
                 className={styles.localTimetableNoticeAction}
               >
-                處理本機課表
+                {guestTimetable.error ? '重新檢查本機課表' : '處理本機課表'}
               </Button>
             )}
           </div>

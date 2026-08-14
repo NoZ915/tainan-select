@@ -10,6 +10,7 @@ import {
   createEmptyGuestTimetableStorage,
   getGuestTimetableSummary,
   GuestTimetableStorageError,
+  isGuestCourseSnapshotCurrent,
   parseGuestTimetableStorage,
   readGuestTimetableRawValue,
   removeGuestCourse,
@@ -43,6 +44,7 @@ export type UseGuestTimetableResult = {
   error: GuestTimetableStorageError | null
   getItemsBySemester: (semester: string) => GuestTimetableItem[]
   isCourseAdded: (semester: string, courseId: number) => boolean
+  isCourseSnapshotCurrent: (item: GuestTimetableItem) => Promise<boolean>
   addCourse: (item: GuestTimetableItem) => Promise<AddGuestCourseResult>
   removeCourse: (
     semester: string,
@@ -109,6 +111,7 @@ export const useGuestTimetable = (): UseGuestTimetableResult => {
     error,
     getItemsBySemester,
     isCourseAdded,
+    isCourseSnapshotCurrent: isGuestCourseSnapshotCurrent,
     addCourse: addGuestCourse,
     removeCourse: removeGuestCourse,
     clearSemester: clearGuestSemester,
