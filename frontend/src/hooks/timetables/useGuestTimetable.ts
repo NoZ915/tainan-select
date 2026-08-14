@@ -58,7 +58,7 @@ export type UseGuestTimetableResult = {
   ) => Promise<boolean>
   clearSemester: (
     semester: string,
-    expectedCourseIds: readonly number[],
+    expectedItems: readonly GuestTimetableItem[],
   ) => Promise<GuestTimetableClearResult>
   clearAll: (expectedStorage: GuestTimetableStorage) => Promise<GuestTimetableClearResult>
   swapCourse: (
@@ -85,9 +85,22 @@ export const useGuestTimetable = (): UseGuestTimetableResult => {
       }
     }
 
-    return {
-      storage: parseGuestTimetableStorage(rawSnapshot || null),
-      error: null,
+    try {
+      return {
+        storage: parseGuestTimetableStorage(rawSnapshot || null),
+        error: null,
+      }
+    } catch (error) {
+      return {
+        storage: createEmptyGuestTimetableStorage(),
+        error: error instanceof GuestTimetableStorageError
+          ? error
+          : new GuestTimetableStorageError(
+            'PARSE_FAILED',
+            '本機課表資料無法讀取，暫時無法修改，以免覆蓋其他學期的資料。',
+            error,
+          ),
+      }
     }
   }, [rawSnapshot])
 

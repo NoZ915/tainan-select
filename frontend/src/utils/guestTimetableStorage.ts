@@ -20,10 +20,12 @@ let guestTimetableWriteQueue: Promise<void> = Promise.resolve()
 
 export type GuestTimetableStorageErrorCode =
   | 'READ_FAILED'
+  | 'PARSE_FAILED'
   | 'WRITE_FAILED'
   | 'REMOVE_FAILED'
   | 'INVALID_ITEM'
   | 'CONFLICTS_CHANGED'
+  | 'CONCURRENT_MODIFICATION'
 
 export class GuestTimetableStorageError extends Error {
   readonly code: GuestTimetableStorageErrorCode
@@ -176,15 +178,25 @@ export const parseGuestTimetableStorage = (
 ): GuestTimetableStorage => {
   if (!rawValue) return createEmptyGuestTimetableStorage()
 
+  let parsedValue: unknown
   try {
-    const parsedValue: unknown = JSON.parse(rawValue)
-    if (!isGuestTimetableStorage(parsedValue)) {
-      return createEmptyGuestTimetableStorage()
-    }
-    return normalizeGuestTimetableStorage(parsedValue)
-  } catch {
-    return createEmptyGuestTimetableStorage()
+    parsedValue = JSON.parse(rawValue)
+  } catch (error) {
+    throw new GuestTimetableStorageError(
+      'PARSE_FAILED',
+      '本機課表資料已損毀，暫時無法讀取或修改，以免覆蓋其他學期的資料。',
+      error,
+    )
   }
+
+  if (!isGuestTimetableStorage(parsedValue)) {
+    throw new GuestTimetableStorageError(
+      'PARSE_FAILED',
+      '本機課表資料格式不相容（可能來自較新版本），暫時無法讀取或修改，以免覆蓋其他學期的資料。',
+    )
+  }
+
+  return normalizeGuestTimetableStorage(parsedValue)
 }
 
 export const readGuestTimetableRawValue = (): string | null => {
@@ -203,6 +215,16 @@ export const readGuestTimetableRawValue = (): string | null => {
 
 export const getGuestTimetable = (): GuestTimetableStorage =>
   parseGuestTimetableStorage(readGuestTimetableRawValue())
+
+// 讀取時保留 raw 字串，讓寫入前可比對其是否被其他分頁改寫（樂觀並發控制）。
+// Web Locks 不可用時，同分頁佇列無法阻擋其他分頁的並行寫入，這是最後一道防線。
+const getGuestTimetableWithRaw = (): {
+  raw: string | null
+  storage: GuestTimetableStorage
+} => {
+  const raw = readGuestTimetableRawValue()
+  return { raw, storage: parseGuestTimetableStorage(raw) }
+}
 
 export const getGuestItemsBySemester = (
   semester: string,
@@ -240,13 +262,27 @@ const dispatchGuestTimetableChange = (): void => {
   window.dispatchEvent(new Event(GUEST_TIMETABLE_CHANGE_EVENT))
 }
 
-const writeGuestTimetable = (storage: GuestTimetableStorage): void => {
+const assertRawValueUnchanged = (expectedRawValue: string | null): void => {
+  if (readGuestTimetableRawValue() === expectedRawValue) return
+
+  throw new GuestTimetableStorageError(
+    'CONCURRENT_MODIFICATION',
+    '本機課表已在其他分頁變更，請重新嘗試。',
+  )
+}
+
+const writeGuestTimetable = (
+  storage: GuestTimetableStorage,
+  expectedRawValue: string | null,
+): void => {
   if (typeof window === 'undefined') {
     throw new GuestTimetableStorageError(
       'WRITE_FAILED',
       '目前環境無法保存本機課表。',
     )
   }
+
+  assertRawValueUnchanged(expectedRawValue)
 
   try {
     window.localStorage.setItem(GUEST_TIMETABLE_STORAGE_KEY, JSON.stringify(storage))
@@ -277,7 +313,8 @@ const withGuestTimetableWriteLock = async <Result>(
     return navigator.locks.request(GUEST_TIMETABLE_WRITE_LOCK, mutation)
   }
 
-  // 不支援 Web Locks 的瀏覽器至少要避免同一分頁內的寫入互相覆蓋。
+  // 不支援 Web Locks 的瀏覽器：同分頁佇列避免同分頁內寫入互相覆蓋，
+  // 跨分頁的並行寫入則交由 writeGuestTimetable 內的 raw 值 CAS 檢查擋下。
   const queuedMutation = guestTimetableWriteQueue.then(mutation, mutation)
   guestTimetableWriteQueue = queuedMutation.then(() => undefined, () => undefined)
   return queuedMutation
@@ -289,7 +326,7 @@ export const addGuestCourse = (
   assertValidGuestTimetableItem(item)
 
   return withGuestTimetableWriteLock(() => {
-    const storage = getGuestTimetable()
+    const { raw, storage } = getGuestTimetableWithRaw()
     const semester = item.course.semester
     const currentItems = storage.semesters[semester] ?? []
     const alreadyExists = currentItems.some(
@@ -315,7 +352,7 @@ export const addGuestCourse = (
         ...storage.semesters,
         [semester]: [...currentItems, item],
       },
-    })
+    }, raw)
 
     return { added: true, alreadyExists: false, conflictCourseIds: [] }
   })
@@ -328,12 +365,13 @@ export const removeGuestCourse = (
 ): Promise<boolean> => withGuestTimetableWriteLock(() => {
   if (canRemove && !canRemove()) return false
 
-  const storage = getGuestTimetable()
-  return removeGuestCourseFromStorage(storage, semester, courseId)
+  const { raw, storage } = getGuestTimetableWithRaw()
+  return removeGuestCourseFromStorage(storage, raw, semester, courseId)
 })
 
 const removeGuestCourseFromStorage = (
   storage: GuestTimetableStorage,
+  raw: string | null,
   semester: string,
   courseId: number,
 ): boolean => {
@@ -349,7 +387,7 @@ const removeGuestCourseFromStorage = (
     nextSemesters[semester] = nextItems
   }
 
-  writeGuestTimetable({ ...storage, semesters: nextSemesters })
+  writeGuestTimetable({ ...storage, semesters: nextSemesters }, raw)
 
   return true
 }
@@ -363,33 +401,37 @@ export const removeGuestCourseSnapshot = (
   return withGuestTimetableWriteLock(() => {
     if (canRemove && !canRemove()) return false
 
-    const storage = getGuestTimetable()
+    const { raw, storage } = getGuestTimetableWithRaw()
     const snapshotMatches = (storage.semesters[item.course.semester] ?? []).some(
       (currentItem) => currentItem.course.id === item.course.id
         && currentItem.addedAt === item.addedAt,
     )
     if (!snapshotMatches) return false
 
-    return removeGuestCourseFromStorage(storage, item.course.semester, item.course.id)
+    return removeGuestCourseFromStorage(storage, raw, item.course.semester, item.course.id)
   })
 }
 
 export const clearGuestSemester = (
   semester: string,
-  expectedCourseIds: readonly number[],
+  expectedItems: readonly GuestTimetableItem[],
 ): Promise<GuestTimetableClearResult> => withGuestTimetableWriteLock(() => {
-  const storage = getGuestTimetable()
+  const { raw, storage } = getGuestTimetableWithRaw()
   const currentItems = storage.semesters[semester]
   if (!currentItems || currentItems.length === 0) return 'already-empty'
 
-  const expectedCourseIdSet = new Set(expectedCourseIds)
-  const snapshotMatches = currentItems.length === expectedCourseIdSet.size
-    && currentItems.every((item) => expectedCourseIdSet.has(item.course.id))
+  const expectedAddedAtByCourseId = new Map(
+    expectedItems.map((item) => [item.course.id, item.addedAt]),
+  )
+  const snapshotMatches = currentItems.length === expectedAddedAtByCourseId.size
+    && currentItems.every(
+      (item) => expectedAddedAtByCourseId.get(item.course.id) === item.addedAt,
+    )
   if (!snapshotMatches) return 'changed'
 
   const nextSemesters = { ...storage.semesters }
   delete nextSemesters[semester]
-  writeGuestTimetable({ ...storage, semesters: nextSemesters })
+  writeGuestTimetable({ ...storage, semesters: nextSemesters }, raw)
   return 'cleared'
 })
 
@@ -403,7 +445,7 @@ export const clearGuestTimetable = (
     )
   }
 
-  const currentStorage = getGuestTimetable()
+  const { raw, storage: currentStorage } = getGuestTimetableWithRaw()
   const hasCurrentCourses = Object.values(currentStorage.semesters)
     .some((items) => items.length > 0)
   if (!hasCurrentCourses) return 'already-empty'
@@ -411,6 +453,8 @@ export const clearGuestTimetable = (
   if (!haveSameGuestTimetableSnapshots(expectedStorage, currentStorage)) {
     return 'changed'
   }
+
+  assertRawValueUnchanged(raw)
 
   try {
     window.localStorage.removeItem(GUEST_TIMETABLE_STORAGE_KEY)
@@ -433,7 +477,7 @@ export const swapGuestCourse = (
   assertValidGuestTimetableItem(item)
 
   return withGuestTimetableWriteLock(() => {
-    const storage = getGuestTimetable()
+    const { raw, storage } = getGuestTimetableWithRaw()
     const semester = item.course.semester
     const currentItems = storage.semesters[semester] ?? []
     const alreadyExists = currentItems.some(
@@ -482,7 +526,7 @@ export const swapGuestCourse = (
         ...storage.semesters,
         [semester]: [...nextItems, item],
       },
-    })
+    }, raw)
 
     return {
       added: true,

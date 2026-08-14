@@ -9,7 +9,12 @@ import { useGetTimetable } from '../../hooks/timetables/useGetTimetable'
 import { useRemoveTimetableCourse } from '../../hooks/timetables/useRemoveTimetableCourse'
 import { useGetAllTimetableItems } from '../../hooks/timetables/useGetAllTimetableItems'
 import { useGuestTimetable } from '../../hooks/timetables/useGuestTimetable'
-import { AddedCourseItem, TimetableGridCell, TimetableItem } from '../../types/timetableType'
+import {
+  AddedCourseItem,
+  GuestTimetableItem,
+  TimetableGridCell,
+  TimetableItem,
+} from '../../types/timetableType'
 import {
   buildTimetableGrid,
   countMissingTimeslotCourses,
@@ -44,11 +49,12 @@ const weekdays: WeekdayOption[] = [
 ]
 
 const EMPTY_TIMETABLE_ITEMS: TimetableItem[] = []
+const EMPTY_GUEST_TIMETABLE_ITEMS: GuestTimetableItem[] = []
 const EMPTY_ADDED_ITEMS: AddedCourseItem[] = []
 
 type ClearGuestSemesterSnapshot = {
   semester: string
-  courseIds: number[]
+  items: GuestTimetableItem[]
 }
 
 const parseSemester = (semester: string): { year: number; term: number } | null => {
@@ -141,7 +147,7 @@ const Timetable: React.FC = () => {
 
   const guestItems = selectedSemester
     ? guestTimetable.getItemsBySemester(selectedSemester)
-    : EMPTY_TIMETABLE_ITEMS
+    : EMPTY_GUEST_TIMETABLE_ITEMS
   const items = isAuthenticated
     ? timetableData?.items ?? EMPTY_TIMETABLE_ITEMS
     : guestItems
@@ -273,7 +279,7 @@ const Timetable: React.FC = () => {
       setIsGuestMutationPending(true)
       const clearResult = await guestTimetable.clearSemester(
         clearGuestSemesterSnapshot.semester,
-        clearGuestSemesterSnapshot.courseIds,
+        clearGuestSemesterSnapshot.items,
       )
       if (clearResult !== 'cleared') {
         setClearGuestSemesterSnapshot(null)
@@ -445,7 +451,7 @@ const Timetable: React.FC = () => {
               if (!selectedSemester) return
               setClearGuestSemesterSnapshot({
                 semester: selectedSemester,
-                courseIds: guestItems.map((item) => item.course.id),
+                items: guestItems,
               })
             }}
             onOpenCourseSearch={() => {
