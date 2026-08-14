@@ -109,24 +109,48 @@ const dispatchAuthSessionRecordChange = (): void => {
   window.dispatchEvent(new Event(AUTH_SESSION_RECORD_CHANGE_EVENT))
 }
 
-const writeAuthSessionRecord = (record: AuthSessionRecord): void => {
-  if (typeof window === 'undefined') return
-
-  window.localStorage.setItem(AUTH_SESSION_RECORD_STORAGE_KEY, JSON.stringify(record))
-  dispatchAuthSessionRecordChange()
-}
-
-export const getAuthSessionRecord = (): AuthSessionRecord | null => {
+const readAuthSessionRecordRawValue = (): string | null => {
   if (typeof window === 'undefined') return null
 
   try {
-    const rawRecord = window.localStorage.getItem(AUTH_SESSION_RECORD_STORAGE_KEY)
-    if (!rawRecord) return null
-    const parsedRecord: unknown = JSON.parse(rawRecord)
-    return isAuthSessionRecord(parsedRecord) ? parsedRecord : null
+    return window.localStorage.getItem(AUTH_SESSION_RECORD_STORAGE_KEY)
   } catch {
     return null
   }
+}
+
+// 讀取時保留 raw 字串，寫入前重新比對；Web Locks 不可用時，
+// 同分頁佇列無法阻擋其他分頁的並行 transition，這是最後一道防線。
+const getAuthSessionRecordWithRaw = (): {
+  raw: string | null
+  record: AuthSessionRecord | null
+} => {
+  const raw = readAuthSessionRecordRawValue()
+  if (!raw) return { raw, record: null }
+
+  try {
+    const parsedRecord: unknown = JSON.parse(raw)
+    return { raw, record: isAuthSessionRecord(parsedRecord) ? parsedRecord : null }
+  } catch {
+    return { raw, record: null }
+  }
+}
+
+export const getAuthSessionRecord = (): AuthSessionRecord | null =>
+  getAuthSessionRecordWithRaw().record
+
+// 回傳是否成功寫入；raw 值與寫入前不符（其他分頁已變更）時放棄寫入，
+// 由呼叫端依既有的「操作未套用」路徑處理，而非讓寫入互相覆蓋。
+const writeAuthSessionRecord = (
+  record: AuthSessionRecord,
+  expectedRawValue: string | null,
+): boolean => {
+  if (typeof window === 'undefined') return false
+  if (readAuthSessionRecordRawValue() !== expectedRawValue) return false
+
+  window.localStorage.setItem(AUTH_SESSION_RECORD_STORAGE_KEY, JSON.stringify(record))
+  dispatchAuthSessionRecordChange()
+  return true
 }
 
 const recordsMatch = (
@@ -161,7 +185,7 @@ const getStableSnapshot = (
 export const beginAuthSessionTransition = async (
   transitionKind: 'oauth' | 'logout',
 ): Promise<TransitionAuthSessionRecord | null> => withAuthSessionRecordLock(() => {
-  const currentRecord = getAuthSessionRecord()
+  const { raw, record: currentRecord } = getAuthSessionRecordWithRaw()
   if (currentRecord?.status === 'transition') return null
 
   const owner = createOpaqueId()
@@ -174,7 +198,7 @@ export const beginAuthSessionTransition = async (
     previous: getStableSnapshot(currentRecord),
     epoch: createOpaqueId(),
   }
-  writeAuthSessionRecord(nextRecord)
+  if (!writeAuthSessionRecord(nextRecord, raw)) return null
   return nextRecord
 })
 
@@ -213,19 +237,18 @@ const restoreTransitionPreviousState = (
 
 export const cancelAuthSessionTransition = async (owner: string): Promise<boolean> => (
   withAuthSessionRecordLock(() => {
-    const currentRecord = getAuthSessionRecord()
+    const { raw, record: currentRecord } = getAuthSessionRecordWithRaw()
     if (currentRecord?.status !== 'transition' || currentRecord.owner !== owner) {
       return false
     }
 
-    writeAuthSessionRecord(restoreTransitionPreviousState(currentRecord))
-    return true
+    return writeAuthSessionRecord(restoreTransitionPreviousState(currentRecord), raw)
   })
 )
 
 export const recoverExpiredAuthSessionTransition = async (): Promise<boolean> => (
   withAuthSessionRecordLock(() => {
-    const currentRecord = getAuthSessionRecord()
+    const { raw, record: currentRecord } = getAuthSessionRecordWithRaw()
     if (
       currentRecord?.status !== 'transition'
       || currentRecord.transitionKind === 'oauth'
@@ -234,8 +257,7 @@ export const recoverExpiredAuthSessionTransition = async (): Promise<boolean> =>
       return false
     }
 
-    writeAuthSessionRecord(restoreTransitionPreviousState(currentRecord))
-    return true
+    return writeAuthSessionRecord(restoreTransitionPreviousState(currentRecord), raw)
   })
 )
 
@@ -268,7 +290,7 @@ export const applyAuthStatusResponse = async (
   authStatus: AuthStatusResponse,
   options: ApplyAuthStatusOptions = {},
 ): Promise<ApplyAuthStatusResult> => withAuthSessionRecordLock(() => {
-  const currentRecord = getAuthSessionRecord()
+  const { raw, record: currentRecord } = getAuthSessionRecordWithRaw()
   if (!recordsMatch(requestSnapshot, currentRecord)) {
     return { applied: false, record: currentRecord }
   }
@@ -306,14 +328,16 @@ export const applyAuthStatusResponse = async (
     nextRecord = createStableRecord({ status: 'guest', sessionScope: null })
   }
 
-  if (nextRecord !== currentRecord) writeAuthSessionRecord(nextRecord)
+  if (nextRecord !== currentRecord && !writeAuthSessionRecord(nextRecord, raw)) {
+    return { applied: false, record: currentRecord }
+  }
   return { applied: true, record: nextRecord }
 })
 
 export const completeLogoutAuthSessionTransition = async (
   owner: string,
 ): Promise<boolean> => withAuthSessionRecordLock(() => {
-  const currentRecord = getAuthSessionRecord()
+  const { raw, record: currentRecord } = getAuthSessionRecordWithRaw()
   if (
     currentRecord?.status !== 'transition'
     || currentRecord.transitionKind !== 'logout'
@@ -322,20 +346,18 @@ export const completeLogoutAuthSessionTransition = async (
     return false
   }
 
-  writeAuthSessionRecord(createStableRecord({ status: 'guest', sessionScope: null }))
-  return true
+  return writeAuthSessionRecord(createStableRecord({ status: 'guest', sessionScope: null }), raw)
 })
 
 export const forceGuestAuthSessionRecord = async (
   requestSnapshot: AuthStatusRequestSnapshot,
 ): Promise<boolean> => (
   withAuthSessionRecordLock(() => {
-    const currentRecord = getAuthSessionRecord()
+    const { raw, record: currentRecord } = getAuthSessionRecordWithRaw()
     if (!recordsMatch(requestSnapshot, currentRecord)) return false
     if (currentRecord?.status === 'transition') return false
     if (currentRecord?.status === 'guest') return true
-    writeAuthSessionRecord(createStableRecord({ status: 'guest', sessionScope: null }))
-    return true
+    return writeAuthSessionRecord(createStableRecord({ status: 'guest', sessionScope: null }), raw)
   })
 )
 
