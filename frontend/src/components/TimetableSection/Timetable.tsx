@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Button, Collapse, Stack, Text } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { FaLaptop } from 'react-icons/fa'
+import { FaCloudUploadAlt, FaLaptop } from 'react-icons/fa'
 
 import { useAuthStore } from '../../stores/authStore'
 import { useGetSemesters } from '../../hooks/semesters/useGetSemesters'
@@ -18,6 +18,7 @@ import {
   TIMETABLE_PERIOD_ORDER,
 } from '../../utils/timetable'
 import { getUserCacheScope } from '../../utils/userCacheScope'
+import { requestGuestTimetableImportPrompt } from '../../utils/guestTimetableImportSession'
 import styles from '../../styles/components/Timetable.module.css'
 import ConfirmModal from '../ConfirmModal'
 
@@ -318,13 +319,52 @@ const Timetable: React.FC = () => {
     )
   }
 
+  const localTimetableNotice = (!isAuthenticated
+    || guestTimetable.summary.totalCourses > 0
+    || guestTimetable.error !== null) ? (
+      <div className={styles.localTimetableNotice}>
+        <div className={styles.localTimetableNoticeIcon} aria-hidden='true'>
+          <FaLaptop size={18} />
+        </div>
+        <div className={styles.localTimetableNoticeContent}>
+          <Text fw={800} size='sm'>
+            {isAuthenticated
+              ? guestTimetable.error
+                ? '無法讀取本機課表'
+                : `本機還有 ${guestTimetable.summary.totalCourses} 門課尚未處理`
+              : '這份課表保存在此裝置'}
+          </Text>
+          <Text size='xs' c='dimmed'>
+            {isAuthenticated
+              ? guestTimetable.error?.message
+                ?? `涵蓋 ${guestTimetable.summary.semesterCount} 個學期，可隨時保存到帳號或清除本機資料。`
+              : '訪客模式不會寫入帳號；登入後可選擇保存，並跨裝置同步。'}
+          </Text>
+        </div>
+        {isAuthenticated
+          && (guestTimetable.summary.totalCourses > 0 || guestTimetable.error !== null) && (
+          <Button
+            size='xs'
+            leftSection={<FaCloudUploadAlt size={14} />}
+            onClick={requestGuestTimetableImportPrompt}
+            className={styles.localTimetableNoticeAction}
+          >
+            {guestTimetable.error ? '重新檢查本機課表' : '處理本機課表'}
+          </Button>
+        )}
+      </div>
+    ) : null
+
   if (semesterOptions.length === 0) {
     return (
-      <div className={styles.card}>
-        <Text c='dimmed'>
-          {hasSemestersError ? '無法載入學期資料，請稍後再試。' : '目前沒有可選學期。'}
-        </Text>
-      </div>
+      <Stack gap='md'>
+        {isAuthenticated && localTimetableNotice}
+        <div className={styles.card}>
+          <Text c='dimmed'>
+            {hasSemestersError ? '無法載入學期資料，請稍後再試。' : '目前沒有可選學期。'}
+          </Text>
+        </div>
+      </Stack>
     )
   }
 
@@ -364,21 +404,7 @@ const Timetable: React.FC = () => {
       />
 
       <Stack gap='md'>
-        {!isAuthenticated && (
-          <div className={styles.localTimetableNotice}>
-            <div className={styles.localTimetableNoticeIcon} aria-hidden='true'>
-              <FaLaptop size={18} />
-            </div>
-            <div className={styles.localTimetableNoticeContent}>
-              <Text fw={800} size='sm'>
-                這份課表保存在此裝置
-              </Text>
-              <Text size='xs' c='dimmed'>
-                訪客模式不會寫入帳號；登入後可選擇保存，並跨裝置同步。
-              </Text>
-            </div>
-          </div>
-        )}
+        {localTimetableNotice}
 
         {guestTimetable.error && !isAuthenticated && (
           <div className={`${styles.alert} ${styles.alertRed}`}>
