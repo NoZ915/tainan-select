@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { User } from '../types/userType'
-import { clearGuestTimetableImportPromptGuard } from '../utils/guestTimetableImportSession'
 import { createAuthenticatedUserCacheScope } from '../utils/userCacheScope'
 
 type AuthenticatedUser = User & {
@@ -51,7 +50,6 @@ export const useAuthStore = create<AuthState>()(
           isLogoutInProgress: false,
           user: null,
         })
-        clearGuestTimetableImportPromptGuard()
         localStorage.removeItem('auth-storage')
       },
       markAuthUnresolved: () => set((state) => {

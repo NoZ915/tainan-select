@@ -9,7 +9,6 @@ interface DeleteReviewModalProps {
   cancelText?: string;
   onConfirm: () => void;
   loading?: boolean;
-  zIndex?: number;
 }
 
 const ConfirmModal: React.FC<DeleteReviewModalProps> = ({ 
@@ -21,24 +20,14 @@ const ConfirmModal: React.FC<DeleteReviewModalProps> = ({
   cancelText,
   onConfirm,
   loading = false,
-  zIndex = 1100,
 }) => {
 
   return (
-    <Modal
-      centered
-      opened={opened}
-      onClose={loading ? () => undefined : onClose}
-      title={title}
-      zIndex={zIndex}
-      closeOnClickOutside={!loading}
-      closeOnEscape={!loading}
-      withCloseButton={!loading}
-    >
+    <Modal centered opened={opened} onClose={onClose} title={title} zIndex={1100}>
       <Text>{message}</Text>
       <Group justify='flex-end' mt='md'>
         {cancelText && 
-        <Button variant='light' onClick={onClose} disabled={loading}>
+        <Button variant='light' onClick={onClose}>
           {cancelText}
         </Button>}
         <Button variant='filled' color='red' onClick={onConfirm} loading={loading}>

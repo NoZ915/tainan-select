@@ -8,7 +8,6 @@ import { useGetAllReviewsByCourseId } from '../hooks/reviews/useGetAllReviewsByC
 
 import { ActionIcon, Container, Tooltip } from '@mantine/core'
 import CourseInfoPanel from '../components/CourseInfoPanel'
-import CourseTimetableAction from '../components/CourseTimetableAction'
 import CourseRelatedPostsPanel from '../components/CourseRelatedPostsPanel'
 import CourseReviewsPanel from '../components/CourseReviewsPanel'
 import AddOrEditReviewModal from '../components/AddOrEditReviewModal'
@@ -50,11 +49,7 @@ const CourseDetailPage: React.FC = () => {
   const { course_id } = useParams<{ course_id: string }>()
   const courseId = course_id || ''
 
-  const {
-    data: courseResponse,
-    isLoading: isInfoLoading,
-    isError: hasInfoError,
-  } = useGetCourse(courseId)
+  const { data: courseResponse, isLoading: isInfoLoading } = useGetCourse(courseId)
   const { data: reviews, isLoading: isReviewsLoading } = useGetAllReviewsByCourseId(courseId)
 
   const course = courseResponse?.course
@@ -103,17 +98,7 @@ const CourseDetailPage: React.FC = () => {
       <>
         <Container size='lg' mt='lg' style={{ gap: '1rem' }}>
           <div>
-            <CourseInfoPanel
-              course={courseResponse}
-              isLoading={isInfoLoading}
-            />
-            <div style={{ marginTop: '1rem' }}>
-              <CourseTimetableAction
-                course={courseResponse}
-                isLoading={isInfoLoading}
-                hasError={hasInfoError}
-              />
-            </div>
+            <CourseInfoPanel course={courseResponse} isLoading={isInfoLoading} />
           </div>
           <div style={{ marginTop: '2rem' }}>
             <CourseReviewsPanel course={courseResponse} reviews={reviews} isLoading={isReviewsLoading} />
@@ -151,17 +136,7 @@ const CourseDetailPage: React.FC = () => {
     <>
       <Container size='lg' mt='lg' style={{ display: 'flex', gap: '2.5rem' }}>
         <div style={{ flex: '1' }}>
-          <CourseInfoPanel
-            course={courseResponse}
-            isLoading={isInfoLoading}
-          />
-          <div style={{ marginTop: '1rem' }}>
-            <CourseTimetableAction
-              course={courseResponse}
-              isLoading={isInfoLoading}
-              hasError={hasInfoError}
-            />
-          </div>
+          <CourseInfoPanel course={courseResponse} isLoading={isInfoLoading} />
         </div>
         <div style={{ flex: '2' }}>
           <CourseReviewsPanel course={courseResponse} reviews={reviews} isLoading={isReviewsLoading} />

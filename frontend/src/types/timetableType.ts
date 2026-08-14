@@ -74,6 +74,17 @@ export interface TimetableConflict {
   }
 }
 
+export interface BatchAddFromInterestsResponse {
+  summary: {
+    requested: number
+    eligibleSameSemester: number
+    added: number
+    skippedAlreadyExists: number
+    conflicted: number
+  }
+  conflicts: TimetableConflict[]
+}
+
 export interface AddTimetableCourseResponse {
   added: boolean
   alreadyExists: boolean

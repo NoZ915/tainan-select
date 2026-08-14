@@ -2,6 +2,7 @@ import { axiosInstance } from './axiosInstance'
 import {
   AddTimetableCourseResponse,
   AddedCourseItem,
+  BatchAddFromInterestsResponse,
   SwapTimetableCourseResponse,
   TimetableResponse
 } from '../types/timetableType'
@@ -37,6 +38,11 @@ export const getAllTimetableItems = async (
   return response.data
 }
 
+export const batchAddTimetableFromInterests = async (timetableId: number): Promise<BatchAddFromInterestsResponse> => {
+  const response = await axiosInstance.post(`/timetables/${timetableId}/items/batch-from-interests`)
+  return response.data
+}
+
 export const addTimetableCourse = async (
   timetableId: number,
   courseId: number,
@@ -64,22 +70,7 @@ export const removeTimetableCourse = async (
   })
 }
 
-export const swapTimetableCourse = async (
-  timetableId: number,
-  courseId: number,
-  conflictCourseIds: readonly number[],
-  context: TimetableRequestContext,
-): Promise<SwapTimetableCourseResponse> => {
-  const response = await axiosInstance.post(
-    `/timetables/${timetableId}/items/swap`,
-    {
-      courseId,
-      conflictCourseIds,
-    },
-    {
-      signal: context.signal,
-      headers: getSessionHeaders(context.expectedSessionScope),
-    },
-  )
+export const swapTimetableCourse = async (timetableId: number, courseId: number): Promise<SwapTimetableCourseResponse> => {
+  const response = await axiosInstance.post(`/timetables/${timetableId}/items/swap`, { courseId })
   return response.data
 }

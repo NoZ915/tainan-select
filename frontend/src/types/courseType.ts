@@ -1,5 +1,3 @@
-import type { Timeslot } from './timetableType'
-
 export interface Course {
   id: number;
   course_name: string;
@@ -7,8 +5,8 @@ export interface Course {
   academy?: string;
   instructor: string;
   instructor_url?: string;
-  course_room?: string | null;
-  course_time?: string | null;
+  course_room?: string;
+  course_time?: string;
   course_url?: string;
   credit_hours: number;
   semester: string;
@@ -19,7 +17,6 @@ export interface Course {
   interests_count: number;
   view_count: number;
   dcard_related_post_count?: number;
-  timeslots?: Timeslot[];
 }
 
 export interface CourseRelatedPost {
@@ -58,7 +55,6 @@ export interface RelatedPostComment {
 
 export interface CourseDetailResponse {
   course: Course;
-  timeslots: Timeslot[];
   hasUserAddInterest: boolean;
   related_posts: CourseRelatedPost[];
 }
@@ -98,5 +94,4 @@ export interface SearchParams {
   periods: string[];
   semesters: string[];
   sortBy?: string;
-  includeTimeslots?: boolean;
 }

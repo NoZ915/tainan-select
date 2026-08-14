@@ -1,5 +1,5 @@
-import { Badge, Button, Group, Select, Text } from '@mantine/core'
-import { FaChevronDown, FaChevronUp, FaSearch, FaTrashAlt } from 'react-icons/fa'
+﻿import { ActionIcon, Badge, Group, Select, Text } from '@mantine/core'
+import { FaChevronDown, FaChevronUp } from 'react-icons/fa'
 import styles from '../../styles/components/Timetable.module.css'
 
 type SemesterOption = {
@@ -12,14 +12,12 @@ type TimetableHeaderProps = {
   selectedSemester: string | null
   onSemesterChange: (value: string | null) => void
   isDisabled: boolean
-  isGuest: boolean
   itemsCount: number
+  selectableCount: number
   missingTimeslotCount: number
   ewantCount: number
   collapsed: boolean
   onToggleCollapse: () => void
-  onClearGuestSemester: () => void
-  onOpenCourseSearch: () => void
 }
 
 const TimetableHeader: React.FC<TimetableHeaderProps> = ({
@@ -27,14 +25,12 @@ const TimetableHeader: React.FC<TimetableHeaderProps> = ({
   selectedSemester,
   onSemesterChange,
   isDisabled,
-  isGuest,
   itemsCount,
+  selectableCount,
   missingTimeslotCount,
   ewantCount,
   collapsed,
   onToggleCollapse,
-  onClearGuestSemester,
-  onOpenCourseSearch,
 }) => {
   return (
     <>
@@ -42,21 +38,18 @@ const TimetableHeader: React.FC<TimetableHeaderProps> = ({
         <div className={styles.toolbarLeft}>
           <Group gap='xs' align='center'>
             <Text fw={700}>學期課表</Text>
-            <Button
+            <ActionIcon
               variant='subtle'
               color='gray'
-              size='xs'
+              size='sm'
               onClick={onToggleCollapse}
               aria-label={collapsed ? '展開課程清單' : '收合課程清單'}
-              rightSection={collapsed ? <FaChevronDown size={11} /> : <FaChevronUp size={11} />}
             >
-              {collapsed ? '展開課程明細' : '收合課程明細'}
-            </Button>
+              {collapsed ? <FaChevronDown size={12} /> : <FaChevronUp size={12} />}
+            </ActionIcon>
           </Group>
           <Text c='dimmed' size='sm'>
-            {isGuest
-              ? '課表只顯示選定學期，可直接搜尋課程加入。'
-              : '課表與收藏互不影響，可直接搜尋課程加入。'}
+            課表只顯示選定學期，並限制只能加入同學期的收藏課程。
           </Text>
         </div>
         <Group align='center' gap='sm'>
@@ -71,31 +64,15 @@ const TimetableHeader: React.FC<TimetableHeaderProps> = ({
             disabled={isDisabled}
             aria-label='排課學期'
           />
-          <Button
-            variant='light'
-            leftSection={<FaSearch size={13} />}
-            disabled={!selectedSemester || isDisabled}
-            onClick={onOpenCourseSearch}
-          >
-            搜尋加入課程
-          </Button>
-          {isGuest && (
-            <Button
-              variant='light'
-              color='red'
-              leftSection={<FaTrashAlt size={13} />}
-              disabled={!selectedSemester || itemsCount === 0}
-              onClick={onClearGuestSemester}
-            >
-              清空課表
-            </Button>
-          )}
         </Group>
       </div>
 
       <Group mt='sm' gap='xs'>
         <Badge variant='light' color='red'>
           已排課程 {itemsCount}
+        </Badge>
+        <Badge variant='light' color='green'>
+          可加入收藏課 {selectableCount}
         </Badge>
         <Badge variant='light' color={missingTimeslotCount > 0 ? 'orange' : 'gray'}>
           缺時段課程 {missingTimeslotCount}

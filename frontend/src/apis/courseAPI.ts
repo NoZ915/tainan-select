@@ -5,7 +5,7 @@ export const getCourses = async (searchParams: SearchParams): Promise<CourseResp
   const filteredSearchParams = Object.fromEntries(
     Object.entries(searchParams).filter(([, value]) => {
       if (Array.isArray(value)) return value.length > 0
-      return value !== '' && value !== undefined
+      return value !== ''
     })
   )
   const normalizedSearchParams = Object.fromEntries(
