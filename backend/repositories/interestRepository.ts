@@ -46,17 +46,28 @@ class InterestRepository {
     })
   }
 
-  async getAllInterestsByUserId(user_id: number): Promise<AllInterestsResponse[]> {
+  async getAllInterestsByUserId(
+    user_id: number,
+    transaction?: Transaction
+  ): Promise<AllInterestsResponse[]> {
     const interests = await InterestModel.findAll({
       where: { user_id },
       attributes: ["id", "course_id", "created_at"],
+      transaction,
       order: [["created_at", "DESC"]],
       include: [
         {
           model: CourseModel,
           as: "course",
           required: true,
-          attributes: ["id", "semester", "course_name", "instructor"],
+          attributes: [
+            "id",
+            "semester",
+            "course_name",
+            "department",
+            "instructor",
+            "course_room",
+          ],
         },
       ],
     });

@@ -1,6 +1,7 @@
 import CourseService from "../services/courseService";
 import CourseViewService from "../services/courseViewService";
 import { RequestHandler } from "express";
+import { PERIOD_ORDER } from "../utils/courseSchedule";
 
 const getQueryValues = (value: unknown): string[] => {
   if (value === undefined || value === null || value === "") return [];
@@ -18,21 +19,27 @@ export const getAllCourses: RequestHandler = async (
   res
 ): Promise<void> => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 15;
+    const page = Math.max(parseInt(req.query.page as string) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 15, 1), 100);
     const offset = (page - 1) * limit;
-    const weekdays = String(req.query.weekdays || "")
-      .split(",")
-      .map((item) => parseInt(item.trim(), 10))
-      .filter((value) => !Number.isNaN(value) && value >= 1 && value <= 7);
-    const periods = String(req.query.periods || "")
-      .split(",")
-      .map((item) => item.trim().toUpperCase())
-      .filter((value) => Boolean(value));
+    const weekdayValues = getQueryValues(req.query.weekdays);
+    if (weekdayValues.some((value) => !/^[1-7]$/.test(value))) {
+      res.status(400).json({ message: "星期篩選格式錯誤，weekdays 僅接受 1 至 7。" });
+      return;
+    }
+    const weekdays = weekdayValues.map(Number);
+
+    const allowedPeriods = new Set(PERIOD_ORDER);
+    const periods = getQueryValues(req.query.periods).map((value) => value.toUpperCase());
+    if (periods.some((period) => !allowedPeriods.has(period))) {
+      res.status(400).json({ message: "節次篩選格式錯誤，periods 僅接受 1 至 9 或 A 至 G。" });
+      return;
+    }
     const semesters = String(req.query.semesters || "")
       .split(",")
       .map((item) => item.trim())
       .filter((value) => Boolean(value));
+    const includeTimeslots = req.query.includeTimeslots === "true";
 
     const search = {
       search: String(req.query.search || ""),
@@ -46,12 +53,10 @@ export const getAllCourses: RequestHandler = async (
       sortBy: String(req.query.sortBy || "")
     };
 
-    const { courses, total } = await CourseService.getAllCourses({
-      page,
-      limit,
-      offset,
-      search,
-    });
+    const courseResult = includeTimeslots
+      ? await CourseService.getAllCourses({ page, limit, offset, search }, true)
+      : await CourseService.getAllCourses({ page, limit, offset, search });
+    const { courses, total } = courseResult;
     res.status(200).json({
       courses,
       pagination: {
