@@ -46,6 +46,7 @@ const CourseInfoPanel: React.FC<CourseInfoPanelProps> = ({ course, isLoading }) 
   ].filter(Boolean)
   const courseType = displayText(courseData?.course_type)
   const creditHours = displayText(courseData?.credit_hours)
+  const className = displayText(courseData?.class_name)
 
   if (isMobile) {
     return (
@@ -82,6 +83,11 @@ const CourseInfoPanel: React.FC<CourseInfoPanelProps> = ({ course, isLoading }) 
         <div>
           <Text className={style.label}>修別 / 學分數</Text>
           <Text className={style.courseDetail}>{courseType} / {creditHours}</Text>
+        </div>
+
+        <div>
+          <Text className={style.label}>開課班級</Text>
+          <Text className={style.courseDetail}>{className}</Text>
         </div>
       </Flex>
     )
@@ -129,6 +135,11 @@ const CourseInfoPanel: React.FC<CourseInfoPanelProps> = ({ course, isLoading }) 
       <div>
         <Text className={style.label}>學分數</Text>
         <Text className={style.courseDetail}>{creditHours}</Text>
+      </div>
+
+      <div>
+        <Text className={style.label}>開課班級</Text>
+        <Text className={style.courseDetail}>{className}</Text>
       </div>
     </Flex>
   )

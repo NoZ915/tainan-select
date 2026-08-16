@@ -1,62 +1,18 @@
 import "dotenv/config";
 import axios from "axios";
-import https from "https";
 import pLimit from "p-limit";
 import * as cheerio from "cheerio";
 import db from "../models";
 import Course from "../models/Course";
 import { googleRequestCURL } from "./googleRequestCURL";
+import { getWithRetry } from "./httpClient";
 import { normalizeCourseTime, parseCourseTime } from "../utils/parseCourseTime";
 import { normalizeCourseType } from "../utils/normalizeCourseType";
 import { parseCourseIdentityFromUrl } from "../utils/courseIdentity";
+import { extractClassName, parseGradesFromClassName } from "../utils/parseCourseClass";
 import CourseScheduleModel from "../models/CourseSchedule";
 
 const courses: string[] = [];
-
-// 處理爬蟲被擋的問題
-const httpsAgent = new https.Agent({
-  keepAlive: true,
-  maxSockets: 20,
-});
-
-const detailClient = axios.create({
-  httpsAgent,
-  timeout: 15_000,
-  headers: {
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
-    "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8",
-    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-  },
-});
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-function isRetryableNetworkError(err: any) {
-  const code = err?.code;
-  return (
-    code === "ETIMEDOUT" ||
-    code === "ECONNRESET" ||
-    code === "ECONNABORTED" ||
-    code === "EAI_AGAIN" ||
-    code === "ENOTFOUND"
-  );
-}
-
-async function getWithRetry(url: string, retries = 3) {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      return await detailClient.get(url, {
-        headers: { Referer: "https://ecourse.nutn.edu.tw/public/tea_preview_list.aspx" },
-      });
-    } catch (err: any) {
-      if (attempt === retries || !isRetryableNetworkError(err)) throw err;
-      const backoff = 400 * 2 ** (attempt - 1) + Math.floor(Math.random() * 300);
-      await sleep(backoff);
-    }
-  }
-  throw new Error("unreachable");
-}
 
 // 初始化，跟server.ts做的事情一樣
 // 不過scraper.ts只有要重新爬蟲課程資料才會執行
@@ -171,6 +127,12 @@ async function runScraper(): Promise<void> {
           const rawCourseType = coursePage$("#Label16").text();
           const courseType = normalizeCourseType(rawCourseType);
 
+          const courseClassElement = coursePage$("#Label5").clone();
+          courseClassElement.find("br").replaceWith("\n");
+          const rawCourseClass = courseClassElement.text();
+          const className = extractClassName(rawCourseClass);
+          const grades = className ? parseGradesFromClassName(className) : null;
+
           // cour_no + course_dep_code 是課程網址帶的開課序號，用來識別「同系所同課名同老師」
           // 也可能是不同班次的情況（例如必修課同老師連開兩班）；解析失敗時退回舊比對方式。
           const identity = parseCourseIdentityFromUrl(course.courseURL);
@@ -205,6 +167,8 @@ async function runScraper(): Promise<void> {
                   course_dep_code: identity?.course_dep_code ?? existingCourse.course_dep_code,
                   credit_hours: parseInt(course.creditHours),
                   course_type: courseType,
+                  class_name: className,
+                  grades,
                   updated_at: new Date(),
                 },
                 { transaction }
@@ -244,6 +208,8 @@ async function runScraper(): Promise<void> {
                   created_at: new Date(), // 提供當前時間
                   updated_at: new Date(), // 提供當前時間
                   course_type: courseType,
+                  class_name: className,
+                  grades,
                   interests_count: 0,
                   review_count: 0,
                   view_count: 0,

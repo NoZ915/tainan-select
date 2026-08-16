@@ -15,6 +15,8 @@ export interface Course {
   created_at: Date;
   updated_at: Date;
   course_type: string;
+  class_name?: string | null;
+  grades?: number[] | null;
   review_count: number;
   interests_count: number;
   view_count: number;

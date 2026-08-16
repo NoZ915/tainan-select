@@ -49,6 +49,9 @@ const CourseCard: React.FC<CourseCardProp> = ({ course }) => {
 						{course.department && (
 							<Badge color='brick-red.3' variant='light' radius='sm'>{course.department}</Badge>
 						)}
+						{course.class_name && (
+							<Badge color='brick-red.3' variant='outline' radius='sm'>{course.class_name}</Badge>
+						)}
 					</div>
 				</div>
 

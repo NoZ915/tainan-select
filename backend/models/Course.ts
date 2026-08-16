@@ -26,6 +26,8 @@ class CourseModel extends Model<
   declare created_at: Date;
   declare updated_at: Date;
   declare course_type: string;
+  declare class_name?: string | null; // 開課班級原始字串
+  declare grades?: number[] | null; // 解析出的大學部年級（1~4）
   declare interests_count: number;
   declare view_count: number;
   declare review_count: number;
@@ -90,6 +92,14 @@ CourseModel.init(
     },
     course_type: {
       type: DataTypes.STRING(50),
+      allowNull: true,
+    },
+    class_name: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    grades: {
+      type: DataTypes.JSON,
       allowNull: true,
     },
     interests_count: {
