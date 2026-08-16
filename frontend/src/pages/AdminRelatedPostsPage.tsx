@@ -145,6 +145,9 @@ const AdminRelatedPostsPage: React.FC = () => {
     weekdays: [],
     periods: [],
     semesters: [],
+    grades: [],
+    graduateLevels: [],
+    classNames: [],
     sortBy: 'viewDesc',
   }), [previewCourseLookupKeyword])
 
@@ -164,6 +167,9 @@ const AdminRelatedPostsPage: React.FC = () => {
     weekdays: [],
     periods: [],
     semesters: [],
+    grades: [],
+    graduateLevels: [],
+    classNames: [],
     sortBy: 'viewDesc',
   }), [attachCourseLookupKeyword])
 

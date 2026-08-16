@@ -3,6 +3,7 @@ export const QUERY_KEYS = {
   COURSE: 'course',
   ACADEMIES: 'academies',
   DEPARTMENTS: 'departments',
+  CLASS_NAMES: 'class_names',
   
   AUTH_STATUS: 'authStatus',
   CHECK_AUTH_STATUS: 'checkAuthStatus',

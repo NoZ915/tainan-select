@@ -1,12 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
-import { Container, Tabs, Input, Button, Select, MultiSelect, Accordion } from '@mantine/core'
+import { Container, Tabs, Input, Button, Select, MultiSelect, Accordion, Group } from '@mantine/core'
 import { SearchParams, FilterOption } from '../types/courseType'
 import { FaSearch } from 'react-icons/fa'
 import style from '../styles/components/CourseFilter.module.css'
 import { useGetDepartments } from '../hooks/courses/useGetDepartments'
 import { useGetAcademies } from '../hooks/courses/useGetAcademies'
+import { useGetClassNames } from '../hooks/courses/useGetClassNames'
 import { useGetSemesters } from '../hooks/semesters/useGetSemesters'
 import periodTimeMap from '../utils/periodTimeMap'
+
+const GRADE_OPTIONS = [
+    { value: '1', label: '一' },
+    { value: '2', label: '二' },
+    { value: '3', label: '三' },
+    { value: '4', label: '四' },
+]
+const GRADUATE_LEVEL_OPTIONS = [
+    { value: '碩一', label: '碩一' },
+    { value: '碩二以上', label: '碩二（以上）' },
+    { value: '博一', label: '博一' },
+    { value: '博二以上', label: '博二（以上）' },
+]
 
 interface CourseFilterProps {
     searchParams: SearchParams;
@@ -24,6 +38,9 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
     const [weekdays, setWeekdays] = useState<string[]>(searchParams.weekdays)
     const [periods, setPeriods] = useState<string[]>(searchParams.periods)
     const [semesters, setSemesters] = useState<string[]>(searchParams.semesters)
+    const [grades, setGrades] = useState<string[]>(searchParams.grades)
+    const [graduateLevels, setGraduateLevels] = useState<string[]>(searchParams.graduateLevels)
+    const [classNames, setClassNames] = useState<string[]>(searchParams.classNames)
     const [advancedAccordionValue, setAdvancedAccordionValue] = useState<string | null>(null)
 
     useEffect(() => {
@@ -39,6 +56,9 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
         setWeekdays(searchParams.weekdays)
         setPeriods(searchParams.periods)
         setSemesters(searchParams.semesters)
+        setGrades(searchParams.grades)
+        setGraduateLevels(searchParams.graduateLevels)
+        setClassNames(searchParams.classNames)
     }, [searchParams])
 
     const filterOptions: FilterOption[] = [
@@ -66,7 +86,12 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
             category: activeTab,
         },
     )
+    const { data: classNameList, isLoading: isLoadingClassNames } = useGetClassNames(
+        activeTab === 'teacher',
+        { category: activeTab },
+    )
     const { data: semesterList } = useGetSemesters()
+    const showCourseTypeFilter = activeTab === 'university' || activeTab === 'graduate' || activeTab === 'teacher'
     const organizationOptionContextMatchesUrl = activeTab === searchParams.category
         && semesters.join(',') === searchParams.semesters.join(',')
 
@@ -189,6 +214,9 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
         setWeekdays([])
         setPeriods([])
         setSemesters([])
+        setGrades([])
+        setGraduateLevels([])
+        setClassNames([])
         onSearch({
             page: 1,
             limit: 9,
@@ -200,6 +228,9 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
             weekdays: [],
             periods: [],
             semesters: [],
+            grades: [],
+            graduateLevels: [],
+            classNames: [],
             sortBy: searchParams.sortBy || 'reviewDesc',
         })
     }
@@ -216,6 +247,9 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
             weekdays,
             periods,
             semesters,
+            grades,
+            graduateLevels,
+            classNames,
             sortBy: searchParams.sortBy || 'reviewDesc',
         })
     }
@@ -278,17 +312,55 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
                     </>
                 )}
 
-                {activeTab === 'university' && (
-                    <Select
-                        placeholder='選擇修別'
-                        data={['必修', '選修', '必選修']}
-                        value={courseType || null}
-                        size='md'
-                        classNames={{ input: style.selectInput }}
-                        className={style.select}
-                        onChange={(value) => setCourseType(value!)}
-                        searchable
-                    />
+                {showCourseTypeFilter && (
+                    <Group grow gap='sm' className={style.filterRow}>
+                        {activeTab === 'university' && (
+                            <MultiSelect
+                                placeholder='篩選年級（可多選）'
+                                data={GRADE_OPTIONS}
+                                value={grades}
+                                size='md'
+                                classNames={{ input: style.selectInput }}
+                                onChange={setGrades}
+                                searchable
+                                clearable
+                            />
+                        )}
+                        {activeTab === 'graduate' && (
+                            <MultiSelect
+                                placeholder='篩選年級（可多選）'
+                                data={GRADUATE_LEVEL_OPTIONS}
+                                value={graduateLevels}
+                                size='md'
+                                classNames={{ input: style.selectInput }}
+                                onChange={setGraduateLevels}
+                                searchable
+                                clearable
+                            />
+                        )}
+                        {activeTab === 'teacher' && (
+                            <MultiSelect
+                                placeholder='篩選開課班別（可多選）'
+                                data={classNameList?.classNames ?? []}
+                                value={classNames}
+                                size='md'
+                                classNames={{ input: style.selectInput }}
+                                onChange={setClassNames}
+                                disabled={isLoadingClassNames}
+                                searchable
+                                clearable
+                            />
+                        )}
+                        <Select
+                            placeholder='選擇修別'
+                            data={['必修', '選修', '必選修']}
+                            value={courseType || null}
+                            size='md'
+                            classNames={{ input: style.selectInput }}
+                            onChange={(value) => setCourseType(value!)}
+                            searchable
+                        />
+                    </Group>
                 )}
                 {activeTab !== 'ewant' && (
                     <Accordion
@@ -344,7 +416,10 @@ const CourseFilter: React.FC<CourseFilterProps> = ({ searchParams, onSearch, onC
 
                 <Button
                     className={style.searchButton}
-                    disabled={showOrganizationFilters && (isLoadingAcademies || isLoadingDepartments)}
+                    disabled={
+                        (showOrganizationFilters && (isLoadingAcademies || isLoadingDepartments))
+                        || (activeTab === 'teacher' && isLoadingClassNames)
+                    }
                     onClick={() => handleClick()}
                 >
                     搜尋

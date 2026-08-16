@@ -76,6 +76,9 @@ const buildSearchParams = (queryParams: URLSearchParams): SearchParams => ({
 	weekdays: (queryParams.get('weekdays') || '').split(',').map((item) => item.trim()).filter(Boolean),
 	periods: (queryParams.get('periods') || '').split(',').map((item) => item.trim()).filter(Boolean),
 	semesters: (queryParams.get('semesters') || '').split(',').map((item) => item.trim()).filter(Boolean),
+	grades: (queryParams.get('grades') || '').split(',').map((item) => item.trim()).filter(Boolean),
+	graduateLevels: (queryParams.get('graduateLevels') || '').split(',').map((item) => item.trim()).filter(Boolean),
+	classNames: (queryParams.get('classNames') || '').split(',').map((item) => item.trim()).filter(Boolean),
 	sortBy: normalizeSortBy(queryParams.get('sortBy') || undefined)
 })
 
@@ -115,6 +118,9 @@ const CoursesPage: React.FC = () => {
 		if (params.weekdays.length > 0) newQueryParams.set('weekdays', params.weekdays.join(','))
 		if (params.periods.length > 0) newQueryParams.set('periods', params.periods.join(','))
 		if (params.semesters.length > 0) newQueryParams.set('semesters', params.semesters.join(','))
+		if (params.grades.length > 0) newQueryParams.set('grades', params.grades.join(','))
+		if (params.graduateLevels.length > 0) newQueryParams.set('graduateLevels', params.graduateLevels.join(','))
+		if (params.classNames.length > 0) newQueryParams.set('classNames', params.classNames.join(','))
 		if (params.sortBy) newQueryParams.set('sortBy', params.sortBy)
 
 		navigate(`?${newQueryParams.toString()}`, { replace: options.replace ?? false })

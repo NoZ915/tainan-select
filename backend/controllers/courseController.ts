@@ -41,6 +41,22 @@ export const getAllCourses: RequestHandler = async (
       .filter((value) => Boolean(value));
     const includeTimeslots = req.query.includeTimeslots === "true";
 
+    const gradeValues = getQueryValues(req.query.grades);
+    if (gradeValues.some((value) => !/^[1-4]$/.test(value))) {
+      res.status(400).json({ message: "年級篩選格式錯誤，grades 僅接受 1 至 4。" });
+      return;
+    }
+    const grades = gradeValues.map(Number);
+
+    const allowedGraduateLevels = new Set(["碩一", "碩二以上", "博一", "博二以上"]);
+    const graduateLevels = getQueryValues(req.query.graduateLevels);
+    if (graduateLevels.some((value) => !allowedGraduateLevels.has(value))) {
+      res.status(400).json({ message: "年級篩選格式錯誤，graduateLevels 僅接受 碩一/碩二以上/博一/博二以上。" });
+      return;
+    }
+
+    const classNames = getQueryValues(req.query.classNames);
+
     const search = {
       search: String(req.query.search || ""),
       category: String(req.query.category || "all"),
@@ -50,6 +66,9 @@ export const getAllCourses: RequestHandler = async (
       weekdays,
       periods,
       semesters,
+      grades,
+      graduateLevels,
+      classNames,
       sortBy: String(req.query.sortBy || "")
     };
 
@@ -90,6 +109,18 @@ export const getAllAcademies: RequestHandler = async (
   try {
     const academies = await CourseService.getAllAcademies(getCourseOptionFilters(req.query));
     res.status(200).json({ academies });
+  } catch (err) {
+    res.status(500).json({ message: err });
+  }
+};
+
+export const getAllClassNames: RequestHandler = async (
+  req,
+  res
+): Promise<void> => {
+  try {
+    const classNames = await CourseService.getAllClassNames(getCourseOptionFilters(req.query));
+    res.status(200).json({ classNames });
   } catch (err) {
     res.status(500).json({ message: err });
   }

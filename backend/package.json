@@ -12,6 +12,8 @@
     "backfill:schedules": "tsx scripts/backfillCourseSchedules.ts",
     "backfill:course-identity": "tsx scripts/backfillCourseIdentity.ts",
     "backfill:dcard-related-post-counts": "tsx scripts/backfillDcardRelatedPostCounts.ts",
+    "backfill:course-class-name": "tsx scripts/backfillCourseClassName.ts",
+    "backfill:graduate-levels": "tsx scripts/backfillGraduateLevels.ts",
     "migrate": "sequelize-cli db:migrate --config config/config.cjs"
   },
   "keywords": [],

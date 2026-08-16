@@ -15,6 +15,9 @@ export interface Course {
   created_at: Date;
   updated_at: Date;
   course_type: string;
+  class_name?: string | null;
+  grades?: number[] | null;
+  graduate_levels?: string[] | null;
   review_count: number;
   interests_count: number;
   view_count: number;
@@ -97,6 +100,9 @@ export interface SearchParams {
   weekdays: string[];
   periods: string[];
   semesters: string[];
+  grades: string[];
+  graduateLevels: string[];
+  classNames: string[];
   sortBy?: string;
   includeTimeslots?: boolean;
 }
