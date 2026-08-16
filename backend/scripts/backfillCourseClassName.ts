@@ -4,7 +4,7 @@ import * as cheerio from "cheerio";
 import db from "../models";
 import CourseModel from "../models/Course";
 import { getWithRetry } from "../scraper/httpClient";
-import { extractClassName, parseGradesFromClassName } from "../utils/parseCourseClass";
+import { extractClassName, parseGradesFromClassName, parseGraduateLevelsFromClassName } from "../utils/parseCourseClass";
 
 const BATCH_SIZE = 300;
 const CONCURRENCY = 6;
@@ -57,9 +57,10 @@ const backfillCourseClassName = async (): Promise<void> => {
           const rawCourseClass = courseClassElement.text();
           const className = extractClassName(rawCourseClass);
           const grades = className ? parseGradesFromClassName(className) : null;
+          const graduateLevels = className ? parseGraduateLevelsFromClassName(className) : null;
 
           if (className) {
-            await course.update({ class_name: className, grades });
+            await course.update({ class_name: className, grades, graduate_levels: graduateLevels });
             updated += 1;
           }
         } catch (error) {

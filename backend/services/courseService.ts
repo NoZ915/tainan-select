@@ -82,6 +82,10 @@ class CourseService {
     return await CourseRepository.getAllAcademies(filters);
   }
 
+  async getAllClassNames(filters: CourseOptionFilters = {}): Promise<string[]>{
+    return await CourseRepository.getAllClassNames(filters);
+  }
+
   async getAllSemesters(): Promise<string[]>{
     return await CourseRepository.getAllSemesters();
   }

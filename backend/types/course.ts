@@ -19,6 +19,7 @@ export interface Course {
   course_type?: string;
   class_name?: string | null;
   grades?: number[] | null;
+  graduate_levels?: string[] | null;
   interests_count?: number;
   view_count?: number;
   review_count?: number;
@@ -84,6 +85,9 @@ export interface CourseSearchParams {
   weekdays: number[];
   periods: string[];
   semesters: string[];
+  grades: number[];
+  graduateLevels: string[];
+  classNames: string[];
   sortBy?: string;
 }
 

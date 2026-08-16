@@ -86,6 +86,10 @@
   width: 100%;
 }
 
+.filterRow {
+  margin-bottom: 16px;
+}
+
 .advancedFilterAccordion {
   margin-bottom: 16px;
 }

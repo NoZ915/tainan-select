@@ -31,6 +31,11 @@ export const getAcademies = async (filters: CourseOptionFilters = {}): Promise<{
   return response.data
 }
 
+export const getClassNames = async (filters: CourseOptionFilters = {}): Promise<{ classNames: string[] }> => {
+  const response = await axiosInstance.get('/courses/getAllClassNames', { params: filters })
+  return response.data
+}
+
 // NOTE: 暫時移除此功能
 export const getMostCuriousButUnreviewedCourses = async (): Promise<Course[]> => {
   const response = await axiosInstance.get('/courses/getMostCuriousButUnreviewedCourses')

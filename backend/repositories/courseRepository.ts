@@ -39,6 +39,16 @@ const getCategoryConditions = (category?: string): any[] => {
   return [];
 };
 
+const LEADING_NUMERAL_MAP: Record<string, number> = { 一: 1, 二: 2, 三: 3, 四: 4 };
+
+// 開課班別選項排序：開頭是一二三四的（如「一A學程」）依數字排序在前，其餘（如「教育實習」）依字母排序放後面
+const compareClassNames = (a: string, b: string): number => {
+  const numA = LEADING_NUMERAL_MAP[a[0]] ?? Infinity;
+  const numB = LEADING_NUMERAL_MAP[b[0]] ?? Infinity;
+  if (numA !== numB) return numA - numB;
+  return a.localeCompare(b, "zh-Hant");
+};
+
 class CourseRepository {
   private getCourseOptionWhere = (
     filters: CourseOptionFilters,
@@ -59,6 +69,14 @@ class CourseRepository {
     }
 
     return whereCondition;
+  };
+
+  // 用 MySQL JSON_CONTAINS 檢查 JSON 陣列欄位（grades / graduate_levels）是否包含指定值
+  private jsonArrayContains = (column: string, value: string | number): any => {
+    return db.sequelize.where(
+      db.Sequelize.fn("JSON_CONTAINS", db.Sequelize.col(column), JSON.stringify(value)),
+      1
+    );
   };
 
   private getFilteredCourseIdsBySchedule = async (
@@ -129,6 +147,22 @@ class CourseRepository {
     if (search && search.courseType) whereCondition.course_type = search.courseType;
     if (search && search.semesters.length > 0) whereCondition.semester = { [Op.in]: search.semesters };
 
+    if (search && search.grades && search.grades.length > 0) {
+      whereCondition[Op.and] = [
+        ...(whereCondition[Op.and] ?? []),
+        { [Op.or]: search.grades.map((grade) => this.jsonArrayContains("grades", grade)) },
+      ];
+    }
+    if (search && search.graduateLevels && search.graduateLevels.length > 0) {
+      whereCondition[Op.and] = [
+        ...(whereCondition[Op.and] ?? []),
+        { [Op.or]: search.graduateLevels.map((level) => this.jsonArrayContains("graduate_levels", level)) },
+      ];
+    }
+    if (search && search.classNames && search.classNames.length > 0) {
+      whereCondition.class_name = { [Op.in]: search.classNames };
+    }
+
     const filteredByScheduleIds = await this.getFilteredCourseIdsBySchedule(search?.weekdays ?? [], search?.periods ?? []);
     if (filteredByScheduleIds) {
       if (filteredByScheduleIds.length === 0) return { courses: [], total: 0 };
@@ -194,6 +228,20 @@ class CourseRepository {
       return item.department
     })
     return departmentList;
+  }
+
+  async getAllClassNames(filters: CourseOptionFilters = {}): Promise<string[]> {
+    const whereCondition = this.getCourseOptionWhere(filters);
+    whereCondition.class_name = { [Op.ne]: null };
+    const classNames = await CourseModel.findAll({
+      attributes: [[db.Sequelize.fn("DISTINCT", db.Sequelize.col("class_name")), "class_name"]],
+      where: whereCondition,
+      raw: true
+    });
+    const classNameList = classNames
+      .map((item: { class_name?: string | null }) => item.class_name)
+      .filter((className): className is string => className != null && className.trim() !== '');
+    return classNameList.sort(compareClassNames);
   }
 
   async getAllAcademies(filters: CourseOptionFilters = {}): Promise<string[]> {

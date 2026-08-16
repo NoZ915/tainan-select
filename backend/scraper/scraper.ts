@@ -9,7 +9,7 @@ import { getWithRetry } from "./httpClient";
 import { normalizeCourseTime, parseCourseTime } from "../utils/parseCourseTime";
 import { normalizeCourseType } from "../utils/normalizeCourseType";
 import { parseCourseIdentityFromUrl } from "../utils/courseIdentity";
-import { extractClassName, parseGradesFromClassName } from "../utils/parseCourseClass";
+import { extractClassName, parseGradesFromClassName, parseGraduateLevelsFromClassName } from "../utils/parseCourseClass";
 import CourseScheduleModel from "../models/CourseSchedule";
 
 const courses: string[] = [];
@@ -132,6 +132,7 @@ async function runScraper(): Promise<void> {
           const rawCourseClass = courseClassElement.text();
           const className = extractClassName(rawCourseClass);
           const grades = className ? parseGradesFromClassName(className) : null;
+          const graduateLevels = className ? parseGraduateLevelsFromClassName(className) : null;
 
           // cour_no + course_dep_code 是課程網址帶的開課序號，用來識別「同系所同課名同老師」
           // 也可能是不同班次的情況（例如必修課同老師連開兩班）；解析失敗時退回舊比對方式。
@@ -169,6 +170,7 @@ async function runScraper(): Promise<void> {
                   course_type: courseType,
                   class_name: className,
                   grades,
+                  graduate_levels: graduateLevels,
                   updated_at: new Date(),
                 },
                 { transaction }
@@ -210,6 +212,7 @@ async function runScraper(): Promise<void> {
                   course_type: courseType,
                   class_name: className,
                   grades,
+                  graduate_levels: graduateLevels,
                   interests_count: 0,
                   review_count: 0,
                   view_count: 0,

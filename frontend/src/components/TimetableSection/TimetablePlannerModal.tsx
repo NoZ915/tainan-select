@@ -231,6 +231,9 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
     weekdays: selectedSlot ? [String(selectedSlot.dayOfWeek)] : [],
     periods: selectedSlot ? [selectedSlot.period] : [],
     semesters: semester ? [semester] : [],
+    grades: [],
+    graduateLevels: [],
+    classNames: [],
     sortBy: 'reviewDesc',
     includeTimeslots: true,
   }), [
