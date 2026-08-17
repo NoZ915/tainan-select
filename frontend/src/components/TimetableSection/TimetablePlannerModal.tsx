@@ -7,6 +7,7 @@ import {
   Group,
   Loader,
   Modal,
+  MultiSelect,
   Pagination,
   ScrollArea,
   Select,
@@ -25,6 +26,7 @@ import { addTimetableCourse, swapTimetableCourse } from '../../apis/timetableAPI
 import type { ApiError } from '../../apis/axiosInstance'
 import { useGetCourses } from '../../hooks/courses/useGetCourses'
 import { useGetAcademies } from '../../hooks/courses/useGetAcademies'
+import { useGetClassNames } from '../../hooks/courses/useGetClassNames'
 import { useGetDepartments } from '../../hooks/courses/useGetDepartments'
 import { QUERY_KEYS } from '../../hooks/queryKeys'
 import { useGuestTimetable } from '../../hooks/timetables/useGuestTimetable'
@@ -94,6 +96,19 @@ const plannerFilterOptions: FilterOption[] = [
 ]
 
 const courseTypeOptions = ['必修', '選修', '必選修']
+
+const gradeOptions = [
+  { value: '1', label: '一' },
+  { value: '2', label: '二' },
+  { value: '3', label: '三' },
+  { value: '4', label: '四' },
+]
+const graduateLevelOptions = [
+  { value: '碩一', label: '碩一' },
+  { value: '碩二以上', label: '碩二（以上）' },
+  { value: '博一', label: '博一' },
+  { value: '博二以上', label: '博二（以上）' },
+]
 
 const weekdays: WeekdayOption[] = [
   { label: '一', value: 1 },
@@ -177,6 +192,9 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
   const [academy, setAcademy] = useState('')
   const [department, setDepartment] = useState('')
   const [courseType, setCourseType] = useState('')
+  const [grades, setGrades] = useState<string[]>([])
+  const [graduateLevels, setGraduateLevels] = useState<string[]>([])
+  const [classNames, setClassNames] = useState<string[]>([])
   const [selectedSlot, setSelectedSlot] = useState<TimetableSlotSelection | null>(initialSlot)
   const [addingCourseId, setAddingCourseId] = useState<number | null>(null)
   const [pendingSwap, setPendingSwap] = useState<PendingSwap | null>(null)
@@ -207,6 +225,9 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
     setAcademy('')
     setDepartment('')
     setCourseType('')
+    setGrades([])
+    setGraduateLevels([])
+    setClassNames([])
     setSelectedSlot(initialSlot)
     setPendingSwap(null)
     setFailedCourseId(null)
@@ -231,16 +252,19 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
     weekdays: selectedSlot ? [String(selectedSlot.dayOfWeek)] : [],
     periods: selectedSlot ? [selectedSlot.period] : [],
     semesters: semester ? [semester] : [],
-    grades: [],
-    graduateLevels: [],
-    classNames: [],
+    grades,
+    graduateLevels,
+    classNames,
     sortBy: 'reviewDesc',
     includeTimeslots: true,
   }), [
     academy,
     category,
+    classNames,
     courseType,
     department,
+    grades,
+    graduateLevels,
     searchPage,
     selectedSlot,
     semester,
@@ -248,6 +272,7 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
   ])
 
   const showOrganizationFilters = category === 'university' || category === 'graduate'
+  const showCourseTypeFilter = category === 'university' || category === 'graduate' || category === 'teacher'
   const {
     data: academyList,
     isLoading: isLoadingAcademies,
@@ -264,6 +289,12 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
     semester: semester ?? undefined,
     category,
     academy: academy || undefined,
+  })
+  const {
+    data: classNameList,
+    isLoading: isLoadingClassNames,
+  } = useGetClassNames(opened && category === 'teacher', {
+    category,
   })
 
   const {
@@ -396,6 +427,9 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
     setAcademy('')
     setDepartment('')
     setCourseType('')
+    setGrades([])
+    setGraduateLevels([])
+    setClassNames([])
     setSearchPage(1)
   }
 
@@ -834,19 +868,67 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
               <Text size='xs' c='red'>學院或系所選項載入失敗，請稍後重新開啟課表規劃。</Text>
             )}
 
-            {category === 'university' && (
-              <Select
-                label='修別'
-                placeholder='全部'
-                data={courseTypeOptions}
-                value={courseType || null}
-                onChange={(value) => {
-                  setCourseType(value ?? '')
-                  setSearchPage(1)
-                }}
-                clearable
-                comboboxProps={{ withinPortal: true, zIndex: 1300 }}
-              />
+            {showCourseTypeFilter && (
+              <Group grow align='flex-start'>
+                {category === 'university' && (
+                  <MultiSelect
+                    label='年級'
+                    placeholder='全部'
+                    data={gradeOptions}
+                    value={grades}
+                    onChange={(value) => {
+                      setGrades(value)
+                      setSearchPage(1)
+                    }}
+                    searchable
+                    clearable
+                    comboboxProps={{ withinPortal: true, zIndex: 1300 }}
+                  />
+                )}
+                {category === 'graduate' && (
+                  <MultiSelect
+                    label='年級'
+                    placeholder='全部'
+                    data={graduateLevelOptions}
+                    value={graduateLevels}
+                    onChange={(value) => {
+                      setGraduateLevels(value)
+                      setSearchPage(1)
+                    }}
+                    searchable
+                    clearable
+                    comboboxProps={{ withinPortal: true, zIndex: 1300 }}
+                  />
+                )}
+                {category === 'teacher' && (
+                  <MultiSelect
+                    label='開課班別'
+                    placeholder='全部'
+                    data={classNameList?.classNames ?? []}
+                    value={classNames}
+                    onChange={(value) => {
+                      setClassNames(value)
+                      setSearchPage(1)
+                    }}
+                    disabled={isLoadingClassNames}
+                    searchable
+                    clearable
+                    comboboxProps={{ withinPortal: true, zIndex: 1300 }}
+                  />
+                )}
+                <Select
+                  label='修別'
+                  placeholder='全部'
+                  data={courseTypeOptions}
+                  value={courseType || null}
+                  onChange={(value) => {
+                    setCourseType(value ?? '')
+                    setSearchPage(1)
+                  }}
+                  clearable
+                  comboboxProps={{ withinPortal: true, zIndex: 1300 }}
+                />
+              </Group>
             )}
 
             <form onSubmit={handleSearch}>
@@ -896,6 +978,11 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
                       <Stack gap={4}>
                         <Group justify='space-between' align='flex-start' wrap='nowrap'>
                           <Text fw={700} size='sm'>{course.course_name}</Text>
+                          {course.class_name && (
+                            <Badge size='sm' color='brick-red.3' variant='outline' radius='sm' style={{ flexShrink: 0 }}>
+                              {course.class_name}
+                            </Badge>
+                          )}
                         </Group>
                         <Text size='xs' c='dimmed'>
                           {[course.instructor, course.department].filter(Boolean).join('・')}
