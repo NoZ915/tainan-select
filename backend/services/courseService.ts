@@ -4,6 +4,7 @@ import {
   CourseListResult,
   CourseOptionFilters,
   CourseWithTimeslots,
+  ReviewRequestCoursesResponse,
 } from "../types/course";
 import { PaginationParams } from "../types/course";
 import CourseRepository from "../repositories/courseRepository";
@@ -15,6 +16,18 @@ import {
   normalizeCourseSchedule,
   normalizeCourseSchedules,
 } from "../utils/courseSchedule";
+import { REVIEW_REQUEST_CONFIG } from "../config/reviewRequest";
+
+const SEMESTER_PATTERN = /^\d{3}-[12]$/;
+
+export class ReviewRequestServiceError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
 
 class CourseService {
   async getAllCourses(params: PaginationParams): Promise<CourseListResult>;
@@ -86,9 +99,49 @@ class CourseService {
     return await CourseRepository.getAllSemesters();
   }
 
-  // NOTE: 暫時移除此功能
-  async getMostCuriousButUnreviewedCourses(): Promise<Course[]>{
-    return await CourseRepository.getMostCuriousButUnreviewedCourses();
+  async getReviewRequestCourses(
+    rawSemester: unknown,
+    rawLimit: unknown
+  ): Promise<ReviewRequestCoursesResponse> {
+    const semester = typeof rawSemester === "string" ? rawSemester.trim() : "";
+    if (!SEMESTER_PATTERN.test(semester)) {
+      throw new ReviewRequestServiceError(400, "semester 格式錯誤");
+    }
+
+    const limit = rawLimit === undefined || rawLimit === ""
+      ? REVIEW_REQUEST_CONFIG.defaultLimit
+      : Number(rawLimit);
+    if (
+      !Number.isSafeInteger(limit)
+      || limit < 1
+      || limit > REVIEW_REQUEST_CONFIG.maxLimit
+    ) {
+      throw new ReviewRequestServiceError(
+        400,
+        `limit 必須介於 1 與 ${REVIEW_REQUEST_CONFIG.maxLimit} 之間`
+      );
+    }
+
+    const rows = await CourseRepository.getReviewRequestCourses(semester, limit);
+    return {
+      semester,
+      items: rows.map((row) => ({
+        course: {
+          id: Number(row.id),
+          course_name: row.course_name,
+          department: row.department,
+          instructor: row.instructor,
+          review_count: Number(row.review_count),
+        },
+        signals: {
+          recentInterestCount: Number(row.recentInterestCount),
+          weightedFavoriteScore: Number(row.weightedFavoriteScore),
+          timetableCount: Number(row.timetableCount),
+          reviewCount: Number(row.review_count),
+        },
+        reviewRequestScore: Number(row.reviewRequestScore),
+      })),
+    };
   }
 
   async addViewCount(course_id: number): Promise<void>{
