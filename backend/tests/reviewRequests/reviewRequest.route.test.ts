@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import router from "./courses";
+import router from "../../routes/courses";
 
 test("review-requests route 位於動態 course_id route 前", () => {
   const paths = (router as unknown as {

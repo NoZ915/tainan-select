@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { normalizeCourseTime, parseCourseTime } from "./parseCourseTime";
+import { normalizeCourseTime, parseCourseTime } from "../../utils/parseCourseTime";
 
 test("不將英文星期錯字的字母解析為節次", () => {
   assert.equal(

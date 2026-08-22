@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { NextFunction, Request, Response } from "express";
-import TimetableAnalyticsService, {
-  TimetableAnalyticsServiceError,
-} from "../services/timetableAnalyticsService";
+import GuestTimetableSnapshotService, {
+  GuestTimetableSnapshotServiceError,
+} from "../../services/guestTimetableSnapshotService";
 import {
   deleteGuestTimetableSnapshot,
   syncGuestTimetableSnapshot,
-} from "./timetableAnalyticsController";
+} from "../../controllers/guestTimetableSnapshotController";
 
 const createResponse = () => {
   const state: { status?: number; body?: unknown; sent?: boolean } = {};
@@ -32,7 +32,7 @@ const next = (() => {}) as NextFunction;
 
 test("PUT guest snapshot 成功時回傳 204", async (t) => {
   const body = { clientId: "550e8400-e29b-41d4-a716-446655440000", semesters: {} };
-  const serviceMock = t.mock.method(TimetableAnalyticsService, "syncGuestSnapshot", async () => {});
+  const serviceMock = t.mock.method(GuestTimetableSnapshotService, "syncGuestSnapshot", async () => {});
   const { response, state } = createResponse();
 
   await syncGuestTimetableSnapshot({ body } as Request, response, next);
@@ -43,7 +43,7 @@ test("PUT guest snapshot 成功時回傳 204", async (t) => {
 
 test("DELETE guest snapshot 會呼叫刪除服務", async (t) => {
   const body = { clientId: "550e8400-e29b-41d4-a716-446655440000" };
-  const serviceMock = t.mock.method(TimetableAnalyticsService, "deleteGuestSnapshot", async () => {});
+  const serviceMock = t.mock.method(GuestTimetableSnapshotService, "deleteGuestSnapshot", async () => {});
   const { response, state } = createResponse();
 
   await deleteGuestTimetableSnapshot({ body } as Request, response, next);
@@ -53,8 +53,8 @@ test("DELETE guest snapshot 會呼叫刪除服務", async (t) => {
 });
 
 test("輸入驗證錯誤會回傳安全的 400 訊息", async (t) => {
-  t.mock.method(TimetableAnalyticsService, "syncGuestSnapshot", async () => {
-    throw new TimetableAnalyticsServiceError(400, "clientId 必須是有效的 UUID");
+  t.mock.method(GuestTimetableSnapshotService, "syncGuestSnapshot", async () => {
+    throw new GuestTimetableSnapshotServiceError(400, "clientId 必須是有效的 UUID");
   });
   const { response, state } = createResponse();
 
@@ -64,4 +64,24 @@ test("輸入驗證錯誤會回傳安全的 400 訊息", async (t) => {
     status: 400,
     body: { message: "clientId 必須是有效的 UUID" },
   });
+});
+
+test("未預期錯誤會保留診斷資訊並回傳安全的 500 訊息", async (t) => {
+  const unexpectedError = new Error("database unavailable");
+  t.mock.method(GuestTimetableSnapshotService, "syncGuestSnapshot", async () => {
+    throw unexpectedError;
+  });
+  const errorLogMock = t.mock.method(console, "error", () => {});
+  const { response, state } = createResponse();
+
+  await syncGuestTimetableSnapshot({ body: {} } as Request, response, next);
+
+  assert.deepEqual(state, {
+    status: 500,
+    body: { message: "匿名課表統計同步失敗" },
+  });
+  assert.deepEqual(errorLogMock.mock.calls[0].arguments, [
+    "訪客課表快照同步失敗",
+    unexpectedError,
+  ]);
 });

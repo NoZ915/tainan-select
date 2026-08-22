@@ -1,4 +1,4 @@
-import { TIMETABLE_ANALYTICS_CONFIG } from "../types/timetableAnalytics";
+import { GUEST_TIMETABLE_SNAPSHOT_CONFIG } from "./guestTimetableSnapshot";
 
 export const REVIEW_REQUEST_CONFIG = {
   interestWeights: [
@@ -16,7 +16,7 @@ export const REVIEW_REQUEST_CONFIG = {
     { maxReviewCount: 7, factor: 0.2 },
   ],
   minimumReviewNeedFactor: 0.1,
-  guestSnapshotTtlDays: TIMETABLE_ANALYTICS_CONFIG.guestSnapshotTtlDays,
+  guestSnapshotTtlDays: GUEST_TIMETABLE_SNAPSHOT_CONFIG.guestSnapshotTtlDays,
   defaultLimit: 5,
   maxLimit: 20,
 } as const;

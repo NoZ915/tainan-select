@@ -1,22 +1,7 @@
 import { Op, Transaction } from "sequelize";
-import CourseModel from "../models/Course";
 import GuestTimetableSnapshotModel from "../models/GuestTimetableSnapshot";
 
-class TimetableAnalyticsRepository {
-  async findCoursesByIds(
-    courseIds: number[],
-    transaction: Transaction
-  ): Promise<Array<{ id: number; semester: string }>> {
-    if (courseIds.length === 0) return [];
-
-    return await CourseModel.findAll({
-      attributes: ["id", "semester"],
-      where: { id: { [Op.in]: courseIds } },
-      transaction,
-      raw: true,
-    });
-  }
-
+class GuestTimetableSnapshotRepository {
   async upsertSnapshot(
     clientId: string,
     semester: string,
@@ -61,4 +46,4 @@ class TimetableAnalyticsRepository {
   }
 }
 
-export default new TimetableAnalyticsRepository();
+export default new GuestTimetableSnapshotRepository();

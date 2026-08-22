@@ -1,21 +1,21 @@
 import { useEffect } from 'react'
 import { useAuthStore } from '../../stores/authStore'
-import { guestTimetableAnalyticsSyncCoordinator } from '../../utils/guestTimetableAnalyticsSync'
+import { guestTimetableSnapshotSyncCoordinator } from '../../utils/guestTimetableSnapshotSync'
 import { useGuestTimetable } from './useGuestTimetable'
 
-export const useSyncGuestTimetableAnalytics = (): void => {
+export const useSyncGuestTimetableSnapshot = (): void => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const isAuthResolved = useAuthStore((state) => state.isAuthResolved)
   const { storage, error } = useGuestTimetable()
 
   useEffect(() => {
-    guestTimetableAnalyticsSyncCoordinator.setAuthState(
+    guestTimetableSnapshotSyncCoordinator.setAuthState(
       isAuthResolved,
       isAuthenticated,
     )
 
     if (isAuthResolved && !isAuthenticated && error === null) {
-      guestTimetableAnalyticsSyncCoordinator.schedule(storage)
+      guestTimetableSnapshotSyncCoordinator.schedule(storage)
     }
   }, [error, isAuthResolved, isAuthenticated, storage])
 }

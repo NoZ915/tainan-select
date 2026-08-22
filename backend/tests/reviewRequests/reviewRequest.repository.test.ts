@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { QueryTypes } from "sequelize";
-import db from "../models";
-import CourseRepository from "./courseRepository";
+import db from "../../models";
+import CourseRepository from "../../repositories/courseRepository";
 
 test("求評價排行使用單次 aggregate query、JSON snapshot 與安全參數", async (t) => {
   const queryMock = t.mock.method(db.sequelize, "query", async () => []);

@@ -31,7 +31,7 @@ import {
   markGuestTimetableImportPromptHandled,
   subscribeGuestTimetableImportPromptRequest,
 } from '../utils/guestTimetableImportSession'
-import { deleteGuestSnapshotAfterSuccessfulImport } from '../utils/guestTimetableAnalyticsSync'
+import { deleteSyncedGuestTimetableSnapshot } from '../utils/guestTimetableSnapshotSync'
 import { findConflictCourseIds } from '../utils/timetable'
 import {
   captureAuthStatusRequestSnapshot,
@@ -238,6 +238,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
         return
       }
       markHandled()
+      void deleteSyncedGuestTimetableSnapshot()
       setActionError(null)
       setClearAllSnapshot(null)
       setPhase('idle')
@@ -436,7 +437,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
     }
 
     if (!sessionChanged && nextSummary.added + nextSummary.alreadyExists > 0) {
-      void deleteGuestSnapshotAfterSuccessfulImport()
+      void deleteSyncedGuestTimetableSnapshot()
     }
 
     setImportSummary(nextSummary)
@@ -520,7 +521,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
           return
         }
 
-        void deleteGuestSnapshotAfterSuccessfulImport()
+        void deleteSyncedGuestTimetableSnapshot()
 
         let localSnapshotChanged = false
         try {
@@ -664,7 +665,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
         return
       }
 
-      void deleteGuestSnapshotAfterSuccessfulImport()
+      void deleteSyncedGuestTimetableSnapshot()
 
       try {
         const removed = await removeCourseSnapshot(

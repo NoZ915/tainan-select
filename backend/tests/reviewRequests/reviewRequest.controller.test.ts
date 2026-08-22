@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { NextFunction, Request, Response } from "express";
-import CourseService, { ReviewRequestServiceError } from "../services/courseService";
-import { getReviewRequestCourses } from "./courseController";
+import CourseService, { ReviewRequestServiceError } from "../../services/courseService";
+import { getReviewRequestCourses } from "../../controllers/courseController";
 
 const createResponse = () => {
   const state: { status?: number; body?: unknown } = {};

@@ -198,6 +198,20 @@ class CourseRepository {
     return await CourseModel.findByPk(course_id);
   }
 
+  async findSemestersByIds(
+    courseIds: number[],
+    transaction: Transaction
+  ): Promise<Array<{ id: number; semester: string }>> {
+    if (courseIds.length === 0) return [];
+
+    return await CourseModel.findAll({
+      attributes: ["id", "semester"],
+      where: { id: { [Op.in]: courseIds } },
+      transaction,
+      raw: true,
+    });
+  }
+
   async getAllCoursesCount(): Promise<number> {
     return await CourseModel.count();
   }

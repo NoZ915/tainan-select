@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import CourseRepository from "../repositories/courseRepository";
-import CourseService, { ReviewRequestServiceError } from "./courseService";
+import CourseRepository from "../../repositories/courseRepository";
+import CourseService, { ReviewRequestServiceError } from "../../services/courseService";
 
 test("求評價排行驗證 semester 與 limit", async () => {
   await assert.rejects(

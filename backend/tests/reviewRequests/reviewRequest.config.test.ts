@@ -4,7 +4,7 @@ import {
   getInterestWeightByAgeDays,
   getReviewNeedFactor,
   REVIEW_REQUEST_CONFIG,
-} from "./reviewRequest";
+} from "../../config/reviewRequest";
 
 test("收藏 freshness 在各天數邊界使用逐筆權重", () => {
   assert.deepEqual(

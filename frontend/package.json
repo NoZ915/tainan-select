@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "test:timetable-analytics": "tsc -p tsconfig.test.json --noEmit && tsx --test src/utils/analyticsClientId.test.ts src/utils/guestTimetableAnalyticsSync.test.ts",
+    "test": "tsc -p tsconfig.test.json --noEmit && tsx --test tests/**/*.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {
