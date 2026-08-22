@@ -11,6 +11,54 @@ export type VersionEntry = {
 // Keep this list in reverse-chronological order (newest first).
 export const VERSION_HISTORY: VersionEntry[] = [
   {
+    version: 'v4.2.1',
+    releasedAt: '2026-08-22',
+    kind: 'fix',
+    title: '課程爬蟲大修',
+    summary:
+      '學校在統計表偷偷多加了一列「跨領域學院」，結果整份課程資料的解析全部位移，爬到一堆不存在的網址 🥲 這次把解析方式整個改成逐列讀取，之後學校再改版也不會整批歪掉。順便讓課程大綱還在「整理中」的課也抓得到，跨領域學院的課終於出現了。',
+  },
+  {
+    version: 'v4.2.0',
+    releasedAt: '2026-08-22',
+    kind: 'feat',
+    title: '課程瀏覽次數統計',
+    summary:
+      '課程卡片新增瀏覽次數，可以看看哪些課大家比較好奇。未登入的訪客課表也會納入統計，但不會帶到任何個人身分資訊，放心。',
+  },
+  {
+    version: 'v4.1.0～v4.1.1',
+    releasedAt: '2026-08-17',
+    kind: 'feat',
+    title: '開課班級與年級篩選',
+    summary:
+      '爬蟲新增抓「開課班級」，搜尋頁和課表規劃器都可以用年級、開課班別來篩課，課程上也會顯示班級標籤。另外修掉 iOS 點輸入框會自動放大的惱人問題。',
+  },
+  {
+    version: 'v4.0.0',
+    releasedAt: '2026-08-16',
+    kind: 'feat',
+    title: '訪客課表與課表規劃器',
+    summary:
+      '沒登入也可以排課表了！課表會存在你自己的裝置上，之後登入再一鍵匯入帳號。新增課表規劃器，直接在格子上排課、即時看衝堂，課程頁也能直接加入課表（以前只能先收藏再加，有夠麻煩）。順便把多分頁同時登入登出會打架的狀況修掉。',
+  },
+  {
+    version: 'v3.3.0',
+    releasedAt: '2026-08-01',
+    kind: 'feat',
+    title: '功能許願池上線',
+    summary:
+      '新增「功能許願」頁面，想要什麼功能可以直接許願，也能幫別人的願望投票，我會看票數決定先做哪個（盡量啦）。',
+  },
+  {
+    version: 'v3.2.1',
+    releasedAt: '2026-04-15',
+    kind: 'feat',
+    title: '白名單手動加入',
+    summary:
+      '在日本玩沒帶筆電，剛好有使用者想加白名單，直接用手機開 chatgpt 建一個功能出來  :3 於是...管理員後台可以直接把 Email 加進白名單了，還能一併填學號跟備註，不用再自己開資料庫來加',
+  },
+  {
     version: 'v3.2.0',
     releasedAt: '2026-03-27',
     kind: 'enhancement',
