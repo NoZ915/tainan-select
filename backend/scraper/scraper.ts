@@ -6,13 +6,12 @@ import db from "../models";
 import Course from "../models/Course";
 import { googleRequestCURL } from "./googleRequestCURL";
 import { getWithRetry } from "./httpClient";
+import { parseCourseListPage } from "./parseCourseList";
 import { normalizeCourseTime, parseCourseTime } from "../utils/parseCourseTime";
 import { normalizeCourseType } from "../utils/normalizeCourseType";
 import { parseCourseIdentityFromUrl } from "../utils/courseIdentity";
 import { extractClassName, parseGradesFromClassName, parseGraduateLevelsFromClassName } from "../utils/parseCourseClass";
 import CourseScheduleModel from "../models/CourseSchedule";
-
-const courses: string[] = [];
 
 // 初始化，跟server.ts做的事情一樣
 // 不過scraper.ts只有要重新爬蟲課程資料才會執行
@@ -59,52 +58,15 @@ async function runScraper(): Promise<void> {
       }
     );
 
-    // cheerio取得資料
-    const $ = cheerio.load(response.data);
-    $("table > tbody > tr > td").each(function () {
-      courses.push($(this).text().split("\n")[1].replace(/\s*/g, ""));
-      // * 處理特例「整理中」，整理中沒有url，會導致後續course在切資料出錯
-      if ($(this).text().split("\n")[1].replace(/\s*/g, "") === "整理中") {
-        courses.push("no link");
-      }
-      // * 正常來說，課程、教師、檢視，這三個欄位都會有url
-      // * 暫時先這樣，之後也許可以改成不管沒有url都要再多push一個東西，只是底下course切的位置得修正
-      const href = $(this).find("a").attr("href");
-      if (href) {
-        courses.push(href); // 只有當 href 存在時才push
-      }
-    });
+    const formattedData = parseCourseListPage(response.data);
 
-    // cheerio取得學期
-    const semester = $("#label_title2")
-      .text()
-      .replace(/[^0-9]/gi, "");
-
-    // 整理取得的資料
-    const formattedData: {
-      semester: string;
-      academy: string;
-      department: string;
-      courseName: string;
-      courseURL: string;
-      instructor: string;
-      instructorURL: string;
-      creditHours: string;
-    }[] = [];
-
-    for (let i = 0; i < courses.length; i += 11) {
-      const course = {
-        semester: `${semester.slice(0, 3)}-${semester.slice(3)}`,
-        academy: courses.slice(53)[i] || "",
-        department: courses.slice(53)[i + 1] || "未知系所",
-        courseName: courses.slice(53)[i + 2]?.split("[")[0] || "未知課程",
-        courseURL: `https://ecourse.nutn.edu.tw/public/${courses.slice(53)[i + 3] || ""}`,
-        instructor: courses.slice(53)[i + 4] || "未知教師",
-        instructorURL: courses.slice(53)[i + 5] || "",
-        creditHours: courses.slice(53)[i + 6] || "0",
-      };
-      formattedData.push(course);
+    // 學校網站改版時要立刻炸掉，而不是安靜地爬到0筆或一堆垃圾資料
+    if (formattedData.length === 0) {
+      throw new Error(
+        "課程列表解析結果為0筆，學校網站的表格結構可能已改版，請重新確認欄位對應"
+      );
     }
+    console.log(`解析到 ${formattedData.length} 堂課程`);
 
     const limit = pLimit(6); // 先 6，穩了再調 8 or 10
     let failed = 0;
@@ -113,8 +75,6 @@ async function runScraper(): Promise<void> {
     const tasks = formattedData.map((course) =>
       limit(async () => {
         try {
-          if (!course.courseURL || course.courseURL.endsWith("/no link")) return;
-
           const res = await getWithRetry(course.courseURL);
           const coursePage$ = cheerio.load(res.data);
 
@@ -160,6 +120,11 @@ async function runScraper(): Promise<void> {
                 {
                   semester: course.semester,
                   academy: course.academy,
+                  // 學校會改課名、換授課教師、調整開課系所，這三個欄位一樣要跟著更新，
+                  // 否則會停在第一次抓到的舊值（而 instructor_url 卻已換人，造成名字與連結不一致）
+                  department: course.department,
+                  course_name: course.courseName,
+                  instructor: course.instructor,
                   instructor_url: course.instructorURL,
                   course_room: courseRoom,
                   course_time: courseTime,
@@ -243,7 +208,9 @@ async function runScraper(): Promise<void> {
       }));
 
     await Promise.all(tasks);
-    console.log("All courses have been updated.");
+    console.log(
+      `All courses have been updated. 成功 ${formattedData.length - failed} 筆、失敗 ${failed} 筆`
+    );
     process.exit(0);
   } catch (error) {
     console.error("Error scraping courses:", error);
