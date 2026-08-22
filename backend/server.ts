@@ -19,8 +19,13 @@ import timetablesRoutes from "./routes/timetables";
 import reactionsRoutes from "./routes/reactions";
 import adminRoutes from "./routes/admin";
 import featureRequestsRoutes from "./routes/featureRequests";
+import timetableAnalyticsRoutes from "./routes/timetableAnalytics";
 
 const app: Express = express();
+const trustProxyHops = Number.parseInt(process.env.TRUST_PROXY_HOPS ?? "0", 10);
+if (Number.isSafeInteger(trustProxyHops) && trustProxyHops > 0) {
+  app.set("trust proxy", trustProxyHops);
+}
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const corsOptions = {
@@ -51,6 +56,7 @@ app.use("/api/semesters", semestersRoutes);
 app.use("/api/timetables", timetablesRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/feature-requests", featureRequestsRoutes);
+app.use("/api/timetable-analytics", timetableAnalyticsRoutes);
 
 const startServer = async (): Promise<void> => {
   try {
