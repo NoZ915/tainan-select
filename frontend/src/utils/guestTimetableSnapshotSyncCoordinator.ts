@@ -6,9 +6,10 @@ import type { GuestTimetableStorage } from '../types/timetableType'
 type AuthMode = 'unresolved' | 'authenticated' | 'guest'
 
 export type GuestTimetableSnapshotSyncDependencies = {
-  getClientId: () => string
+  getClientId: () => string | Promise<string>
   syncSnapshot: (payload: GuestTimetableSnapshotPayload) => Promise<void>
   deleteSnapshot: (clientId: string) => Promise<void>
+  setSyncDisabled: (clientId: string, disabled: boolean) => void
   setTimer: (callback: () => void, delay: number) => number
   clearTimer: (timerId: number) => void
   logError: (message: string, error: unknown) => void
@@ -42,9 +43,13 @@ export class GuestTimetableSnapshotSyncCoordinator {
   private pendingPayloadSignature: string | null = null
   private lastPayloadSignature: string | null = null
   private retryAttempt = 0
+  private scheduleVersion = 0
+  private shouldEnableSync = false
   private deletionTimerId: number | null = null
   private isDeletionPending = false
   private deletionRetryAttempt = 0
+  private deletionClientId: string | null = null
+  private deletionGeneration = 0
   private requestChain: Promise<void> = Promise.resolve()
 
   constructor(dependencies: GuestTimetableSnapshotSyncDependencies) {
@@ -63,48 +68,89 @@ export class GuestTimetableSnapshotSyncCoordinator {
     const wasAuthenticated = this.authMode === 'authenticated'
     this.authMode = nextMode
     if (nextMode !== 'guest') {
+      this.scheduleVersion += 1
       this.clearPendingSync()
       this.lastPayloadSignature = null
       this.retryAttempt = 0
     }
     if (wasAuthenticated) {
       this.lastPayloadSignature = null
+      this.shouldEnableSync = true
     }
-    if (nextMode === 'guest') this.clearPendingDeletion()
+    if (nextMode === 'authenticated') this.shouldEnableSync = false
+    if (nextMode === 'guest') {
+      this.clearPendingDeletion()
+    }
   }
 
   schedule(storage: GuestTimetableStorage): void {
     if (this.authMode !== 'guest') return
 
-    let clientId: string
+    const scheduleVersion = ++this.scheduleVersion
+    const preparePayload = (clientId: string): void => {
+      if (scheduleVersion !== this.scheduleVersion || this.authMode !== 'guest') return
+
+      if (this.shouldEnableSync) {
+        try {
+          this.dependencies.setSyncDisabled(clientId, false)
+        } catch (error) {
+          this.dependencies.logError('無法恢復匿名課表統計同步', error)
+        }
+        this.shouldEnableSync = false
+      }
+
+      const payload: GuestTimetableSnapshotPayload = {
+        clientId,
+        semesters: buildGuestSnapshotSemesters(storage),
+      }
+      const payloadSignature = JSON.stringify(payload)
+      if (payloadSignature === this.lastPayloadSignature) return
+
+      this.lastPayloadSignature = payloadSignature
+      this.retryAttempt = 0
+      this.pendingPayload = payload
+      this.pendingPayloadSignature = payloadSignature
+      if (this.timerId !== null) this.dependencies.clearTimer(this.timerId)
+      this.timerId = this.dependencies.setTimer(
+        () => this.flushPendingSync(),
+        GUEST_TIMETABLE_SNAPSHOT_CONFIG.syncDebounceMs,
+      )
+    }
+
     try {
-      clientId = this.dependencies.getClientId()
+      const clientId = this.dependencies.getClientId()
+      if (typeof clientId === 'string') {
+        preparePayload(clientId)
+      } else {
+        void clientId.then(preparePayload).catch((error) => {
+          this.dependencies.logError('無法準備匿名課表統計同步', error)
+        })
+      }
     } catch (error) {
       this.dependencies.logError('無法準備匿名課表統計同步', error)
-      return
     }
-
-    const payload: GuestTimetableSnapshotPayload = {
-      clientId,
-      semesters: buildGuestSnapshotSemesters(storage),
-    }
-    const payloadSignature = JSON.stringify(payload)
-    if (payloadSignature === this.lastPayloadSignature) return
-
-    this.lastPayloadSignature = payloadSignature
-    this.retryAttempt = 0
-    this.pendingPayload = payload
-    this.pendingPayloadSignature = payloadSignature
-    if (this.timerId !== null) this.dependencies.clearTimer(this.timerId)
-    this.timerId = this.dependencies.setTimer(
-      () => this.flushPendingSync(),
-      GUEST_TIMETABLE_SNAPSHOT_CONFIG.syncDebounceMs,
-    )
   }
 
   async deleteSnapshot(): Promise<void> {
     this.clearPendingSync()
     this.clearPendingDeletion()
+    const deletionGeneration = this.deletionGeneration
+
+    let clientId: string
+    try {
+      clientId = await this.dependencies.getClientId()
+    } catch (error) {
+      this.dependencies.logError('無法準備移除匿名課表統計 Snapshot', error)
+      return
+    }
+    if (deletionGeneration !== this.deletionGeneration) return
+
+    try {
+      this.dependencies.setSyncDisabled(clientId, true)
+    } catch (error) {
+      this.dependencies.logError('無法暫停跨分頁匿名課表統計同步', error)
+    }
+    this.deletionClientId = clientId
     this.isDeletionPending = true
 
     this.requestChain = this.requestChain.then(() => this.attemptSnapshotDeletion())
@@ -128,13 +174,15 @@ export class GuestTimetableSnapshotSyncCoordinator {
     }
     this.isDeletionPending = false
     this.deletionRetryAttempt = 0
+    this.deletionClientId = null
+    this.deletionGeneration += 1
   }
 
   private async attemptSnapshotDeletion(): Promise<void> {
-    if (!this.isDeletionPending) return
+    if (!this.isDeletionPending || !this.deletionClientId) return
 
     try {
-      await this.dependencies.deleteSnapshot(this.dependencies.getClientId())
+      await this.dependencies.deleteSnapshot(this.deletionClientId)
       this.lastPayloadSignature = null
       this.retryAttempt = 0
       this.clearPendingDeletion()

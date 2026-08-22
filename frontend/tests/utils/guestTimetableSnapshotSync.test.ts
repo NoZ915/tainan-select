@@ -31,6 +31,7 @@ const createStorage = (semesters: Record<string, number[]>): GuestTimetableStora
 const createTestCoordinator = (options?: {
   syncSnapshot?: (payload: GuestTimetableSnapshotPayload) => Promise<void>
   deleteSnapshot?: (clientId: string) => Promise<void>
+  setSyncDisabled?: (clientId: string, disabled: boolean) => void
   logError?: (message: string, error: unknown) => void
 }) => {
   let nextTimerId = 1
@@ -39,6 +40,7 @@ const createTestCoordinator = (options?: {
     getClientId: () => CLIENT_ID,
     syncSnapshot: options?.syncSnapshot ?? (async () => {}),
     deleteSnapshot: options?.deleteSnapshot ?? (async () => {}),
+    setSyncDisabled: options?.setSyncDisabled ?? (() => {}),
     setTimer: (callback, delay) => {
       const id = nextTimerId
       nextTimerId += 1
@@ -115,6 +117,26 @@ test('auth resolved 前不同步，登出成 guest 後會補同步現有課表',
   await coordinator.deleteSnapshot()
 
   assert.equal(payloads.length, 1)
+})
+
+test('只有從 authenticated 回到 guest 才解除跨分頁同步暫停標記', async () => {
+  const syncDisabledChanges: boolean[] = []
+  const { coordinator } = createTestCoordinator({
+    setSyncDisabled: (clientId, disabled) => {
+      assert.equal(clientId, CLIENT_ID)
+      syncDisabledChanges.push(disabled)
+    },
+  })
+  const storage = createStorage({ '115-1': [1] })
+
+  coordinator.setAuthState(true, false)
+  coordinator.schedule(storage)
+  assert.deepEqual(syncDisabledChanges, [])
+
+  coordinator.setAuthState(true, true)
+  coordinator.setAuthState(true, false)
+  coordinator.schedule(storage)
+  assert.deepEqual(syncDisabledChanges, [false])
 })
 
 test('auth 暫時變回 unresolved 取消排程後，重新 resolved 仍會補同步', async () => {

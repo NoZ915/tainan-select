@@ -49,9 +49,14 @@ export const createAnalyticsClientId = (
 export const getOrCreateAnalyticsClientId = (
   storage: Storage = window.localStorage,
   createId: () => string = createAnalyticsClientId,
-): string => {
-  const storedClientId = storage.getItem(ANALYTICS_CLIENT_ID_STORAGE_KEY)
-  if (isAnalyticsClientId(storedClientId)) return storedClientId.toLowerCase()
+  withLock: <Result>(callback: () => Result) => Promise<Result> = (callback) => (
+    typeof navigator !== 'undefined' && navigator.locks
+      ? navigator.locks.request('tainan-select:analytics-client-id', callback)
+      : Promise.resolve(callback())
+  ),
+): Promise<string> => withLock(() => {
+  const currentClientId = storage.getItem(ANALYTICS_CLIENT_ID_STORAGE_KEY)
+  if (isAnalyticsClientId(currentClientId)) return currentClientId.toLowerCase()
 
   const clientId = createId().toLowerCase()
   if (!isAnalyticsClientId(clientId)) {
@@ -60,4 +65,4 @@ export const getOrCreateAnalyticsClientId = (
 
   storage.setItem(ANALYTICS_CLIENT_ID_STORAGE_KEY, clientId)
   return clientId
-}
+})
