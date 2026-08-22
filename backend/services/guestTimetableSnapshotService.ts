@@ -1,15 +1,16 @@
 import { Transaction } from "sequelize";
 import db from "../models";
-import TimetableAnalyticsRepository from "../repositories/timetableAnalyticsRepository";
+import CourseRepository from "../repositories/courseRepository";
+import GuestTimetableSnapshotRepository from "../repositories/guestTimetableSnapshotRepository";
 import {
-  GuestSnapshotSyncInput,
-  TIMETABLE_ANALYTICS_CONFIG,
-} from "../types/timetableAnalytics";
+  GuestTimetableSnapshotSyncInput,
+  GUEST_TIMETABLE_SNAPSHOT_CONFIG,
+} from "../types/guestTimetableSnapshot";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SEMESTER_PATTERN = /^\d{3}-[12]$/;
 
-export class TimetableAnalyticsServiceError extends Error {
+export class GuestTimetableSnapshotServiceError extends Error {
   status: number;
 
   constructor(status: number, message: string) {
@@ -18,43 +19,43 @@ export class TimetableAnalyticsServiceError extends Error {
   }
 }
 
-export const normalizeGuestSnapshotInput = (input: unknown): GuestSnapshotSyncInput => {
+export const normalizeGuestSnapshotInput = (input: unknown): GuestTimetableSnapshotSyncInput => {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
-    throw new TimetableAnalyticsServiceError(400, "請提供有效的同步資料");
+    throw new GuestTimetableSnapshotServiceError(400, "請提供有效的同步資料");
   }
 
   const { clientId, semesters } = input as Record<string, unknown>;
   if (typeof clientId !== "string" || !UUID_PATTERN.test(clientId)) {
-    throw new TimetableAnalyticsServiceError(400, "clientId 必須是有效的 UUID");
+    throw new GuestTimetableSnapshotServiceError(400, "clientId 必須是有效的 UUID");
   }
   if (!semesters || typeof semesters !== "object" || Array.isArray(semesters)) {
-    throw new TimetableAnalyticsServiceError(400, "semesters 必須是物件");
+    throw new GuestTimetableSnapshotServiceError(400, "semesters 必須是物件");
   }
 
   const semesterEntries = Object.entries(semesters);
-  if (semesterEntries.length > TIMETABLE_ANALYTICS_CONFIG.maxSemestersPerSnapshot) {
-    throw new TimetableAnalyticsServiceError(
+  if (semesterEntries.length > GUEST_TIMETABLE_SNAPSHOT_CONFIG.maxSemestersPerSnapshot) {
+    throw new GuestTimetableSnapshotServiceError(
       400,
-      `一次最多同步 ${TIMETABLE_ANALYTICS_CONFIG.maxSemestersPerSnapshot} 個學期`
+      `一次最多同步 ${GUEST_TIMETABLE_SNAPSHOT_CONFIG.maxSemestersPerSnapshot} 個學期`
     );
   }
 
   const normalizedSemesters: Record<string, number[]> = {};
   for (const [semester, rawCourseIds] of semesterEntries) {
     if (!SEMESTER_PATTERN.test(semester)) {
-      throw new TimetableAnalyticsServiceError(400, `學期格式錯誤：${semester}`);
+      throw new GuestTimetableSnapshotServiceError(400, `學期格式錯誤：${semester}`);
     }
     if (!Array.isArray(rawCourseIds)) {
-      throw new TimetableAnalyticsServiceError(400, `${semester} 的 course ID 必須是陣列`);
+      throw new GuestTimetableSnapshotServiceError(400, `${semester} 的 course ID 必須是陣列`);
     }
-    if (rawCourseIds.length > TIMETABLE_ANALYTICS_CONFIG.maxCoursesPerSemester) {
-      throw new TimetableAnalyticsServiceError(
+    if (rawCourseIds.length > GUEST_TIMETABLE_SNAPSHOT_CONFIG.maxCoursesPerSemester) {
+      throw new GuestTimetableSnapshotServiceError(
         400,
-        `${semester} 最多只能包含 ${TIMETABLE_ANALYTICS_CONFIG.maxCoursesPerSemester} 門課`
+        `${semester} 最多只能包含 ${GUEST_TIMETABLE_SNAPSHOT_CONFIG.maxCoursesPerSemester} 門課`
       );
     }
     if (!rawCourseIds.every((courseId) => Number.isSafeInteger(courseId) && courseId > 0)) {
-      throw new TimetableAnalyticsServiceError(400, `${semester} 包含無效的 course ID`);
+      throw new GuestTimetableSnapshotServiceError(400, `${semester} 包含無效的 course ID`);
     }
 
     normalizedSemesters[semester] = [...new Set(rawCourseIds as number[])];
@@ -63,14 +64,14 @@ export const normalizeGuestSnapshotInput = (input: unknown): GuestSnapshotSyncIn
   return { clientId: clientId.toLowerCase(), semesters: normalizedSemesters };
 };
 
-class TimetableAnalyticsService {
+class GuestTimetableSnapshotService {
   async syncGuestSnapshot(input: unknown): Promise<void> {
     const { clientId, semesters } = normalizeGuestSnapshotInput(input);
     const activeEntries = Object.entries(semesters).filter(([, courseIds]) => courseIds.length > 0);
 
     await db.sequelize.transaction(async (transaction: Transaction) => {
       const requestedCourseIds = [...new Set(activeEntries.flatMap(([, courseIds]) => courseIds))];
-      const courses = await TimetableAnalyticsRepository.findCoursesByIds(
+      const courses = await CourseRepository.findSemestersByIds(
         requestedCourseIds,
         transaction
       );
@@ -81,7 +82,7 @@ class TimetableAnalyticsService {
           (courseId) => courseSemesterById.get(courseId) !== semester
         );
         if (invalidCourseId !== undefined) {
-          throw new TimetableAnalyticsServiceError(
+          throw new GuestTimetableSnapshotServiceError(
             400,
             `course ID ${invalidCourseId} 不存在或不屬於 ${semester}`
           );
@@ -90,7 +91,7 @@ class TimetableAnalyticsService {
 
       const lastSyncedAt = new Date();
       for (const [semester, courseIds] of activeEntries) {
-        await TimetableAnalyticsRepository.upsertSnapshot(
+        await GuestTimetableSnapshotRepository.upsertSnapshot(
           clientId,
           semester,
           courseIds,
@@ -99,7 +100,7 @@ class TimetableAnalyticsService {
         );
       }
 
-      await TimetableAnalyticsRepository.deleteMissingSemesters(
+      await GuestTimetableSnapshotRepository.deleteMissingSemesters(
         clientId,
         activeEntries.map(([semester]) => semester),
         transaction
@@ -114,9 +115,9 @@ class TimetableAnalyticsService {
     }).clientId;
 
     await db.sequelize.transaction(async (transaction: Transaction) => {
-      await TimetableAnalyticsRepository.deleteByClientId(clientId, transaction);
+      await GuestTimetableSnapshotRepository.deleteByClientId(clientId, transaction);
     });
   }
 }
 
-export default new TimetableAnalyticsService();
+export default new GuestTimetableSnapshotService();

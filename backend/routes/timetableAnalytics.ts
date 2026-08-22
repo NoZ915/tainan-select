@@ -2,7 +2,7 @@ import express, { Router } from "express";
 import {
   deleteGuestTimetableSnapshot,
   syncGuestTimetableSnapshot,
-} from "../controllers/timetableAnalyticsController";
+} from "../controllers/guestTimetableSnapshotController";
 
 const router: Router = express.Router();
 

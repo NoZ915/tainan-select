@@ -1,10 +1,10 @@
 import { RequestHandler, Response } from "express";
-import TimetableAnalyticsService, {
-  TimetableAnalyticsServiceError,
-} from "../services/timetableAnalyticsService";
+import GuestTimetableSnapshotService, {
+  GuestTimetableSnapshotServiceError,
+} from "../services/guestTimetableSnapshotService";
 
-const handleTimetableAnalyticsError = (res: Response, error: unknown): void => {
-  if (error instanceof TimetableAnalyticsServiceError) {
+const handleGuestTimetableSnapshotError = (res: Response, error: unknown): void => {
+  if (error instanceof GuestTimetableSnapshotServiceError) {
     res.status(error.status).json({ message: error.message });
     return;
   }
@@ -14,18 +14,18 @@ const handleTimetableAnalyticsError = (res: Response, error: unknown): void => {
 
 export const syncGuestTimetableSnapshot: RequestHandler = async (req, res): Promise<void> => {
   try {
-    await TimetableAnalyticsService.syncGuestSnapshot(req.body);
+    await GuestTimetableSnapshotService.syncGuestSnapshot(req.body);
     res.status(204).send();
   } catch (error) {
-    handleTimetableAnalyticsError(res, error);
+    handleGuestTimetableSnapshotError(res, error);
   }
 };
 
 export const deleteGuestTimetableSnapshot: RequestHandler = async (req, res): Promise<void> => {
   try {
-    await TimetableAnalyticsService.deleteGuestSnapshot(req.body);
+    await GuestTimetableSnapshotService.deleteGuestSnapshot(req.body);
     res.status(204).send();
   } catch (error) {
-    handleTimetableAnalyticsError(res, error);
+    handleGuestTimetableSnapshotError(res, error);
   }
 };
