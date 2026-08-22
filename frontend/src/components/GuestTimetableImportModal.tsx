@@ -31,6 +31,7 @@ import {
   markGuestTimetableImportPromptHandled,
   subscribeGuestTimetableImportPromptRequest,
 } from '../utils/guestTimetableImportSession'
+import { deleteSyncedGuestTimetableSnapshot } from '../utils/guestTimetableSnapshotSync'
 import { findConflictCourseIds } from '../utils/timetable'
 import {
   captureAuthStatusRequestSnapshot,
@@ -237,6 +238,7 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
         return
       }
       markHandled()
+      void deleteSyncedGuestTimetableSnapshot()
       setActionError(null)
       setClearAllSnapshot(null)
       setPhase('idle')
@@ -434,6 +436,10 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
       return
     }
 
+    if (!sessionChanged && nextSummary.added + nextSummary.alreadyExists > 0) {
+      void deleteSyncedGuestTimetableSnapshot()
+    }
+
     setImportSummary(nextSummary)
     setImportConflictDetails(nextConflictDetails)
     setActionError([
@@ -514,6 +520,8 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
           setActionError('登入帳號已變更；帳號課表可能已更新，裝置上尚未處理的資料會繼續保留。')
           return
         }
+
+        void deleteSyncedGuestTimetableSnapshot()
 
         let localSnapshotChanged = false
         try {
@@ -656,6 +664,8 @@ const AuthenticatedGuestTimetableImportModal: React.FC = () => {
         setActionError('登入帳號已變更；帳號課表可能已完成交換，裝置上尚未處理的資料會繼續保留。')
         return
       }
+
+      void deleteSyncedGuestTimetableSnapshot()
 
       try {
         const removed = await removeCourseSnapshot(
