@@ -94,20 +94,15 @@ class GuestTimetableSnapshotService {
       );
       const courseSemesterById = new Map(courses.map((course) => [Number(course.id), course.semester]));
 
-      for (const [semester, courseIds] of activeEntries) {
-        const invalidCourseId = courseIds.find(
-          (courseId) => courseSemesterById.get(courseId) !== semester
-        );
-        if (invalidCourseId !== undefined) {
-          throw new GuestTimetableSnapshotServiceError(
-            400,
-            `course ID ${invalidCourseId} 不存在或不屬於 ${semester}`
-          );
-        }
-      }
+      const validEntries = activeEntries
+        .map(([semester, courseIds]) => [
+          semester,
+          courseIds.filter((courseId) => courseSemesterById.get(courseId) === semester),
+        ] as const)
+        .filter(([, courseIds]) => courseIds.length > 0);
 
       const lastSyncedAt = new Date();
-      for (const [semester, courseIds] of activeEntries) {
+      for (const [semester, courseIds] of validEntries) {
         await GuestTimetableSnapshotRepository.upsertSnapshot(
           clientId,
           semester,
@@ -119,7 +114,7 @@ class GuestTimetableSnapshotService {
 
       await GuestTimetableSnapshotRepository.deleteMissingSemesters(
         clientId,
-        activeEntries.map(([semester]) => semester),
+        validEntries.map(([semester]) => semester),
         transaction
       );
     }));

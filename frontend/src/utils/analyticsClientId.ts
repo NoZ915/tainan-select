@@ -6,6 +6,13 @@ export const isAnalyticsClientId = (value: unknown): value is string => (
   typeof value === 'string' && UUID_V4_PATTERN.test(value)
 )
 
+export const getAnalyticsClientId = (
+  storage: Storage = window.localStorage,
+): string | null => {
+  const clientId = storage.getItem(ANALYTICS_CLIENT_ID_STORAGE_KEY)
+  return isAnalyticsClientId(clientId) ? clientId.toLowerCase() : null
+}
+
 type AnalyticsClientIdRandomSource = {
   randomUUID?: () => string
   getRandomValues?: (values: Uint8Array) => void
@@ -55,8 +62,8 @@ export const getOrCreateAnalyticsClientId = (
       : Promise.resolve(callback())
   ),
 ): Promise<string> => withLock(() => {
-  const currentClientId = storage.getItem(ANALYTICS_CLIENT_ID_STORAGE_KEY)
-  if (isAnalyticsClientId(currentClientId)) return currentClientId.toLowerCase()
+  const currentClientId = getAnalyticsClientId(storage)
+  if (currentClientId) return currentClientId
 
   const clientId = createId().toLowerCase()
   if (!isAnalyticsClientId(clientId)) {

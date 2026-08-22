@@ -101,14 +101,15 @@ test("同步會在同一個 transaction 內驗證課程、upsert 並移除缺少
   assert.deepEqual(deletedSemesters, ["115-1", "114-2"]);
 });
 
-test("不存在或學期不一致的課程不會寫入 snapshot", async (t) => {
+test("不存在或學期不一致的課程會被忽略，不影響有效課程同步", async (t) => {
   const transaction = {} as Transaction;
 
   t.mock.method(db.sequelize, "transaction", async (callback: (value: Transaction) => Promise<void>) => {
     await callback(transaction);
   });
   t.mock.method(CourseRepository, "findSemestersByIds", async () => [
-    { id: 1, semester: "114-2" },
+    { id: 1, semester: "115-1" },
+    { id: 2, semester: "114-2" },
   ]);
   const upsertMock = t.mock.method(GuestTimetableSnapshotRepository, "upsertSnapshot", async () => {});
   const deleteMock = t.mock.method(
@@ -117,15 +118,22 @@ test("不存在或學期不一致的課程不會寫入 snapshot", async (t) => {
     async () => 0
   );
 
-  await assert.rejects(
-    GuestTimetableSnapshotService.syncGuestSnapshot({
-      clientId: CLIENT_ID,
-      semesters: { "115-1": [1, 2] },
-    }),
-    GuestTimetableSnapshotServiceError
-  );
-  assert.equal(upsertMock.mock.callCount(), 0);
-  assert.equal(deleteMock.mock.callCount(), 0);
+  await GuestTimetableSnapshotService.syncGuestSnapshot({
+    clientId: CLIENT_ID,
+    semesters: { "115-1": [1, 2, 3] },
+  });
+
+  assert.equal(upsertMock.mock.callCount(), 1);
+  assert.deepEqual(upsertMock.mock.calls[0].arguments.slice(0, 3), [
+    CLIENT_ID,
+    "115-1",
+    [1],
+  ]);
+  assert.equal(deleteMock.mock.callCount(), 1);
+  assert.deepEqual(deleteMock.mock.calls[0].arguments.slice(0, 2), [
+    CLIENT_ID,
+    ["115-1"],
+  ]);
 });
 
 test("空課表 payload 會移除該 client 的所有有效 snapshot", async (t) => {

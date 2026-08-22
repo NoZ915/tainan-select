@@ -2,7 +2,7 @@ import {
   deleteGuestTimetableSnapshot,
   syncGuestTimetableSnapshot,
 } from '../apis/guestTimetableSnapshotAPI'
-import { getOrCreateAnalyticsClientId } from './analyticsClientId'
+import { getAnalyticsClientId, getOrCreateAnalyticsClientId } from './analyticsClientId'
 import {
   GuestTimetableSnapshotSyncCoordinator,
 } from './guestTimetableSnapshotSyncCoordinator'
@@ -13,6 +13,7 @@ import {
 } from './guestTimetableSnapshotCrossTab'
 
 const guestTimetableSnapshotSyncCoordinator = new GuestTimetableSnapshotSyncCoordinator({
+  getExistingClientId: getAnalyticsClientId,
   getClientId: getOrCreateAnalyticsClientId,
   syncSnapshot: (payload) => withGuestTimetableSnapshotLock(payload.clientId, async () => {
     if (isGuestTimetableSnapshotSyncDisabled(payload)) return

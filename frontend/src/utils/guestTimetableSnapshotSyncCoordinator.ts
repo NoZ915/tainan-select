@@ -6,6 +6,7 @@ import type { GuestTimetableStorage } from '../types/timetableType'
 type AuthMode = 'unresolved' | 'authenticated' | 'guest'
 
 export type GuestTimetableSnapshotSyncDependencies = {
+  getExistingClientId: () => string | null
   getClientId: () => string | Promise<string>
   syncSnapshot: (payload: GuestTimetableSnapshotPayload) => Promise<void>
   deleteSnapshot: (clientId: string) => Promise<void>
@@ -86,6 +87,16 @@ export class GuestTimetableSnapshotSyncCoordinator {
   schedule(storage: GuestTimetableStorage): void {
     if (this.authMode !== 'guest') return
 
+    const semesters = buildGuestSnapshotSemesters(storage)
+    if (Object.keys(semesters).length === 0) {
+      try {
+        if (!this.dependencies.getExistingClientId()) return
+      } catch (error) {
+        this.dependencies.logError('讀取匿名課表統計識別碼失敗', error)
+        return
+      }
+    }
+
     const scheduleVersion = ++this.scheduleVersion
     const preparePayload = (clientId: string): void => {
       if (scheduleVersion !== this.scheduleVersion || this.authMode !== 'guest') return
@@ -101,7 +112,7 @@ export class GuestTimetableSnapshotSyncCoordinator {
 
       const payload: GuestTimetableSnapshotPayload = {
         clientId,
-        semesters: buildGuestSnapshotSemesters(storage),
+        semesters,
       }
       const payloadSignature = JSON.stringify(payload)
       if (payloadSignature === this.lastPayloadSignature) return
@@ -132,6 +143,8 @@ export class GuestTimetableSnapshotSyncCoordinator {
   }
 
   async deleteSnapshot(): Promise<void> {
+    if (this.authMode !== 'authenticated') return
+
     this.clearPendingSync()
     this.clearPendingDeletion()
     const deletionGeneration = this.deletionGeneration
@@ -144,6 +157,7 @@ export class GuestTimetableSnapshotSyncCoordinator {
       return
     }
     if (deletionGeneration !== this.deletionGeneration) return
+    if (this.authMode !== 'authenticated') return
 
     try {
       this.dependencies.setSyncDisabled(clientId, true)

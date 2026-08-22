@@ -29,6 +29,7 @@ const createStorage = (semesters: Record<string, number[]>): GuestTimetableStora
 })
 
 const createTestCoordinator = (options?: {
+  getExistingClientId?: () => string | null
   syncSnapshot?: (payload: GuestTimetableSnapshotPayload) => Promise<void>
   deleteSnapshot?: (clientId: string) => Promise<void>
   setSyncDisabled?: (clientId: string, disabled: boolean) => void
@@ -37,6 +38,7 @@ const createTestCoordinator = (options?: {
   let nextTimerId = 1
   let pendingTimer: { id: number; callback: () => void; delay: number } | null = null
   const coordinator = new GuestTimetableSnapshotSyncCoordinator({
+    getExistingClientId: options?.getExistingClientId ?? (() => CLIENT_ID),
     getClientId: () => CLIENT_ID,
     syncSnapshot: options?.syncSnapshot ?? (async () => {}),
     deleteSnapshot: options?.deleteSnapshot ?? (async () => {}),
@@ -93,6 +95,22 @@ test('Snapshot payload 對齊後端的學期與課程數量上限', () => {
     '111-1', '112-1', '113-1', '114-1', '115-1',
   ])
   assert.equal(snapshotSemesters['115-1'].length, 100)
+})
+
+test('首次空課表不會建立 client ID 或送出 Snapshot', () => {
+  let requestCount = 0
+  const { coordinator, runPendingTimer } = createTestCoordinator({
+    getExistingClientId: () => null,
+    syncSnapshot: async () => {
+      requestCount += 1
+    },
+  })
+  coordinator.setAuthState(true, false)
+
+  coordinator.schedule(createStorage({}))
+  runPendingTimer()
+
+  assert.equal(requestCount, 0)
 })
 
 test('auth resolved 前不同步，登出成 guest 後會補同步現有課表', async () => {
@@ -227,6 +245,7 @@ test('PUT 與登入匯入後的 DELETE 會序列化，避免舊請求最後覆�
   await Promise.resolve()
   coordinator.schedule(createStorage({ '115-1': [1, 2] }))
   runPendingTimer()
+  coordinator.setAuthState(true, true)
   const deletion = coordinator.deleteSnapshot()
 
   assert.deepEqual(operations, ['PUT:1'])
@@ -253,6 +272,7 @@ test('Analytics 失敗只記錄錯誤且不阻止後續 DELETE', async () => {
   coordinator.setAuthState(true, false)
   coordinator.schedule(createStorage({ '115-1': [1] }))
   runPendingTimer()
+  coordinator.setAuthState(true, true)
 
   await coordinator.deleteSnapshot()
 
@@ -278,9 +298,29 @@ test('最新 Snapshot 同步失敗後會以退避方式重試', async () => {
   assert.equal(getPendingTimerDelay(), 1_000)
 
   runPendingTimer()
-  await coordinator.deleteSnapshot()
+  await new Promise<void>((resolve) => setImmediate(resolve))
 
   assert.equal(attempts, 2)
+})
+
+test('登出後才到達的舊刪除不會停用或刪除訪客 Snapshot', async () => {
+  let deleteCount = 0
+  const disabledChanges: boolean[] = []
+  const { coordinator } = createTestCoordinator({
+    deleteSnapshot: async () => {
+      deleteCount += 1
+    },
+    setSyncDisabled: (_clientId, disabled) => {
+      disabledChanges.push(disabled)
+    },
+  })
+  coordinator.setAuthState(true, true)
+  coordinator.setAuthState(true, false)
+
+  await coordinator.deleteSnapshot()
+
+  assert.equal(deleteCount, 0)
+  assert.deepEqual(disabledChanges, [])
 })
 
 test('只有網路錯誤、429 與 5xx 會重試', () => {

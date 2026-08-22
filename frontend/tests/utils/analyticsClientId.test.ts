@@ -3,6 +3,7 @@ import test from 'node:test'
 import {
   ANALYTICS_CLIENT_ID_STORAGE_KEY,
   createAnalyticsClientId,
+  getAnalyticsClientId,
   getOrCreateAnalyticsClientId,
 } from '../../src/utils/analyticsClientId'
 
@@ -35,6 +36,16 @@ class MemoryStorage implements Storage {
 }
 
 const CLIENT_ID = '550e8400-e29b-41d4-a716-446655440000'
+
+test('只讀取既有且有效的 Analytics client ID', () => {
+  const storage = new MemoryStorage()
+
+  assert.equal(getAnalyticsClientId(storage), null)
+  storage.setItem(ANALYTICS_CLIENT_ID_STORAGE_KEY, 'invalid')
+  assert.equal(getAnalyticsClientId(storage), null)
+  storage.setItem(ANALYTICS_CLIENT_ID_STORAGE_KEY, CLIENT_ID.toUpperCase())
+  assert.equal(getAnalyticsClientId(storage), CLIENT_ID)
+})
 
 test('第一次建立的 Analytics client ID 會保存到獨立 localStorage key', async () => {
   const storage = new MemoryStorage()
