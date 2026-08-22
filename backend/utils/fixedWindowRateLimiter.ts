@@ -41,6 +41,11 @@ export const createFixedWindowRateLimiter = ({
       return false;
     }
 
+    if (now - existingWindow.windowStartedAt >= windowMs) {
+      windowsBySource.set(source, { count: 1, windowStartedAt: now });
+      return false;
+    }
+
     existingWindow.count += 1;
     return existingWindow.count > maxRequests;
   };

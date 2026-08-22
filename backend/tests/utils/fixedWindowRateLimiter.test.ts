@@ -27,6 +27,19 @@ test("固定時間窗到期後重新計數", () => {
   assert.equal(isRateLimited("source-a", 1_000), false);
 });
 
+test("來源在全域清理後才建立仍會依自己的窗口重設", () => {
+  const isRateLimited = createFixedWindowRateLimiter({
+    windowMs: 1_000,
+    maxRequests: 1,
+    maxSources: 10,
+  });
+
+  assert.equal(isRateLimited("cleanup-anchor", 0), false);
+  assert.equal(isRateLimited("source-a", 500), false);
+  assert.equal(isRateLimited("source-a", 501), true);
+  assert.equal(isRateLimited("source-a", 1_500), false);
+});
+
 test("來源紀錄數量有上限", () => {
   const isRateLimited = createFixedWindowRateLimiter({
     windowMs: 1_000,
