@@ -1,36 +1,26 @@
 import CourseViewRepository from "../repositories/courseViewRepository";
+import { normalizeAnalyticsClientId } from "../utils/analyticsClientId";
+
+export type CourseViewTrackingInput = {
+  courseId: number;
+  userId?: number;
+  clientId?: unknown;
+};
 
 class CourseViewService {
-  async shouldInsertView(
-    course_id: number,
-    user_id: number | undefined,
-    ip_address: string | undefined,
-    user_agent: string | undefined
-  ): Promise<boolean> {
-    const MAX_USER_AGENT_LENGTH = 255;
-    const trimmedUserAgent = user_agent?.slice(0, MAX_USER_AGENT_LENGTH);
-    return await CourseViewRepository.shouldInsertView(
-      course_id,
-      user_id,
-      ip_address,
-      trimmedUserAgent
-    );
-  }
+  async trackCourseView({ courseId, userId, clientId }: CourseViewTrackingInput): Promise<boolean> {
+    const normalizedClientId = userId === undefined
+      ? normalizeAnalyticsClientId(clientId)
+      : null;
+    if (userId === undefined && !normalizedClientId) return false;
 
-  async insertCourseView(
-    course_id: number,
-    user_id: number | undefined,
-    ip_address: string | undefined,
-    user_agent: string | undefined
-  ): Promise<void> {
-		const MAX_USER_AGENT_LENGTH = 255;
-    const trimmedUserAgent = user_agent?.slice(0, MAX_USER_AGENT_LENGTH);
-    await CourseViewRepository.insertCourseView(
-      course_id,
-      user_id,
-      ip_address,
-      trimmedUserAgent
-    );
+    const identity = userId !== undefined
+      ? { courseId, userId, clientId: null }
+      : { courseId, userId: null, clientId: normalizedClientId as string };
+    if (await CourseViewRepository.hasRecentView(identity)) return false;
+
+    await CourseViewRepository.insertCourseView(identity);
+    return true;
   }
 }
 

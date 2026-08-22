@@ -4,8 +4,8 @@ import CourseRepository from "../repositories/courseRepository";
 import GuestTimetableSnapshotRepository from "../repositories/guestTimetableSnapshotRepository";
 import { GUEST_TIMETABLE_SNAPSHOT_CONFIG } from "../config/guestTimetableSnapshot";
 import { GuestTimetableSnapshotSyncInput } from "../types/guestTimetableSnapshot";
+import { normalizeAnalyticsClientId } from "../utils/analyticsClientId";
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SEMESTER_PATTERN = /^\d{3}-[12]$/;
 const snapshotOperationsByClientId = new Map<string, Promise<void>>();
 
@@ -42,7 +42,8 @@ export const normalizeGuestSnapshotInput = (input: unknown): GuestTimetableSnaps
   }
 
   const { clientId, semesters } = input as Record<string, unknown>;
-  if (typeof clientId !== "string" || !UUID_PATTERN.test(clientId)) {
+  const normalizedClientId = normalizeAnalyticsClientId(clientId);
+  if (!normalizedClientId) {
     throw new GuestTimetableSnapshotServiceError(400, "clientId 必須是有效的 UUID");
   }
   if (!semesters || typeof semesters !== "object" || Array.isArray(semesters)) {
@@ -78,7 +79,7 @@ export const normalizeGuestSnapshotInput = (input: unknown): GuestTimetableSnaps
     normalizedSemesters[semester] = [...new Set(rawCourseIds as number[])];
   }
 
-  return { clientId: clientId.toLowerCase(), semesters: normalizedSemesters };
+  return { clientId: normalizedClientId, semesters: normalizedSemesters };
 };
 
 class GuestTimetableSnapshotService {

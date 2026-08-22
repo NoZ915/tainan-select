@@ -1,25 +1,26 @@
 import { Op } from "sequelize";
 import CourseViewModel from "../models/CourseView"
 
+export type CourseViewIdentity = {
+  courseId: number;
+} & (
+  | { userId: number; clientId: null }
+  | { userId: null; clientId: string }
+);
+
 class CourseViewRepository {
-  async shouldInsertView(
-    course_id: number,
-    user_id: number | undefined,
-    ip_address: string | undefined,
-    user_agent: string | undefined
-  ): Promise<boolean> {
+  async hasRecentView({ courseId, userId, clientId }: CourseViewIdentity): Promise<boolean> {
     const tenMinsAgo = new Date(Date.now() - 10 * 60 * 1000);
 
-    const condition = user_id
+    const condition = userId !== null
       ? {
-        course_id,
-        user_id,
+        course_id: courseId,
+        user_id: userId,
         viewed_at: { [Op.gt]: tenMinsAgo },
       }
     : {
-        course_id,
-        ip_address,
-        user_agent,
+        course_id: courseId,
+        client_id: clientId,
         viewed_at: { [Op.gt]: tenMinsAgo },
       };
 
@@ -28,20 +29,14 @@ class CourseViewRepository {
         order: [['viewed_at', 'DESC']],
       });
     
-      return !recentView;
+      return Boolean(recentView);
   }
 
-  async insertCourseView(
-    course_id: number,
-    user_id: number | undefined,
-    ip_address: string | undefined,
-    user_agent: string | undefined
-  ): Promise<void> {
+  async insertCourseView({ courseId, userId, clientId }: CourseViewIdentity): Promise<void> {
     await CourseViewModel.create({
-      course_id,
-      user_id,
-      ip_address,
-      user_agent,
+      course_id: courseId,
+      user_id: userId,
+      client_id: clientId,
       viewed_at: new Date(),
     });
   }
