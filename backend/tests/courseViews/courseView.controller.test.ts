@@ -37,8 +37,6 @@ test("匿名課程瀏覽會將 clientId 傳入 tracking", async (t) => {
       : undefined,
   } as unknown as Request, response, next);
 
-  await new Promise((resolve) => setImmediate(resolve));
-
   assert.deepEqual(trackingMock.mock.calls[0].arguments[0], {
     courseId: 12,
     userId: undefined,
@@ -63,11 +61,10 @@ test("CourseView tracking 失敗不影響課程詳情回應", async (t) => {
   } as unknown as Request, response, next);
 
   assert.deepEqual(state, { status: 200, body: course });
-  await new Promise((resolve) => setImmediate(resolve));
   assert.deepEqual(errorMock.mock.calls[0].arguments, ["記錄課程瀏覽失敗", trackingError]);
 });
 
-test("CourseView 寫入尚未完成時就先回傳課程詳情", async (t) => {
+test("CourseView 去重與寫入完成後才回傳課程詳情", async (t) => {
   const course = { course: { id: 12 } };
   let finishTracking: ((inserted: boolean) => void) | undefined;
   t.mock.method(CourseService, "getCourse", async () => course as never);
@@ -76,12 +73,16 @@ test("CourseView 寫入尚未完成時就先回傳課程詳情", async (t) => {
   }));
   const { response, state } = createResponse();
 
-  await getCourse({
+  const courseRequest = getCourse({
     params: { course_id: "12" },
     query: {},
     header: () => undefined,
   } as unknown as Request, response, next);
 
-  assert.deepEqual(state, { status: 200, body: course });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(state, {});
+  assert.ok(finishTracking);
   finishTracking?.(false);
+  await courseRequest;
+  assert.deepEqual(state, { status: 200, body: course });
 });

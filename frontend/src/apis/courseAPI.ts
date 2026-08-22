@@ -18,7 +18,6 @@ export const getCourses = async (searchParams: SearchParams): Promise<CourseResp
 }
 
 type GetCourseOptions = {
-  isAuthenticated: boolean;
   getClientId?: () => Promise<string>;
   onTrackingError?: (error: unknown) => void;
 }
@@ -26,18 +25,15 @@ type GetCourseOptions = {
 export const getCourse = async (
   course_id: string,
   {
-    isAuthenticated,
     getClientId = getOrCreateAnalyticsClientId,
     onTrackingError = (error) => console.error('無法建立匿名課程瀏覽識別碼', error),
-  }: GetCourseOptions,
+  }: GetCourseOptions = {},
 ): Promise<CourseDetailResponse> => {
   let clientId: string | undefined
-  if (!isAuthenticated) {
-    try {
-      clientId = await getClientId()
-    } catch (error) {
-      onTrackingError(error)
-    }
+  try {
+    clientId = await getClientId()
+  } catch (error) {
+    onTrackingError(error)
   }
 
   const response = await axiosInstance.get(`/courses/${course_id}`, {

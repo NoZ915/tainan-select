@@ -102,17 +102,16 @@ export const getCourse: RequestHandler = async (req, res): Promise<void> => {
     const course = await CourseService.getCourse(user_id, course_id);
 
     if (course) {
-      void CourseViewService.trackCourseView({
+      try {
+        const inserted = await CourseViewService.trackCourseView({
           courseId: course_id,
           userId: user_id,
           clientId: req.header("x-analytics-client-id"),
-        })
-        .then(async (inserted) => {
-          if (inserted) await CourseService.addViewCount(course_id);
-        })
-        .catch((trackingError) => {
-          console.error("記錄課程瀏覽失敗", trackingError);
         });
+        if (inserted) await CourseService.addViewCount(course_id);
+      } catch (trackingError) {
+        console.error("記錄課程瀏覽失敗", trackingError);
+      }
     }
     
     res.status(200).json(course);
