@@ -4,6 +4,7 @@ import { GUEST_TIMETABLE_SNAPSHOT_CONFIG } from '../config/guestTimetableSnapsho
 import type { GuestTimetableStorage } from '../types/timetableType'
 
 type AuthMode = 'unresolved' | 'authenticated' | 'guest'
+const GUEST_SNAPSHOT_SEMESTER_PATTERN = /^\d{3}-[12]$/
 
 export type GuestTimetableSnapshotSyncDependencies = {
   getExistingClientId: () => string | null
@@ -25,6 +26,7 @@ export const buildGuestSnapshotSemesters = (
   storage: GuestTimetableStorage,
 ): Record<string, number[]> => Object.fromEntries(
   Object.entries(storage.semesters)
+    .filter(([semester]) => GUEST_SNAPSHOT_SEMESTER_PATTERN.test(semester))
     .map(([semester, items]) => [
       semester,
       [...new Set(items.map((item) => item.course.id))]
