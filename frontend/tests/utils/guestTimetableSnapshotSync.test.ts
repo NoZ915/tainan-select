@@ -137,7 +137,7 @@ test('auth resolved 前不同步，登出成 guest 後會補同步現有課表',
   assert.equal(payloads.length, 1)
 })
 
-test('只有從 authenticated 回到 guest 才解除跨分頁同步暫停標記', async () => {
+test('首次解析為 guest 與登出時都會解除跨分頁同步暫停標記', async () => {
   const syncDisabledChanges: boolean[] = []
   const { coordinator } = createTestCoordinator({
     setSyncDisabled: (clientId, disabled) => {
@@ -149,12 +149,12 @@ test('只有從 authenticated 回到 guest 才解除跨分頁同步暫停標記'
 
   coordinator.setAuthState(true, false)
   coordinator.schedule(storage)
-  assert.deepEqual(syncDisabledChanges, [])
+  assert.deepEqual(syncDisabledChanges, [false])
 
   coordinator.setAuthState(true, true)
   coordinator.setAuthState(true, false)
   coordinator.schedule(storage)
-  assert.deepEqual(syncDisabledChanges, [false])
+  assert.deepEqual(syncDisabledChanges, [false, false])
 })
 
 test('auth 暫時變回 unresolved 取消排程後，重新 resolved 仍會補同步', async () => {

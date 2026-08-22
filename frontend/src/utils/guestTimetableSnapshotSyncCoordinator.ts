@@ -66,7 +66,7 @@ export class GuestTimetableSnapshotSyncCoordinator {
 
     if (nextMode === this.authMode) return
 
-    const wasAuthenticated = this.authMode === 'authenticated'
+    const previousMode = this.authMode
     this.authMode = nextMode
     if (nextMode !== 'guest') {
       this.scheduleVersion += 1
@@ -74,7 +74,7 @@ export class GuestTimetableSnapshotSyncCoordinator {
       this.lastPayloadSignature = null
       this.retryAttempt = 0
     }
-    if (wasAuthenticated) {
+    if (nextMode === 'guest' && previousMode !== 'guest') {
       this.lastPayloadSignature = null
       this.shouldEnableSync = true
     }
