@@ -65,3 +65,23 @@ test("輸入驗證錯誤會回傳安全的 400 訊息", async (t) => {
     body: { message: "clientId 必須是有效的 UUID" },
   });
 });
+
+test("未預期錯誤會保留診斷資訊並回傳安全的 500 訊息", async (t) => {
+  const unexpectedError = new Error("database unavailable");
+  t.mock.method(GuestTimetableSnapshotService, "syncGuestSnapshot", async () => {
+    throw unexpectedError;
+  });
+  const errorLogMock = t.mock.method(console, "error", () => {});
+  const { response, state } = createResponse();
+
+  await syncGuestTimetableSnapshot({ body: {} } as Request, response, next);
+
+  assert.deepEqual(state, {
+    status: 500,
+    body: { message: "匿名課表統計同步失敗" },
+  });
+  assert.deepEqual(errorLogMock.mock.calls[0].arguments, [
+    "訪客課表快照同步失敗",
+    unexpectedError,
+  ]);
+});

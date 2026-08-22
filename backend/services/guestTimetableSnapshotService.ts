@@ -2,13 +2,30 @@ import { Transaction } from "sequelize";
 import db from "../models";
 import CourseRepository from "../repositories/courseRepository";
 import GuestTimetableSnapshotRepository from "../repositories/guestTimetableSnapshotRepository";
-import {
-  GuestTimetableSnapshotSyncInput,
-  GUEST_TIMETABLE_SNAPSHOT_CONFIG,
-} from "../types/guestTimetableSnapshot";
+import { GUEST_TIMETABLE_SNAPSHOT_CONFIG } from "../config/guestTimetableSnapshot";
+import { GuestTimetableSnapshotSyncInput } from "../types/guestTimetableSnapshot";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SEMESTER_PATTERN = /^\d{3}-[12]$/;
+const snapshotOperationsByClientId = new Map<string, Promise<void>>();
+
+const serializeSnapshotOperation = async (
+  clientId: string,
+  operation: () => Promise<void>
+): Promise<void> => {
+  const previousOperation = snapshotOperationsByClientId.get(clientId) ?? Promise.resolve();
+  const queuedOperation = previousOperation.catch(() => undefined).then(operation);
+  const settledOperation = queuedOperation.then(() => undefined, () => undefined);
+  snapshotOperationsByClientId.set(clientId, settledOperation);
+
+  try {
+    await queuedOperation;
+  } finally {
+    if (snapshotOperationsByClientId.get(clientId) === settledOperation) {
+      snapshotOperationsByClientId.delete(clientId);
+    }
+  }
+};
 
 export class GuestTimetableSnapshotServiceError extends Error {
   status: number;
@@ -69,7 +86,7 @@ class GuestTimetableSnapshotService {
     const { clientId, semesters } = normalizeGuestSnapshotInput(input);
     const activeEntries = Object.entries(semesters).filter(([, courseIds]) => courseIds.length > 0);
 
-    await db.sequelize.transaction(async (transaction: Transaction) => {
+    await serializeSnapshotOperation(clientId, () => db.sequelize.transaction(async (transaction: Transaction) => {
       const requestedCourseIds = [...new Set(activeEntries.flatMap(([, courseIds]) => courseIds))];
       const courses = await CourseRepository.findSemestersByIds(
         requestedCourseIds,
@@ -105,7 +122,7 @@ class GuestTimetableSnapshotService {
         activeEntries.map(([semester]) => semester),
         transaction
       );
-    });
+    }));
   }
 
   async deleteGuestSnapshot(input: unknown): Promise<void> {
@@ -114,9 +131,9 @@ class GuestTimetableSnapshotService {
       semesters: {},
     }).clientId;
 
-    await db.sequelize.transaction(async (transaction: Transaction) => {
+    await serializeSnapshotOperation(clientId, () => db.sequelize.transaction(async (transaction: Transaction) => {
       await GuestTimetableSnapshotRepository.deleteByClientId(clientId, transaction);
-    });
+    }));
   }
 }
 

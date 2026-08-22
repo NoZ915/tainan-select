@@ -152,3 +152,45 @@ test("空課表 payload 會移除該 client 的所有有效 snapshot", async (t)
 
   assert.deepEqual(activeSemesters, []);
 });
+
+test("同一 client 的重疊同步會依收到順序序列化", async (t) => {
+  const transaction = {} as Transaction;
+  let transactionCount = 0;
+  let releaseFirstTransaction: (() => void) | undefined;
+  const firstTransactionCanFinish = new Promise<void>((resolve) => {
+    releaseFirstTransaction = resolve;
+  });
+
+  t.mock.method(
+    db.sequelize,
+    "transaction",
+    async (callback: (value: Transaction) => Promise<void>) => {
+      transactionCount += 1;
+      if (transactionCount === 1) await firstTransactionCanFinish;
+      await callback(transaction);
+    }
+  );
+  t.mock.method(CourseRepository, "findSemestersByIds", async () => []);
+  t.mock.method(
+    GuestTimetableSnapshotRepository,
+    "deleteMissingSemesters",
+    async () => 0
+  );
+
+  const firstSync = GuestTimetableSnapshotService.syncGuestSnapshot({
+    clientId: CLIENT_ID,
+    semesters: {},
+  });
+  await new Promise<void>((resolve) => setImmediate(resolve));
+
+  const secondSync = GuestTimetableSnapshotService.syncGuestSnapshot({
+    clientId: CLIENT_ID,
+    semesters: {},
+  });
+  await new Promise<void>((resolve) => setImmediate(resolve));
+
+  assert.equal(transactionCount, 1);
+  releaseFirstTransaction?.();
+  await Promise.all([firstSync, secondSync]);
+  assert.equal(transactionCount, 2);
+});

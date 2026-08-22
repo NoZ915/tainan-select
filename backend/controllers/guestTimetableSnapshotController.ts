@@ -9,6 +9,7 @@ const handleGuestTimetableSnapshotError = (res: Response, error: unknown): void 
     return;
   }
 
+  console.error("訪客課表快照同步失敗", error);
   res.status(500).json({ message: "匿名課表統計同步失敗" });
 };
 
