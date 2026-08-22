@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   ANALYTICS_CLIENT_ID_STORAGE_KEY,
+  createAnalyticsClientId,
   getOrCreateAnalyticsClientId,
 } from '../../src/utils/analyticsClientId'
 
@@ -54,4 +55,14 @@ test('後續呼叫會穩定沿用既有 Analytics client ID', () => {
   })
 
   assert.equal(clientId, CLIENT_ID)
+})
+
+test('randomUUID 不存在時仍會由 random bytes 建立 UUID v4', () => {
+  const clientId = createAnalyticsClientId({
+    getRandomValues: (values) => {
+      values.fill(0)
+    },
+  })
+
+  assert.equal(clientId, '00000000-0000-4000-8000-000000000000')
 })

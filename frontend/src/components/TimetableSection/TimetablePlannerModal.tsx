@@ -49,6 +49,7 @@ import type {
   Timeslot,
 } from '../../types/timetableType'
 import { GuestTimetableStorageError } from '../../utils/guestTimetableStorage'
+import { deleteGuestTimetableSnapshotAfterSuccessfulImport } from '../../utils/guestTimetableSnapshotSync'
 import {
   buildTimetableGrid,
   findConflictCourseIds,
@@ -487,6 +488,7 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
             if (!isRequestSessionCurrent()) {
               guestCleanupFailed = true
             } else {
+              void deleteGuestTimetableSnapshotAfterSuccessfulImport()
               try {
                 const removed = await guestTimetable.removeCourseSnapshot(
                   item,
@@ -694,6 +696,7 @@ const TimetablePlannerModal: React.FC<TimetablePlannerModalProps> = ({
           if (!isRequestSessionCurrent()) {
             guestCleanupFailed = true
           } else {
+            void deleteGuestTimetableSnapshotAfterSuccessfulImport()
             try {
               const removed = await guestTimetable.removeCourseSnapshot(
                 pendingSwap.item,

@@ -33,15 +33,15 @@ const createTestCoordinator = (options?: {
   logError?: (message: string, error: unknown) => void
 }) => {
   let nextTimerId = 1
-  let pendingTimer: { id: number; callback: () => void } | null = null
+  let pendingTimer: { id: number; callback: () => void; delay: number } | null = null
   const coordinator = new GuestTimetableSnapshotSyncCoordinator({
     getClientId: () => CLIENT_ID,
     syncSnapshot: options?.syncSnapshot ?? (async () => {}),
     deleteSnapshot: options?.deleteSnapshot ?? (async () => {}),
-    setTimer: (callback) => {
+    setTimer: (callback, delay) => {
       const id = nextTimerId
       nextTimerId += 1
-      pendingTimer = { id, callback }
+      pendingTimer = { id, callback, delay }
       return id
     },
     clearTimer: (timerId) => {
@@ -57,6 +57,7 @@ const createTestCoordinator = (options?: {
       pendingTimer = null
       timer?.callback()
     },
+    getPendingTimerDelay: () => pendingTimer?.delay ?? null,
   }
 }
 
@@ -72,6 +73,23 @@ test('Snapshot payload 只保留排序且去重後的完整 course ID 狀態', (
       '115-1': [1, 3],
     },
   )
+})
+
+test('Snapshot payload 對齊後端的學期與課程數量上限', () => {
+  const semesters = Object.fromEntries(
+    Array.from({ length: 12 }, (_, index) => [
+      `${String(104 + index).padStart(3, '0')}-1`,
+      Array.from({ length: 105 }, (__, courseIndex) => courseIndex + 1),
+    ]),
+  )
+
+  const snapshotSemesters = buildGuestSnapshotSemesters(createStorage(semesters))
+
+  assert.deepEqual(Object.keys(snapshotSemesters), [
+    '106-1', '107-1', '108-1', '109-1', '110-1',
+    '111-1', '112-1', '113-1', '114-1', '115-1',
+  ])
+  assert.equal(snapshotSemesters['115-1'].length, 100)
 })
 
 test('auth resolved 前不同步，登出成 guest 後會補同步現有課表', async () => {
@@ -217,4 +235,27 @@ test('Analytics 失敗只記錄錯誤且不阻止後續 DELETE', async () => {
 
   assert.equal(deleted, true)
   assert.deepEqual(errors, ['匿名課表統計同步失敗'])
+})
+
+test('最新 Snapshot 同步失敗後會以退避方式重試', async () => {
+  let attempts = 0
+  const { coordinator, runPendingTimer, getPendingTimerDelay } = createTestCoordinator({
+    syncSnapshot: async () => {
+      attempts += 1
+      if (attempts === 1) throw new Error('temporary network error')
+    },
+  })
+  coordinator.setAuthState(true, false)
+  coordinator.schedule(createStorage({ '115-1': [1] }))
+
+  runPendingTimer()
+  await new Promise<void>((resolve) => setImmediate(resolve))
+
+  assert.equal(attempts, 1)
+  assert.equal(getPendingTimerDelay(), 1_000)
+
+  runPendingTimer()
+  await coordinator.deleteAfterSuccessfulImport()
+
+  assert.equal(attempts, 2)
 })
