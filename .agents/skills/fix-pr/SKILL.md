@@ -1,6 +1,6 @@
 ---
 name: fix-pr
-description: 處理 GitHub Pull Request 尚未解決且可執行的 review threads，完成程式碼修正、驗證、commit、push，並在每個原始 comment 下以可點擊的完整 commit SHA 逐則回覆，再串行觸發 @codex review 並等待回應。當使用者要求處理 PR 未解決問題、修正 review 意見、推送修正並回覆 reviewer 時使用；預設保留 threads 為 unresolved，不直接 resolve。
+description: 處理 GitHub Pull Request 尚未解決且可執行的 review threads，完成程式碼修正、驗證、commit、push，並在每個原始 comment 下以可點擊的完整 commit SHA 逐則回覆，最後統一觸發一次 @codex review 並等待回應。當使用者要求處理 PR 未解決問題、修正 review 意見、推送修正並回覆 reviewer 時使用；預設保留 threads 為 unresolved，不直接 resolve。
 ---
 
 # 處理未解決的 PR Review
@@ -35,25 +35,23 @@ description: 處理 GitHub Pull Request 尚未解決且可執行的 review threa
    - push 到 PR 的 head branch，並取得 push 後 HEAD 的完整 40 字元 SHA。
    - 若程式碼早已修正，不建立空 commit；找出實際包含修正的 commit。
 
-6. 串行回覆並觸發複查
-   - 等 push 成功後，依序處理每個 thread 的最上層 review comment，不發一則籠統的 PR conversation comment。
-   - 一次只處理一個 thread。禁止以 Promise.all、平行工具呼叫或短時間連續留言同時觸發多個 @codex review。
-   - 每則回覆第一行加入：@codex review 請確認此問題是否已修正。
+6. 逐則回覆修正內容
+   - 等 push 成功後，依序回覆每個 thread 的最上層 review comment，讓修正與原始意見維持一對一的脈絡。
+   - 每個 thread 只回覆對應的修正內容，不在 thread 回覆中加入 @codex review，以免同時觸發多個複查任務。
    - 使用完整 40 字元 commit SHA，且不得用反引號或 code block 包住 SHA，確保 GitHub 可自動產生連結。
    - 以繁體中文簡述該 thread 的實際修正及通過的驗證。
 
 回覆格式：
 
-@codex review 請確認此問題是否已修正。
-
 已於 <完整 40 字元 commit SHA> 修正。<對應修正摘要>。已通過 <驗證項目>。
 
-7. 等待該 thread 的 Codex 回應
-   - 留言後記錄時間與 comment ID，輪詢同一個 review thread，確認出現建立時間較新的 Codex bot 回覆。
+7. 統一觸發並等待 Codex 複查
+   - 所有 thread 都回覆完成後，在 PR conversation 留下一則 @codex review，附上完整 commit SHA，請 Codex 統一複查本輪修正。
+   - 只觸發一次，不為每個 thread 分別觸發 review。
+   - 留言後記錄時間與 comment ID，輪詢 PR review 或 conversation，確認出現建立時間較新的 Codex bot 回覆。
    - 每次輪詢間隔不超過 60 秒，等待期間提供簡短進度更新。
-   - 收到該 thread 的 Codex 回覆後，才觸發下一個 thread；不得只因留言 API 成功就立即處理下一則。
-   - 若 Codex 回覆提出新問題，先處理該問題並重新驗證、push、回覆，再繼續下一個 thread。
-   - 若合理等待時間內沒有回覆，停止後續 @codex 觸發並回報卡住的 thread，避免多個 review 任務互相合併或被忽略。
+   - 若 Codex 回覆提出新問題，先處理該問題並重新驗證、push、逐則回覆，再統一觸發下一輪複查。
+   - 若合理等待時間內沒有回覆，停止重複觸發並回報目前狀態，避免建立重複 review 任務。
 
 8. 保留 thread 未解決
    - 回覆後不要呼叫 resolve review thread。
@@ -61,8 +59,8 @@ description: 處理 GitHub Pull Request 尚未解決且可執行的 review threa
    - 只有使用者在後續明確要求，且複查結果確認修正後，才 resolve 指定 thread。
 
 9. 最後確認
-   - 重新讀取目標 threads，確認新回覆存在、包含 @codex review、完整 SHA 未被 code formatting 包住，且 isResolved 為 false。
-   - 確認每個已觸發的 thread 都收到各自的新 Codex bot 回覆；列出尚未收到回覆的 thread。
+   - 重新讀取目標 threads，確認逐則回覆存在、完整 SHA 未被 code formatting 包住，且 isResolved 為 false。
+   - 確認 PR conversation 存在本輪唯一的 @codex review，並記錄統一複查結果。
    - 確認本機分支與遠端同步、工作區沒有本次流程遺留的未提交變更。
    - 回報修正數量、commit、push、驗證結果及仍保留 unresolved 的 threads。
 

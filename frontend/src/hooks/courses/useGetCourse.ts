@@ -10,7 +10,7 @@ export const useGetCourse = (course_id: string) => {
     return useQuery({
         queryKey: [QUERY_KEYS.COURSE, course_id, userCacheScope],
         queryFn: () => getCourse(course_id),
-        enabled: !!course_id,
+        enabled: Boolean(course_id),
         staleTime: 5 * 60 * 1000,
     })
 }

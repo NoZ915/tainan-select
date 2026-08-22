@@ -98,15 +98,20 @@ export const getAllAcademies: RequestHandler = async (
 export const getCourse: RequestHandler = async (req, res): Promise<void> => {
   try {
     const user_id = req.user?.id;
-    const ip = req.ip;
-    const user_agent = req.headers['user-agent'] ?? '';
-
     const course_id = parseInt(req.params.course_id);
     const course = await CourseService.getCourse(user_id, course_id);
-    
-    if (course && (await CourseViewService.shouldInsertView(course_id, user_id, ip, user_agent))) {
-      await CourseViewService.insertCourseView(course_id, user_id, ip, user_agent);
-      await CourseService.addViewCount(course_id);
+
+    if (course) {
+      try {
+        const inserted = await CourseViewService.trackCourseView({
+          courseId: course_id,
+          userId: user_id,
+          clientId: req.header("x-analytics-client-id"),
+        });
+        if (inserted) await CourseService.addViewCount(course_id);
+      } catch (trackingError) {
+        console.error("記錄課程瀏覽失敗", trackingError);
+      }
     }
     
     res.status(200).json(course);
