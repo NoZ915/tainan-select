@@ -32,6 +32,40 @@ export interface CourseListResult<TCourse extends Course = Course> {
   total: number;
 }
 
+export interface ReviewRequestCourseItem {
+  course: {
+    id: number;
+    course_name: string;
+    department: string;
+    instructor: string;
+    review_count: number;
+  };
+  signals: {
+    recentInterestCount: number;
+    weightedFavoriteScore: number;
+    timetableCount: number;
+    reviewCount: number;
+  };
+  reviewRequestScore: number;
+}
+
+export interface ReviewRequestCoursesResponse {
+  semester: string;
+  items: ReviewRequestCourseItem[];
+}
+
+export interface ReviewRequestCourseRow {
+  id: number;
+  course_name: string;
+  department: string;
+  instructor: string;
+  review_count: number;
+  recentInterestCount: number | string;
+  weightedFavoriteScore: number | string;
+  timetableCount: number | string;
+  reviewRequestScore: number | string;
+}
+
 export interface CourseRelatedPost {
   id: number;
   course_id?: number;

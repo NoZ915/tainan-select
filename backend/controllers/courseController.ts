@@ -1,4 +1,4 @@
-import CourseService from "../services/courseService";
+import CourseService, { ReviewRequestServiceError } from "../services/courseService";
 import CourseViewService from "../services/courseViewService";
 import { RequestHandler } from "express";
 import { PERIOD_ORDER } from "../utils/courseSchedule";
@@ -115,15 +115,21 @@ export const getCourse: RequestHandler = async (req, res): Promise<void> => {
   }
 };
 
-// NOTE: 暫時移除此功能
-export const getMostCuriousButUnreviewedCourses: RequestHandler = async (
+export const getReviewRequestCourses: RequestHandler = async (
   req,
   res
 ): Promise<void> => {
   try {
-    const courses = await CourseService.getMostCuriousButUnreviewedCourses();
-    res.status(200).json(courses);
+    const result = await CourseService.getReviewRequestCourses(
+      req.query.semester,
+      req.query.limit
+    );
+    res.status(200).json(result);
   } catch (err) {
-    res.status(500).json({ message: err });
+    if (err instanceof ReviewRequestServiceError) {
+      res.status(err.status).json({ message: err.message });
+      return;
+    }
+    res.status(500).json({ message: "取得求評價課程失敗" });
   }
 };

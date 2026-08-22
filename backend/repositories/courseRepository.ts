@@ -1,8 +1,14 @@
-import { Op, Transaction } from "sequelize";
+import { Op, QueryTypes, Transaction } from "sequelize";
 import CourseModel from "../models/Course";
 import CourseScheduleModel from "../models/CourseSchedule";
-import { Course, CourseOptionFilters, PaginationParams } from "../types/course";
+import {
+  Course,
+  CourseOptionFilters,
+  PaginationParams,
+  ReviewRequestCourseRow,
+} from "../types/course";
 import db from "../models";
+import { REVIEW_REQUEST_CONFIG } from "../config/reviewRequest";
 import {
   EWANT_DEPARTMENT,
   normalizeCourseSchedule,
@@ -13,6 +19,18 @@ const PERIOD_INDEX_MAP = PERIOD_ORDER.reduce<Record<string, number>>((acc, perio
   acc[period] = index;
   return acc;
 }, {});
+
+const INTEREST_WEIGHT_CASE_SQL = REVIEW_REQUEST_CONFIG.interestWeights
+  .map(({ maxAgeDays, weight }) => (
+    `WHEN interests.created_at >= DATE_SUB(NOW(), INTERVAL ${maxAgeDays} DAY) THEN ${weight}`
+  ))
+  .join("\n              ");
+
+const REVIEW_NEED_FACTOR_CASE_SQL = REVIEW_REQUEST_CONFIG.reviewNeedFactors
+  .map(({ maxReviewCount, factor }) => (
+    `WHEN courses.review_count <= ${maxReviewCount} THEN ${factor}`
+  ))
+  .join("\n          ");
 
 const getCategoryConditions = (category?: string): any[] => {
   if (category === "general") {
@@ -232,20 +250,108 @@ class CourseRepository {
       .filter((semester): semester is string => Boolean(semester));
   }
 
-  // NOTE: 暫時移除此功能
-  async getMostCuriousButUnreviewedCourses(): Promise<Course[]> {
-    // 想了解程度 ÷ 評論數 = 被大量收藏或瀏覽、但評論數很少的課程
-    const courses = await CourseModel.findAll({
-      attributes: {
-        include: [[
-          db.Sequelize.literal(`(interests_count * 0.9 + view_count * 0.1) / (review_count + 1)`),
-          "curiosity_score"
-        ]]
+  async getReviewRequestCourses(
+    semester: string,
+    limit: number,
+    transaction?: Transaction
+  ): Promise<ReviewRequestCourseRow[]> {
+    const query = `
+      SELECT
+        ranked.id,
+        ranked.course_name,
+        ranked.department,
+        ranked.instructor,
+        ranked.review_count,
+        ranked.recentInterestCount,
+        ranked.weightedFavoriteScore,
+        ranked.timetableCount,
+        ranked.demandScore * ranked.reviewNeedFactor AS reviewRequestScore
+      FROM (
+        SELECT
+          courses.id,
+          courses.course_name,
+          courses.department,
+          courses.instructor,
+          courses.review_count,
+          COALESCE(interest_signals.recentInterestCount, 0) AS recentInterestCount,
+          COALESCE(interest_signals.weightedFavoriteScore, 0) AS weightedFavoriteScore,
+          COALESCE(auth_timetable_signals.authenticatedTimetableCount, 0)
+            + COALESCE(guest_timetable_signals.guestTimetableCount, 0) AS timetableCount,
+          COALESCE(interest_signals.weightedFavoriteScore, 0)
+            + COALESCE(auth_timetable_signals.authenticatedTimetableCount, 0)
+            + COALESCE(guest_timetable_signals.guestTimetableCount, 0) AS demandScore,
+          CASE
+            ${REVIEW_NEED_FACTOR_CASE_SQL}
+            ELSE ${REVIEW_REQUEST_CONFIG.minimumReviewNeedFactor}
+          END AS reviewNeedFactor
+        FROM Courses AS courses
+        LEFT JOIN (
+          SELECT
+            interests.course_id,
+            COUNT(*) AS recentInterestCount,
+            SUM(
+              CASE
+                ${INTEREST_WEIGHT_CASE_SQL}
+                ELSE 0
+              END
+            ) AS weightedFavoriteScore
+          FROM Interests AS interests
+          INNER JOIN Courses AS interest_courses
+            ON interest_courses.id = interests.course_id
+            AND interest_courses.semester = :semester
+          WHERE interests.created_at >= DATE_SUB(NOW(), INTERVAL :interestTtlDays DAY)
+          GROUP BY interests.course_id
+        ) AS interest_signals ON interest_signals.course_id = courses.id
+        LEFT JOIN (
+          SELECT
+            timetable_items.course_id,
+            COUNT(DISTINCT timetable_items.timetable_id) AS authenticatedTimetableCount
+          FROM TimetableItems AS timetable_items
+          INNER JOIN Timetables AS timetables
+            ON timetables.id = timetable_items.timetable_id
+          WHERE timetables.semester = :semester
+          GROUP BY timetable_items.course_id
+        ) AS auth_timetable_signals ON auth_timetable_signals.course_id = courses.id
+        LEFT JOIN (
+          SELECT
+            guest_courses.course_id,
+            COUNT(DISTINCT guest_snapshots.client_id) AS guestTimetableCount
+          FROM GuestTimetableSnapshots AS guest_snapshots
+          INNER JOIN JSON_TABLE(
+            guest_snapshots.course_ids,
+            '$[*]' COLUMNS(course_id INT PATH '$')
+          ) AS guest_courses ON TRUE
+          WHERE guest_snapshots.semester = :semester
+            AND guest_snapshots.last_synced_at >= DATE_SUB(
+              NOW(),
+              INTERVAL :guestSnapshotTtlDays DAY
+            )
+          GROUP BY guest_courses.course_id
+        ) AS guest_timetable_signals ON guest_timetable_signals.course_id = courses.id
+        WHERE courses.semester = :semester
+      ) AS ranked
+      WHERE ranked.demandScore > 0
+      ORDER BY
+        reviewRequestScore DESC,
+        ranked.timetableCount DESC,
+        ranked.weightedFavoriteScore DESC,
+        ranked.review_count ASC,
+        ranked.id DESC
+      LIMIT :limit
+    `;
+
+    return await db.sequelize.query<ReviewRequestCourseRow>(query, {
+      replacements: {
+        semester,
+        limit,
+        interestTtlDays: REVIEW_REQUEST_CONFIG.interestWeights[
+          REVIEW_REQUEST_CONFIG.interestWeights.length - 1
+        ].maxAgeDays,
+        guestSnapshotTtlDays: REVIEW_REQUEST_CONFIG.guestSnapshotTtlDays,
       },
-      limit: 5,
-      order: [['curiosity_score', 'desc']]
-    })
-    return courses;
+      type: QueryTypes.SELECT,
+      transaction,
+    });
   }
 
   async decrementCount(
