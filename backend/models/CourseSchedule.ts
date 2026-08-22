@@ -64,8 +64,4 @@ CourseScheduleModel.init(
   }
 );
 
-CourseScheduleModel.sync().catch((error) => {
-  console.error("Course 模型同步失敗:", error);
-});
-
 export default CourseScheduleModel;

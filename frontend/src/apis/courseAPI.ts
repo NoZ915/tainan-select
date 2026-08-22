@@ -1,5 +1,6 @@
 import { Course, CourseDetailResponse, CourseOptionFilters, CourseResponse, SearchParams } from '../types/courseType'
 import { axiosInstance } from './axiosInstance'
+import { getOrCreateAnalyticsClientId } from '../utils/analyticsClientId'
 
 export const getCourses = async (searchParams: SearchParams): Promise<CourseResponse> => {
   const filteredSearchParams = Object.fromEntries(
@@ -16,8 +17,28 @@ export const getCourses = async (searchParams: SearchParams): Promise<CourseResp
   return response.data
 }
 
-export const getCourse = async (course_id: string): Promise<CourseDetailResponse> => {
-  const response = await axiosInstance.get(`/courses/${course_id}`)
+type GetCourseOptions = {
+  getClientId?: () => Promise<string>;
+  onTrackingError?: (error: unknown) => void;
+}
+
+export const getCourse = async (
+  course_id: string,
+  {
+    getClientId = getOrCreateAnalyticsClientId,
+    onTrackingError = (error) => console.error('無法建立匿名課程瀏覽識別碼', error),
+  }: GetCourseOptions = {},
+): Promise<CourseDetailResponse> => {
+  let clientId: string | undefined
+  try {
+    clientId = await getClientId()
+  } catch (error) {
+    onTrackingError(error)
+  }
+
+  const response = await axiosInstance.get(`/courses/${course_id}`, {
+    headers: clientId ? { 'X-Analytics-Client-Id': clientId } : undefined,
+  })
   return response.data
 }
 

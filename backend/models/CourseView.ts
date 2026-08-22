@@ -1,7 +1,7 @@
 import { DataTypes, InferAttributes, InferCreationAttributes, Model, Optional } from "sequelize";
 import db from ".";
 
-interface CourseViewCreationAttributes extends Optional<InferCreationAttributes<CourseViewModel>, 'id' | 'user_id' | 'ip_address' | 'user_agent'> { }
+interface CourseViewCreationAttributes extends Optional<InferCreationAttributes<CourseViewModel>, 'id' | 'user_id' | 'client_id' | 'ip_address' | 'user_agent'> { }
 
 class CourseViewModel extends Model<
 	InferAttributes<CourseViewModel>,
@@ -9,9 +9,10 @@ class CourseViewModel extends Model<
 >{
 	declare id: number;
 	declare course_id: number;
-	declare user_id?: number;
-	declare ip_address?: string;
-	declare user_agent?:string;
+	declare user_id: number | null;
+	declare client_id: string | null;
+	declare ip_address: string | null;
+	declare user_agent: string | null;
 	declare viewed_at?: Date;
 }
 
@@ -28,6 +29,10 @@ CourseViewModel.init(
     },
     user_id: {
       type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    client_id: {
+      type: DataTypes.STRING(36),
       allowNull: true,
     },
     ip_address: {
@@ -49,6 +54,12 @@ CourseViewModel.init(
     timestamps: true,
     createdAt: 'created_at',  // 映射到資料表中的 created_at
     updatedAt: 'updated_at',  // 映射到資料表中的 updated_at
+    indexes: [
+      {
+        name: 'idx_course_client_viewed',
+        fields: ['course_id', 'client_id', 'viewed_at'],
+      },
+    ],
   }
 );
 

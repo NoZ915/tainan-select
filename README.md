@@ -136,6 +136,7 @@ Backend variables:
 | Variable | Description |
 | --- | --- |
 | `PORT` | Backend server port |
+| `TRUST_PROXY_HOPS` | 後端前方可信任的反向代理層數；直接對外時設為 `0` |
 | `DB_USERNAME` | MySQL username |
 | `DB_PASSWORD` | MySQL password |
 | `DB_NAME` | Database name |

@@ -8,7 +8,7 @@
     "start": "nodemon --exec tsx server.ts",
     "scrape": "tsx scraper/scraper.ts",
     "scrape:ewant": "tsx scraper/scraperEwant.ts",
-    "test:course-time": "tsx --test utils/parseCourseTime.test.ts",
+    "test": "tsx --test tests/**/*.test.ts",
     "backfill:schedules": "tsx scripts/backfillCourseSchedules.ts",
     "backfill:course-identity": "tsx scripts/backfillCourseIdentity.ts",
     "backfill:dcard-related-post-counts": "tsx scripts/backfillDcardRelatedPostCounts.ts",
