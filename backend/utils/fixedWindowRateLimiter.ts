@@ -15,13 +15,17 @@ export const createFixedWindowRateLimiter = ({
   maxSources,
 }: FixedWindowRateLimiterOptions) => {
   const windowsBySource = new Map<string, RateLimitWindow>();
+  let nextCleanupAt = 0;
 
   const cleanupExpiredWindows = (now: number): void => {
+    if (now < nextCleanupAt) return;
+
     for (const [source, window] of windowsBySource) {
       if (now - window.windowStartedAt >= windowMs) {
         windowsBySource.delete(source);
       }
     }
+    nextCleanupAt = now + windowMs;
   };
 
   return (source: string, now = Date.now()): boolean => {
