@@ -52,8 +52,9 @@ export class GuestTimetableAnalyticsSyncCoordinator {
     this.authMode = nextMode
     if (nextMode !== 'guest') {
       this.clearPendingSync()
+      this.lastFingerprint = null
     }
-    if (nextMode === 'authenticated' || wasAuthenticated) {
+    if (wasAuthenticated) {
       this.lastFingerprint = null
     }
   }

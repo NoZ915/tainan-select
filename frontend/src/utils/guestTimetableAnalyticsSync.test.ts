@@ -98,6 +98,30 @@ test('auth resolved 前不同步，登出成 guest 後會補同步現有課表',
   assert.equal(payloads.length, 1)
 })
 
+test('auth 暫時變回 unresolved 取消排程後，重新 resolved 仍會補同步', async () => {
+  const payloads: GuestTimetableSnapshotPayload[] = []
+  const { coordinator, runPendingTimer } = createTestCoordinator({
+    syncSnapshot: async (payload) => {
+      payloads.push(payload)
+    },
+  })
+  const storage = createStorage({ '115-1': [1] })
+
+  coordinator.setAuthState(true, false)
+  coordinator.schedule(storage)
+  coordinator.setAuthState(false, false)
+  runPendingTimer()
+
+  coordinator.setAuthState(true, false)
+  coordinator.schedule(storage)
+  runPendingTimer()
+  await coordinator.deleteAfterSuccessfulImport()
+
+  assert.deepEqual(payloads.map((payload) => payload.semesters), [
+    { '115-1': [1] },
+  ])
+})
+
 test('debounce 只送出快速連續操作的最新完整狀態', async () => {
   const payloads: GuestTimetableSnapshotPayload[] = []
   const { coordinator, runPendingTimer } = createTestCoordinator({
