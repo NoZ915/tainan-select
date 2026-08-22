@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import router from "./timetableAnalytics";
+import router from "../../routes/timetableAnalytics";
 
 test("匿名課表 analytics 僅提供 PUT 與 DELETE snapshot routes", () => {
   const routes = (router as unknown as {

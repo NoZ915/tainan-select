@@ -3,11 +3,11 @@ import test from "node:test";
 import { NextFunction, Request, Response } from "express";
 import TimetableAnalyticsService, {
   TimetableAnalyticsServiceError,
-} from "../services/timetableAnalyticsService";
+} from "../../services/timetableAnalyticsService";
 import {
   deleteGuestTimetableSnapshot,
   syncGuestTimetableSnapshot,
-} from "./timetableAnalyticsController";
+} from "../../controllers/timetableAnalyticsController";
 
 const createResponse = () => {
   const state: { status?: number; body?: unknown; sent?: boolean } = {};

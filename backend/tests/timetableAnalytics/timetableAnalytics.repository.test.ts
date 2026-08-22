@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Op, Transaction } from "sequelize";
-import CourseModel from "../models/Course";
-import GuestTimetableSnapshotModel from "../models/GuestTimetableSnapshot";
-import TimetableAnalyticsRepository from "./timetableAnalyticsRepository";
+import CourseModel from "../../models/Course";
+import GuestTimetableSnapshotModel from "../../models/GuestTimetableSnapshot";
+import TimetableAnalyticsRepository from "../../repositories/timetableAnalyticsRepository";
 
 const CLIENT_ID = "550e8400-e29b-41d4-a716-446655440000";
 

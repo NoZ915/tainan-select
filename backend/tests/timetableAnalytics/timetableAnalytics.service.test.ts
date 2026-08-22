@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Transaction } from "sequelize";
-import db from "../models";
-import TimetableAnalyticsRepository from "../repositories/timetableAnalyticsRepository";
+import db from "../../models";
+import TimetableAnalyticsRepository from "../../repositories/timetableAnalyticsRepository";
 import {
   normalizeGuestSnapshotInput,
   TimetableAnalyticsServiceError,
-} from "./timetableAnalyticsService";
-import TimetableAnalyticsService from "./timetableAnalyticsService";
+} from "../../services/timetableAnalyticsService";
+import TimetableAnalyticsService from "../../services/timetableAnalyticsService";
 
 const CLIENT_ID = "550e8400-e29b-41d4-a716-446655440000";
 
