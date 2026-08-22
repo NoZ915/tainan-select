@@ -18,6 +18,6 @@ const guestTimetableSnapshotSyncCoordinator = new GuestTimetableSnapshotSyncCoor
 
 export { guestTimetableSnapshotSyncCoordinator }
 
-export const deleteGuestTimetableSnapshotAfterSuccessfulImport = (): Promise<void> => (
-  guestTimetableSnapshotSyncCoordinator.deleteAfterSuccessfulImport()
+export const deleteSyncedGuestTimetableSnapshot = (): Promise<void> => (
+  guestTimetableSnapshotSyncCoordinator.deleteSnapshot()
 )

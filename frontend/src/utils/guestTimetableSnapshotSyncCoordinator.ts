@@ -1,4 +1,5 @@
 import type { GuestTimetableSnapshotPayload } from '../apis/guestTimetableSnapshotAPI'
+import type { ApiError } from '../apis/axiosInstance'
 import { GUEST_TIMETABLE_SNAPSHOT_CONFIG } from '../config/guestTimetableSnapshot'
 import type { GuestTimetableStorage } from '../types/timetableType'
 
@@ -11,6 +12,11 @@ export type GuestTimetableSnapshotSyncDependencies = {
   setTimer: (callback: () => void, delay: number) => number
   clearTimer: (timerId: number) => void
   logError: (message: string, error: unknown) => void
+}
+
+export const isRetryableGuestTimetableSnapshotError = (error: unknown): boolean => {
+  const status = error instanceof Error ? (error as ApiError).status : undefined
+  return status === undefined || status === 429 || status >= 500
 }
 
 export const buildGuestSnapshotSemesters = (
@@ -36,6 +42,9 @@ export class GuestTimetableSnapshotSyncCoordinator {
   private pendingPayloadSignature: string | null = null
   private lastPayloadSignature: string | null = null
   private retryAttempt = 0
+  private deletionTimerId: number | null = null
+  private isDeletionPending = false
+  private deletionRetryAttempt = 0
   private requestChain: Promise<void> = Promise.resolve()
 
   constructor(dependencies: GuestTimetableSnapshotSyncDependencies) {
@@ -61,6 +70,7 @@ export class GuestTimetableSnapshotSyncCoordinator {
     if (wasAuthenticated) {
       this.lastPayloadSignature = null
     }
+    if (nextMode === 'guest') this.clearPendingDeletion()
   }
 
   schedule(storage: GuestTimetableStorage): void {
@@ -92,18 +102,12 @@ export class GuestTimetableSnapshotSyncCoordinator {
     )
   }
 
-  async deleteAfterSuccessfulImport(): Promise<void> {
+  async deleteSnapshot(): Promise<void> {
     this.clearPendingSync()
+    this.clearPendingDeletion()
+    this.isDeletionPending = true
 
-    this.requestChain = this.requestChain.then(async () => {
-      try {
-        await this.dependencies.deleteSnapshot(this.dependencies.getClientId())
-        this.lastPayloadSignature = null
-        this.retryAttempt = 0
-      } catch (error) {
-        this.dependencies.logError('移除匿名課表統計 Snapshot 失敗', error)
-      }
-    })
+    this.requestChain = this.requestChain.then(() => this.attemptSnapshotDeletion())
 
     await this.requestChain
   }
@@ -115,6 +119,46 @@ export class GuestTimetableSnapshotSyncCoordinator {
     }
     this.pendingPayload = null
     this.pendingPayloadSignature = null
+  }
+
+  private clearPendingDeletion(): void {
+    if (this.deletionTimerId !== null) {
+      this.dependencies.clearTimer(this.deletionTimerId)
+      this.deletionTimerId = null
+    }
+    this.isDeletionPending = false
+    this.deletionRetryAttempt = 0
+  }
+
+  private async attemptSnapshotDeletion(): Promise<void> {
+    if (!this.isDeletionPending) return
+
+    try {
+      await this.dependencies.deleteSnapshot(this.dependencies.getClientId())
+      this.lastPayloadSignature = null
+      this.retryAttempt = 0
+      this.clearPendingDeletion()
+    } catch (error) {
+      this.dependencies.logError('移除匿名課表統計 Snapshot 失敗', error)
+      if (!this.isDeletionPending || !isRetryableGuestTimetableSnapshotError(error)) {
+        this.clearPendingDeletion()
+        return
+      }
+
+      const retryDelay = this.getRetryDelay(this.deletionRetryAttempt)
+      this.deletionRetryAttempt += 1
+      this.deletionTimerId = this.dependencies.setTimer(() => {
+        this.deletionTimerId = null
+        this.requestChain = this.requestChain.then(() => this.attemptSnapshotDeletion())
+      }, retryDelay)
+    }
+  }
+
+  private getRetryDelay(retryAttempt: number): number {
+    return Math.min(
+      GUEST_TIMETABLE_SNAPSHOT_CONFIG.retryInitialDelayMs * (2 ** retryAttempt),
+      GUEST_TIMETABLE_SNAPSHOT_CONFIG.retryMaxDelayMs,
+    )
   }
 
   private flushPendingSync(): void {
@@ -131,12 +175,13 @@ export class GuestTimetableSnapshotSyncCoordinator {
         if (this.lastPayloadSignature === payloadSignature) this.retryAttempt = 0
       } catch (error) {
         this.dependencies.logError('匿名課表統計同步失敗', error)
-        if (this.lastPayloadSignature !== payloadSignature || this.authMode !== 'guest') return
+        if (
+          this.lastPayloadSignature !== payloadSignature
+          || this.authMode !== 'guest'
+          || !isRetryableGuestTimetableSnapshotError(error)
+        ) return
 
-        const retryDelay = Math.min(
-          GUEST_TIMETABLE_SNAPSHOT_CONFIG.retryInitialDelayMs * (2 ** this.retryAttempt),
-          GUEST_TIMETABLE_SNAPSHOT_CONFIG.retryMaxDelayMs,
-        )
+        const retryDelay = this.getRetryDelay(this.retryAttempt)
         this.retryAttempt += 1
         this.pendingPayload = payload
         this.pendingPayloadSignature = payloadSignature

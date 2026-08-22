@@ -5,6 +5,7 @@ import type { GuestTimetableStorage } from '../../src/types/timetableType'
 import {
   buildGuestSnapshotSemesters,
   GuestTimetableSnapshotSyncCoordinator,
+  isRetryableGuestTimetableSnapshotError,
 } from '../../src/utils/guestTimetableSnapshotSyncCoordinator'
 
 const CLIENT_ID = '550e8400-e29b-41d4-a716-446655440000'
@@ -111,7 +112,7 @@ test('auth resolved 前不同步，登出成 guest 後會補同步現有課表',
   coordinator.setAuthState(true, false)
   coordinator.schedule(storage)
   runPendingTimer()
-  await coordinator.deleteAfterSuccessfulImport()
+  await coordinator.deleteSnapshot()
 
   assert.equal(payloads.length, 1)
 })
@@ -133,7 +134,7 @@ test('auth 暫時變回 unresolved 取消排程後，重新 resolved 仍會補�
   coordinator.setAuthState(true, false)
   coordinator.schedule(storage)
   runPendingTimer()
-  await coordinator.deleteAfterSuccessfulImport()
+  await coordinator.deleteSnapshot()
 
   assert.deepEqual(payloads.map((payload) => payload.semesters), [
     { '115-1': [1] },
@@ -152,7 +153,7 @@ test('debounce 只送出快速連續操作的最新完整狀態', async () => {
   coordinator.schedule(createStorage({ '115-1': [1] }))
   coordinator.schedule(createStorage({ '115-1': [1, 2] }))
   runPendingTimer()
-  await coordinator.deleteAfterSuccessfulImport()
+  await coordinator.deleteSnapshot()
 
   assert.deepEqual(payloads.map((payload) => payload.semesters), [
     { '115-1': [1, 2] },
@@ -204,7 +205,7 @@ test('PUT 與登入匯入後的 DELETE 會序列化，避免舊請求最後覆�
   await Promise.resolve()
   coordinator.schedule(createStorage({ '115-1': [1, 2] }))
   runPendingTimer()
-  const deletion = coordinator.deleteAfterSuccessfulImport()
+  const deletion = coordinator.deleteSnapshot()
 
   assert.deepEqual(operations, ['PUT:1'])
   resolveFirstSync()
@@ -231,7 +232,7 @@ test('Analytics 失敗只記錄錯誤且不阻止後續 DELETE', async () => {
   coordinator.schedule(createStorage({ '115-1': [1] }))
   runPendingTimer()
 
-  await coordinator.deleteAfterSuccessfulImport()
+  await coordinator.deleteSnapshot()
 
   assert.equal(deleted, true)
   assert.deepEqual(errors, ['匿名課表統計同步失敗'])
@@ -255,7 +256,42 @@ test('最新 Snapshot 同步失敗後會以退避方式重試', async () => {
   assert.equal(getPendingTimerDelay(), 1_000)
 
   runPendingTimer()
-  await coordinator.deleteAfterSuccessfulImport()
+  await coordinator.deleteSnapshot()
 
   assert.equal(attempts, 2)
+})
+
+test('只有網路錯誤、429 與 5xx 會重試', () => {
+  assert.equal(isRetryableGuestTimetableSnapshotError(new Error('network error')), true)
+  assert.equal(isRetryableGuestTimetableSnapshotError(
+    Object.assign(new Error('rate limited'), { status: 429 }),
+  ), true)
+  assert.equal(isRetryableGuestTimetableSnapshotError(
+    Object.assign(new Error('server error'), { status: 500 }),
+  ), true)
+  assert.equal(isRetryableGuestTimetableSnapshotError(
+    Object.assign(new Error('invalid payload'), { status: 400 }),
+  ), false)
+})
+
+test('Snapshot 刪除暫時失敗後會以退避方式重試', async () => {
+  let attempts = 0
+  const { coordinator, runPendingTimer, getPendingTimerDelay } = createTestCoordinator({
+    deleteSnapshot: async () => {
+      attempts += 1
+      if (attempts === 1) throw Object.assign(new Error('rate limited'), { status: 429 })
+    },
+  })
+  coordinator.setAuthState(true, true)
+
+  await coordinator.deleteSnapshot()
+
+  assert.equal(attempts, 1)
+  assert.equal(getPendingTimerDelay(), 1_000)
+
+  runPendingTimer()
+  await new Promise<void>((resolve) => setImmediate(resolve))
+
+  assert.equal(attempts, 2)
+  assert.equal(getPendingTimerDelay(), null)
 })
