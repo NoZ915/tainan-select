@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { GuestTimetableSnapshotPayload } from '../apis/timetableAnalyticsAPI'
-import type { GuestTimetableStorage } from '../types/timetableType'
+import type { GuestTimetableSnapshotPayload } from '../../src/apis/guestTimetableSnapshotAPI'
+import type { GuestTimetableStorage } from '../../src/types/timetableType'
 import {
   buildGuestSnapshotSemesters,
-  GuestTimetableAnalyticsSyncCoordinator,
-} from './guestTimetableAnalyticsSyncCoordinator'
+  GuestTimetableSnapshotSyncCoordinator,
+} from '../../src/utils/guestTimetableSnapshotSyncCoordinator'
 
 const CLIENT_ID = '550e8400-e29b-41d4-a716-446655440000'
 
@@ -34,7 +34,7 @@ const createTestCoordinator = (options?: {
 }) => {
   let nextTimerId = 1
   let pendingTimer: { id: number; callback: () => void } | null = null
-  const coordinator = new GuestTimetableAnalyticsSyncCoordinator({
+  const coordinator = new GuestTimetableSnapshotSyncCoordinator({
     getClientId: () => CLIENT_ID,
     syncSnapshot: options?.syncSnapshot ?? (async () => {}),
     deleteSnapshot: options?.deleteSnapshot ?? (async () => {}),

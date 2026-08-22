@@ -1,13 +1,13 @@
 import {
   deleteGuestTimetableSnapshot,
   syncGuestTimetableSnapshot,
-} from '../apis/timetableAnalyticsAPI'
+} from '../apis/guestTimetableSnapshotAPI'
 import { getOrCreateAnalyticsClientId } from './analyticsClientId'
 import {
-  GuestTimetableAnalyticsSyncCoordinator,
-} from './guestTimetableAnalyticsSyncCoordinator'
+  GuestTimetableSnapshotSyncCoordinator,
+} from './guestTimetableSnapshotSyncCoordinator'
 
-const guestTimetableAnalyticsSyncCoordinator = new GuestTimetableAnalyticsSyncCoordinator({
+const guestTimetableSnapshotSyncCoordinator = new GuestTimetableSnapshotSyncCoordinator({
   getClientId: getOrCreateAnalyticsClientId,
   syncSnapshot: syncGuestTimetableSnapshot,
   deleteSnapshot: deleteGuestTimetableSnapshot,
@@ -16,8 +16,8 @@ const guestTimetableAnalyticsSyncCoordinator = new GuestTimetableAnalyticsSyncCo
   logError: (message, error) => console.error(message, error),
 })
 
-export { guestTimetableAnalyticsSyncCoordinator }
+export { guestTimetableSnapshotSyncCoordinator }
 
-export const deleteGuestSnapshotAfterSuccessfulImport = (): Promise<void> => (
-  guestTimetableAnalyticsSyncCoordinator.deleteAfterSuccessfulImport()
+export const deleteGuestTimetableSnapshotAfterSuccessfulImport = (): Promise<void> => (
+  guestTimetableSnapshotSyncCoordinator.deleteAfterSuccessfulImport()
 )

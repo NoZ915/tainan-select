@@ -4,6 +4,6 @@
     "incremental": false,
     "types": ["node", "vite/client"]
   },
-  "include": ["src/**/*.test.ts"],
+  "include": ["tests/**/*.test.ts"],
   "exclude": []
 }

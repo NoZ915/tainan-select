@@ -3,7 +3,7 @@ import test from 'node:test'
 import {
   ANALYTICS_CLIENT_ID_STORAGE_KEY,
   getOrCreateAnalyticsClientId,
-} from './analyticsClientId'
+} from '../../src/utils/analyticsClientId'
 
 class MemoryStorage implements Storage {
   private readonly values = new Map<string, string>()

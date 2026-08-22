@@ -1,7 +1,7 @@
-import type { GuestTimetableSnapshotPayload } from '../apis/timetableAnalyticsAPI'
+import type { GuestTimetableSnapshotPayload } from '../apis/guestTimetableSnapshotAPI'
 import type { GuestTimetableStorage } from '../types/timetableType'
 
-export const GUEST_TIMETABLE_ANALYTICS_DEBOUNCE_MS = 400
+export const GUEST_TIMETABLE_SNAPSHOT_DEBOUNCE_MS = 400
 
 type AuthMode = 'unresolved' | 'authenticated' | 'guest'
 
@@ -26,7 +26,7 @@ export const buildGuestSnapshotSemesters = (
     .sort(([firstSemester], [secondSemester]) => firstSemester.localeCompare(secondSemester)),
 )
 
-export class GuestTimetableAnalyticsSyncCoordinator {
+export class GuestTimetableSnapshotSyncCoordinator {
   private readonly dependencies: AnalyticsSyncDependencies
   private authMode: AuthMode = 'unresolved'
   private timerId: number | null = null
@@ -83,7 +83,7 @@ export class GuestTimetableAnalyticsSyncCoordinator {
     if (this.timerId !== null) this.dependencies.clearTimer(this.timerId)
     this.timerId = this.dependencies.setTimer(
       () => this.flushPendingSync(),
-      GUEST_TIMETABLE_ANALYTICS_DEBOUNCE_MS,
+      GUEST_TIMETABLE_SNAPSHOT_DEBOUNCE_MS,
     )
   }
 

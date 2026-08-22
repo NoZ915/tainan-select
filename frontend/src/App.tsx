@@ -4,7 +4,7 @@ import { Alert, Button, Group, Text } from '@mantine/core'
 
 import { useAuthStore } from './stores/authStore'
 import { useCheckAuthStatus } from './hooks/auth/useCheckAuthStatus'
-import { useSyncGuestTimetableAnalytics } from './hooks/timetables/useSyncGuestTimetableAnalytics'
+import { useSyncGuestTimetableSnapshot } from './hooks/timetables/useSyncGuestTimetableSnapshot'
 
 import RouteHeadTitle from './seo/RouteHeadTitle'
 
@@ -26,7 +26,7 @@ const OAUTH_RETURN_GRACE_MS = 2_000
 const OAUTH_TRANSITION_TIMEOUT_MS = 10 * 60 * 1000
 
 function App() {
-  useSyncGuestTimetableAnalytics()
+  useSyncGuestTimetableSnapshot()
   const { login, logout, markAuthUnresolved, isLogoutInProgress } = useAuthStore()
   const {
     data,
