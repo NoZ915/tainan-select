@@ -5,7 +5,7 @@ import CourseViewService from "../../services/courseViewService";
 
 const CLIENT_ID = "550e8400-e29b-41d4-a716-446655440000";
 
-test("登入瀏覽只使用 user_id 並忽略 clientId", async (t) => {
+test("登入瀏覽以 user_id 去重並保留有效 clientId", async (t) => {
   const recentMock = t.mock.method(CourseViewRepository, "hasRecentView", async () => false);
   const insertMock = t.mock.method(CourseViewRepository, "insertCourseView", async () => {});
 
@@ -13,6 +13,21 @@ test("登入瀏覽只使用 user_id 並忽略 clientId", async (t) => {
     courseId: 12,
     userId: 8,
     clientId: CLIENT_ID,
+  }), true);
+
+  const identity = { courseId: 12, userId: 8, clientId: CLIENT_ID };
+  assert.deepEqual(recentMock.mock.calls[0].arguments[0], identity);
+  assert.deepEqual(insertMock.mock.calls[0].arguments[0], identity);
+});
+
+test("登入瀏覽缺少有效 clientId 時仍使用 user_id 記錄", async (t) => {
+  const recentMock = t.mock.method(CourseViewRepository, "hasRecentView", async () => false);
+  const insertMock = t.mock.method(CourseViewRepository, "insertCourseView", async () => {});
+
+  assert.equal(await CourseViewService.trackCourseView({
+    courseId: 12,
+    userId: 8,
+    clientId: "invalid",
   }), true);
 
   const identity = { courseId: 12, userId: 8, clientId: null };

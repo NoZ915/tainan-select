@@ -4,7 +4,7 @@ import CourseViewModel from "../models/CourseView"
 export type CourseViewIdentity = {
   courseId: number;
 } & (
-  | { userId: number; clientId: null }
+  | { userId: number; clientId: string | null }
   | { userId: null; clientId: string }
 );
 

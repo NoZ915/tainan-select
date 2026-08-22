@@ -9,13 +9,11 @@ export type CourseViewTrackingInput = {
 
 class CourseViewService {
   async trackCourseView({ courseId, userId, clientId }: CourseViewTrackingInput): Promise<boolean> {
-    const normalizedClientId = userId === undefined
-      ? normalizeAnalyticsClientId(clientId)
-      : null;
+    const normalizedClientId = normalizeAnalyticsClientId(clientId);
     if (userId === undefined && !normalizedClientId) return false;
 
     const identity = userId !== undefined
-      ? { courseId, userId, clientId: null }
+      ? { courseId, userId, clientId: normalizedClientId }
       : { courseId, userId: null, clientId: normalizedClientId as string };
     if (await CourseViewRepository.hasRecentView(identity)) return false;
 
