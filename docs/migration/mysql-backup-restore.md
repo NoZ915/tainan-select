@@ -48,10 +48,12 @@ mysqldump --defaults-extra-file="${SOURCE_CNF:?}" \
   | gzip \
   | age --recipient "${BACKUP_RECIPIENT:?}" \
       > "${BACKUP_FILE:?}"
-shasum -a 256 "$BACKUP_FILE" > "$BACKUP_FILE.sha256"
+shasum -a 256 < "$BACKUP_FILE" | awk '{print $1}' > "$BACKUP_FILE.sha256"
 ```
 
 `pipefail` 確保任一環節失敗都不會記為成功；失敗可能留下部分加密檔，應標為失敗並依受限儲存程序處理。成功退出與雜湊也不等於可還原。確認平台外目的地取得檔案並重新校驗雜湊，保留加密 stderr／執行報告與開始結束時間，禁止將 dump 或日誌上傳 GitHub。
+
+`.sha256` 僅保存 64 字元 digest，不記錄來源路徑。搬移或改名時一併保存配對的 digest 檔，以目前 `BACKUP_FILE` 加 `.sha256` 命名；還原時直接計算目前檔案的 digest 比較，避免誤驗仍存在的來源檔案。
 
 此範本的 GTID 設定適用獨立 schema 還原，不建立 replication／時間點回復基線；若需要 binlog／GTID 追平，須另訂方案。`--databases` 會包含建立／切換原 schema 的語句，還原只能對空的隔離實例進行，不能只用目標 database 參數期待改名。物件的 `DEFINER`／跨 schema 引用與帳號權限亦需核對，不可直接用全域文字取代掩蓋問題。
 
@@ -72,7 +74,13 @@ mysql --defaults-extra-file="${RESTORE_CNF:?}" --batch \
 
 ```bash
 set -euo pipefail
-shasum -a 256 --check "${BACKUP_FILE:?}.sha256"
+expected_backup_sha256=$(cat "${BACKUP_FILE:?}.sha256")
+actual_backup_sha256=$(shasum -a 256 < "$BACKUP_FILE" | awk '{print $1}')
+if [[ ! "$expected_backup_sha256" =~ ^[0-9a-f]{64}$ ]] \
+  || [[ "$actual_backup_sha256" != "$expected_backup_sha256" ]]; then
+  printf '%s\n' '備份 SHA-256 校驗失敗，停止還原。' >&2
+  exit 1
+fi
 age --decrypt --identity "${BACKUP_IDENTITY:?}" "$BACKUP_FILE" \
   | gzip --decompress \
   | mysql --defaults-extra-file="${RESTORE_CNF:?}"
