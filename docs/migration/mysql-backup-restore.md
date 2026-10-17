@@ -22,10 +22,11 @@ mysql --defaults-extra-file="${SOURCE_CNF:?}" \
   > "${PRIVATE_AUDIT_DIR:?}/source-inventory.txt"
 ```
 
-輸出包括版本、容量估計、引擎、欄位編碼／排序、索引、外鍵、其他物件、migration 與十七張模型表的精確筆數。`information_schema.TABLES.TABLE_ROWS` 僅是估計值；筆數驗證使用檔案後段的 `COUNT(*)`。SQL 只讀 metadata 與彙總資料，但報告仍限受控保存。
+輸出包括版本、容量估計、引擎、欄位編碼／排序、索引、外鍵、物件定義、migration 與十七張模型表的精確筆數。`information_schema.TABLES.TABLE_ROWS` 僅是估計值；筆數驗證使用檔案後段的 `COUNT(*)`。物件定義可能含敏感常數，報告必須限受控保存。
 
 - 比對實際表清單與模型；若有額外 schema／表，加入完整備份與核對範圍。若預期表缺少而報錯，保留缺口，不能將部分輸出視為完成。
 - 比對 `SequelizeMeta` 名稱集合與三十個 `backend/migrations/*.js` 檔案，記錄缺漏／額外項目；不要為了讓集合相同而在正式 DB 執行 migration。
+- 逐項比較 view 查詢、routine 本體／參數／回傳型別、trigger 本體／執行順序、event 本體／排程／時區及建立時的 SQL mode／編碼設定；再對每個物件以 `SHOW CREATE VIEW`、`SHOW CREATE PROCEDURE`、`SHOW CREATE FUNCTION`、`SHOW CREATE TRIGGER` 或 `SHOW CREATE EVENT` 將完整建構語句存入受限報告，涵蓋 view 的 `ALGORITHM` 等額外屬性。定義為 `NULL`、空白或物件清單不完整時停止驗收，先確認讀取權限；不可將來源與還原端同時不可見當作相符。[官方權限說明](https://dev.mysql.com/doc/refman/8.0/en/information-schema-routines-table.html)
 - 若有非 InnoDB 表，`--single-transaction` 無法保證其一致性，需另外設計並核准快照／維護窗口；不要直接加全域鎖。
 - 盤點筆數的交易與 mysqldump 是不同快照；線上正式站持續寫入時，兩者不必相等。後續必須從同一份備份取得核對基線，不能把時間差誤判為還原失敗或忽略實際缺漏。
 
@@ -93,7 +94,7 @@ mysql --defaults-extra-file="$RESTORE_CNF" \
 還原時不可使用 `mysql --force` 忽略錯誤，也不可先跑 migration／啟動 API 讓缺少的表被建立。若 dump 來自疑似受影響環境，先在斷開外連的環境受控檢視物件定義，不能將還原視為內容可信的證明。
 
 - [ ] 解密、解壓縮與匯入皆成功退出，沒有截斷、權限或 `DEFINER` 錯誤；記錄 client／server 版本及各步耗時。
-- [ ] 全部表、view、trigger、routine、event、欄位、編碼／排序、索引、外鍵與 `SequelizeMeta` 名稱集合相符；server 身份與容量等環境欄位不要求相同。
+- [ ] 全部表、view、trigger、routine、event、欄位、編碼／排序、索引、外鍵與 `SequelizeMeta` 名稱集合相符；依第 2 節比較物件定義與 `SHOW CREATE` 完整建構語句，不能僅比較名稱。server 身份、容量與建立／執行時間等環境欄位不要求相同；`DEFINER` 或 event 狀態等預期差異須另行記錄原因與驗證結果。
 - [ ] 十七張關鍵表與所有額外業務表的精確筆數／必要內容雜湊核對。同一份 dump 的預期筆數與內容可由受控工具解析，或在第二個隔離空實例獨立還原比對；僅兩次還原相同仍不足以證明來源備份範圍完整，還需來源物件／schema 清單與匯出成功紀錄。
 - [ ] 使用非敏感抽樣核對課程身份、中文／emoji、日期／時區、JSON 課程清單與關聯，檢查孤立外鍵及重要唯一索引；不要僅以筆數相等判定資料正確。
 - [ ] 若要與來源精確逐列核對，須有經核准的共同快照／短暫停寫策略；不能將不同時間的線上查詢直接當一致性證據。本 P0 不自行停寫正式站。
