@@ -25,6 +25,7 @@ mysql --defaults-extra-file="${SOURCE_CNF:?}" \
 輸出包括版本、容量估計、引擎、欄位編碼／排序、索引、外鍵、物件定義、migration 與十七張模型表的精確筆數。`information_schema.TABLES.TABLE_ROWS` 僅是估計值；筆數驗證使用檔案後段的 `COUNT(*)`。物件定義可能含敏感常數，報告必須限受控保存。
 
 - 比對實際表清單與模型；若有額外 schema／表，加入完整備份與核對範圍。若預期表缺少而報錯，保留缺口，不能將部分輸出視為完成。
+- 逐欄比較 `GENERATION_EXPRESSION`，不能只核對 `EXTRA` 的 generated 標記；並逐表以 `SHOW CREATE TABLE` 將完整建構語句存入受限報告，比較產生運算式、約束、索引與其他表屬性。
 - 比對 `SequelizeMeta` 名稱集合與三十個 `backend/migrations/*.js` 檔案，記錄缺漏／額外項目；不要為了讓集合相同而在正式 DB 執行 migration。
 - 逐項比較 view 查詢、routine 本體／參數／回傳型別、trigger 本體／執行順序、event 本體／排程／時區及建立時的 SQL mode／編碼設定；再對每個物件以 `SHOW CREATE VIEW`、`SHOW CREATE PROCEDURE`、`SHOW CREATE FUNCTION`、`SHOW CREATE TRIGGER` 或 `SHOW CREATE EVENT` 將完整建構語句存入受限報告，涵蓋 view 的 `ALGORITHM` 等額外屬性。定義為 `NULL`、空白或物件清單不完整時停止驗收，先確認讀取權限；不可將來源與還原端同時不可見當作相符。[官方權限說明](https://dev.mysql.com/doc/refman/8.0/en/information-schema-routines-table.html)
 - 若有非 InnoDB 表，`--single-transaction` 無法保證其一致性，需另外設計並核准快照／維護窗口；不要直接加全域鎖。
