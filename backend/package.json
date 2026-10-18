@@ -4,8 +4,12 @@
   "description": "",
   "main": "database.js",
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
-    "start": "nodemon --exec tsx server.ts",
+    "start": "tsx server.ts",
+    "dev": "nodemon --exec tsx server.ts",
     "scrape": "tsx scraper/scraper.ts",
     "scrape:ewant": "tsx scraper/scraperEwant.ts",
     "test": "tsx --test tests/**/*.test.ts",
