@@ -1,6 +1,7 @@
 import express, { Router } from "express";
 import passport from "passport";
 import { generateJwtToken } from "../utils/jwt";
+import { getAuthCookieOptions } from "../utils/authCookie";
 import { checkAuthStatus, logoutController, statusController } from "../controllers/authController";
 import {
   cancelOAuthAttempt,
@@ -13,7 +14,6 @@ import {
 } from "../utils/oauthStateStore";
 
 const router: Router = express.Router();
-const isProd = process.env.NODE_ENV === "production";
 
 // google oAuth + passport
 router.get(
@@ -73,10 +73,7 @@ router.get("/google/callback", (req, res, next) => {
 
     // 產生 JWT 並存入 Cookie
     res.cookie("token", jwtToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: "lax",
-      path: "/",
+      ...getAuthCookieOptions(),
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 

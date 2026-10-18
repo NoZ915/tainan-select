@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import { getJwtSessionScope, verifyJwtToken } from "../utils/jwt";
 import userService from "../services/userService";
+import { getAuthCookieOptions } from "../utils/authCookie";
 
 export const statusController: RequestHandler = async (
   req,
@@ -103,11 +104,6 @@ export const checkAuthStatus: RequestHandler = async (req, res) => {
 };
 
 export const logoutController: RequestHandler = (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: false,
-    sameSite: "strict",
-    path: "/", 
-  });
+  res.clearCookie("token", getAuthCookieOptions());
   res.json({ message: "已登出" });
 };

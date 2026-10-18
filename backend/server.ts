@@ -1,76 +1,29 @@
 import "dotenv/config";
-import cors from "cors";
-import express, { Express, Request, Response, NextFunction } from "express";
-import cookieParser from "cookie-parser";
-import passport from 'passport';
-import path from "path";
-import { fileURLToPath } from "url";
-import "./utils/passport";
-import db from "./models";
-
-import authRoutes from "./routes/auth"
-import coursesRoutes from "./routes/courses";
-import reviewsRoutes from "./routes/reviews";
-import interestsRoutes from "./routes/interests";
-import usersRoutes from "./routes/users";
-import statsRoutes from "./routes/stats";
-import semestersRoutes from "./routes/semesters";
-import timetablesRoutes from "./routes/timetables";
-import reactionsRoutes from "./routes/reactions";
-import adminRoutes from "./routes/admin";
-import featureRequestsRoutes from "./routes/featureRequests";
-import timetableAnalyticsRoutes from "./routes/timetableAnalytics";
-
-const app: Express = express();
-const trustProxyHops = Number.parseInt(process.env.TRUST_PROXY_HOPS ?? "0", 10);
-if (Number.isSafeInteger(trustProxyHops) && trustProxyHops > 0) {
-  app.set("trust proxy", trustProxyHops);
-}
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const corsOptions = {
-  origin: process.env.FRONTEND_BASE_URL, // 設置允許的來源
-  credentials: true, // 允許帶有憑證的請求
-};
-
-// middleware
-app.use(cors(corsOptions));
-app.use(cookieParser());
-app.use(express.json());
-app.use(passport.initialize());
-app.use("/reactions", express.static(path.join(__dirname, "public", "reactions")));
-
-// 頭貼
-const avatarDir = path.resolve(__dirname, "public", "avatars");
-app.use("/avatars", express.static(avatarDir));
-
-// routes
-app.use("/api/auth", authRoutes)
-app.use("/api/courses", coursesRoutes);
-app.use("/api/reviews", reviewsRoutes);
-app.use("/api/interests", interestsRoutes);
-app.use("/api/users", usersRoutes);
-app.use("/api/stats", statsRoutes);
-app.use("/api/reactions", reactionsRoutes);
-app.use("/api/semesters", semestersRoutes);
-app.use("/api/timetables", timetablesRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/feature-requests", featureRequestsRoutes);
-app.use("/api/timetable-analytics", timetableAnalyticsRoutes);
+import { ConfigurationError, readRuntimeConfig } from "./config/runtime";
+import { startHttpServer } from "./utils/startHttpServer";
 
 const startServer = async (): Promise<void> => {
+  const config = readRuntimeConfig();
+  // 先驗證環境設定，再載入 OAuth 與資料庫模型。
+  process.env.FRONTEND_BASE_URL = config.frontendBaseUrl;
+  process.env.BACKEND_BASE_URL = config.backendBaseUrl;
+  const { default: db } = await import("./models/index");
   try {
-    await db.sequelize.authenticate();
-    console.log("Database connected");
-    // 同步資料庫，會自動幫忙建立資料表（在全新DB的情況下非常好用）
-    // 但其實migration 跟sync二選一就好，比較建議使用migration
-    // await db.sequelize.sync();
-    app.listen(process.env.PORT, () =>
-      console.log(`Server running on port ${process.env.PORT}`)
-    );
+    const { createApp } = await import("./app");
+    await startHttpServer(createApp(config), db.sequelize, config.port);
+    console.log(`伺服器已啟動，監聽連接埠 ${config.port}`);
   } catch (error) {
-    console.error("Failed to start server:", error);
+    await db.sequelize.close().catch(() => {});
+    throw error;
   }
 };
 
-startServer();
+startServer().catch((error: unknown) => {
+  if (error instanceof ConfigurationError
+    || (error instanceof Error && error.name === "DatabaseConfigurationError")) {
+    console.error(error.message);
+  }
+  // 不輸出原始錯誤，避免連線資訊或憑證進入平台日誌。
+  console.error("伺服器啟動失敗，請檢查環境變數、資料庫連線與連接埠設定。");
+  process.exitCode = 1;
+});

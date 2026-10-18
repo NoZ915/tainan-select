@@ -18,7 +18,7 @@ passport.use(
   new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    callbackURL: `${process.env.BACKEND_BASE_URL}/auth/google/callback`,
+    callbackURL: `${process.env.BACKEND_BASE_URL?.replace(/\/$/, "")}/auth/google/callback`,
     store: new OAuthStateStore(),
   },
     async (accessToken: string, refreshToken: string, profile: any, done: any) => {
