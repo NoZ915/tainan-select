@@ -18,7 +18,7 @@
 
 - [ ] P0 平台外加密備份、隔離還原、schema／資料核對及安全檢核已通過，提供不含秘密的證據代稱。
 - [ ] 確認來源 MySQL 精確版本、原 schema 名稱、資料量與 migration 集合，取得受限備份／金鑰的存取方式。
-- [ ] 指定新測試 Google client／secret、JWT secret、測試帳號與秘密保管位置；Google client 採測試模式並限定驗收者，不複製正式憑證。
+- [ ] 依維護者決定沿用既有 Google OAuth client／secret；測試 API 網址確定後，在同一 client 額外加入測試 callback，保留正式 callback 與既有發布狀態。另備獨立 JWT secret、測試帳號與秘密保管位置。
 - [ ] 確認 Railway 帳務方案、可用 Region、Volume 容量、費用預估、告警門檻與付款負責人。
 
 ## 2. 資源與 API 設定
@@ -67,7 +67,7 @@ Railway health check 只用於部署期間，不是持續監測；程式 `/healt
 | `DB_PASSWORD` | `${{MySQL.APP_DB_PASSWORD}}` |
 | `FRONTEND_BASE_URL` | `https://staging.nutnselect.com`；僅為待建立的測試來源，不使用正式前端 |
 | `BACKEND_BASE_URL` | 首次可用 `https://<Railway API 測試網域>/api`；同站 E2E 前改為 `https://api-staging.nutnselect.com/api` 並同步測試 OAuth callback |
-| `GOOGLE_CLIENT_ID`／`GOOGLE_CLIENT_SECRET` | 獨立測試 client，從秘密管理位置設定；目前程式啟動必填 |
+| `GOOGLE_CLIENT_ID`／`GOOGLE_CLIENT_SECRET` | 沿用既有 client，從秘密管理位置設定；目前程式啟動必填 |
 | `JWT_SECRET` | 全新且獨立的隨機秘密，不沿用正式值 |
 | `ALLOWED_EMAIL_DOMAIN` | 測試允許網域；留空時仍可透過 DB 白名單登入，不能視為關閉登入 |
 | `TRUST_PROXY_HOPS` | 部署時核對實際代理路徑後設定；沒有證據時不直接套用 1 或相信所有代理 |
@@ -102,7 +102,7 @@ curl --fail --silent --show-error --request OPTIONS \
 
 health 預期 `200 {"status":"ok"}`；學期與系所預期成功回傳還原資料，不能僅靠 health 推論 schema／資料正確。OPTIONS 預期 204、指定測試 origin 與允許 credentials，不得出現 `Access-Control-Allow-Origin: *`。查詢內容若涉及私有資料，僅保存在受限紀錄。
 
-完整瀏覽器 E2E 需先備妥同站的測試 HTTPS 子網域及 Google 測試 callback：`https://api-staging.nutnselect.com/api/auth/google/callback`。Railway／Pages 預設網域為跨站組合，現有 SameSite=Lax Cookie 無法驗收背景 API 登入。測試 DNS 的建立與正式流量切換分開記錄，本輪兩者均未執行。
+完整瀏覽器 E2E 需先備妥同站的測試 HTTPS 子網域，並在既有 Google OAuth client 額外加入測試 callback：`https://api-staging.nutnselect.com/api/auth/google/callback`；保留原正式 callback。Railway／Pages 預設網域為跨站組合，現有 SameSite=Lax Cookie 無法驗收背景 API 登入。測試 DNS 的建立與正式流量切換分開記錄，本輪兩者均未執行。
 
 ## 5. 備份、還原演練與費用
 
@@ -131,7 +131,7 @@ health 預期 `200 {"status":"ok"}`；學期與系所預期成功回傳還原資
 | API／MySQL／Volume | 未建立；待環境、版本、私網與掛載核對 |
 | Health／API／重啟持久化 | 未測試；待部署 SHA、HTTP 結果與資料保留證據 |
 | Schema／資料／migration | 未匯入；待同備份基線核對報告 |
-| OAuth／靜態檔／副作用隔離 | 未驗收；待測試 client、同站子網域與完整流程 |
+| OAuth／靜態檔／副作用隔離 | 未驗收；待既有 client 加入測試 callback、同站子網域與完整流程 |
 | 平台及平台外備份／還原 | 未啟用；待排程、加密檔代稱、還原結果與耗時 |
 | 用量／月費／通知 | 未取得新環境實測；待帳務方案、取樣、預估與告警設定 |
 | Zeabur／正式 DNS／正式 DB | 本輪未變更，也未向正式 DB 執行測試 |
