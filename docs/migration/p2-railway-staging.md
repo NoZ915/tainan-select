@@ -2,7 +2,7 @@
 
 對應 [#106](https://github.com/NoZ915/tainan-select/issues/106)，前置文件為 [P0 放行清單](p0-audit.md)、[備份／隔離還原](mysql-backup-restore.md)與 [P1 部署相容性](p1-portable-deploy.md)。
 
-**2026-10-18（Asia/Taipei）P0 尚未完整驗收；維護者後續授權先建立 Railway 專案，已完成獨立專案與 `staging` 環境。** P1 已透過 [PR #112](https://github.com/NoZ915/tainan-select/pull/112) 合併，準備基準為 `a6d9f2f4a078ddad0d3dbaf0c295fa7b7f2c4093`。下列服務設定仍是待執行方案，不是已部署證據；尚未建立服務、設定變數、匯入 DB、建立測試 DNS 或啟用備份／告警。
+**2026-10-18（Asia/Taipei）P0 尚未完整驗收；維護者後續授權繼續建立 Railway 測試資源，已完成獨立專案、`staging` 環境與空 MySQL／Volume 部署。** P1 已透過 [PR #112](https://github.com/NoZ915/tainan-select/pull/112) 合併，準備基準為 `a6d9f2f4a078ddad0d3dbaf0c295fa7b7f2c4093`。API 設定仍是待執行方案；尚未建立 API、匯入 DB、建立測試 DNS 或啟用備份／告警。
 
 ## 1. 平台現況與放行條件
 
@@ -11,10 +11,10 @@
 | 現有 Railway | `pleasing-victory` 專案只有 `tainan-select` 服務；環境名稱為 `production`，不代表 Zeabur 正式站 |
 | 既有服務設定 | 來源 `NoZ915/tainan-select@main`，RAILPACK，Region `iad`、一個 replica；未明確設定 backend Root Directory 或 health check |
 | 最新部署 | 2026-10-17 的部署為 `FAILED`，設定記錄的來源 SHA 為 `4679ca3`，不是已合併的 P1；不能當作本輪部署結果 |
-| 隔離資源 | 未見 MySQL、Volume、服務／共用變數、公開網域、TCP Proxy 或待套用變更 |
+| 既有專案隔離資源 | 原 `pleasing-victory` 專案未見 MySQL、Volume、服務／共用變數、公開網域、TCP Proxy 或待套用變更 |
 | 新測試專案 | 已建立私人專案 [tainan-select-staging](https://railway.com/project/a2c5fd3b-3a46-4408-ab14-a3289ce52cb1)，預設環境為 `staging`；未啟用 PR 自動部署 |
-| 新環境驗證 | 建立後重新查詢，確認服務、bucket 與待部署變更皆為空；未建立或啟動 API／MySQL |
-| 本輪操作 | 原先僅準備文件；後續依維護者授權建立上述空專案與環境，未變更既有專案、Zeabur 或正式 DNS |
+| 新環境驗證 | MySQL `8.0.46` 部署成功，500 MB Volume 掛載 `/var/lib/mysql`，服務與 Volume 均在新加坡；無公開網域、TCP Proxy 或待部署變更，尚無 API |
+| 本輪操作 | 原先僅準備文件；後續依維護者授權建立測試專案、環境與空 MySQL／Volume，未變更既有專案、Zeabur 或正式 DNS |
 
 建立或啟動測試服務前，需補齊：
 
@@ -25,7 +25,7 @@
 
 ## 2. 資源與 API 設定
 
-已建立獨立 Project `tainan-select-staging` 與 `staging` 環境，後續服務預定命名為 `API`、`MySQL`。建立服務前重新核對清單，避免建立重複資源；環境需用實際 ID 指定，不依工具預設選取 production。既有失敗專案本輪不刪除或改造。
+已建立獨立 Project `tainan-select-staging`、`staging` 環境與 `MySQL` 服務，後續 API 服務預定命名為 `API`。建立服務前重新核對清單，避免建立重複資源；環境需用實際 ID 指定，不依工具預設選取 production。既有失敗專案本輪不刪除或改造。
 
 本階段以平台設定及下表作為操作依據。官方已淘汰 `railway.json`／`railway.toml`，新服務無法採用；若日後需要程式化管理，再使用 `.railway/railway.ts` 的 IaC，先預覽 plan 並審查影響。本輪不新增 IaC 相依套件或自動 apply 流程。[官方設定方式](https://docs.railway.com/config-as-code)、[IaC 說明](https://docs.railway.com/infrastructure-as-code)
 
@@ -56,6 +56,23 @@ Railway health check 只用於部署期間，不是持續監測；程式 `/healt
 - **MySQL 的 `MYSQL_DATABASE` 設為 P0 備份的原 schema 名稱**，`MYSQLDATABASE` 保留參照 `${{MYSQL_DATABASE}}`。P0 dump 使用 `--databases`，會建立／切換原 schema；只在匯入指令加另一個 database 名稱不會替它改名。不要讓 API 仍連到模板預設的空 `railway` schema。
 - MySQL `event_scheduler` 在還原與測試期間保持 OFF；核對匯入的 event／trigger／routine 與權限，不能讓還原資料自行觸發非預期工作。
 - 匯入／維護使用新環境管理帳號；API 啟動前建立限於目標 schema 的獨立應用帳號，提供現有 API 所需權限，DDL／migration 管理另行分開。將帳號與新密碼以 `APP_DB_USERNAME`、`APP_DB_PASSWORD` 存於 MySQL 服務的受限變數，供 API Reference；這兩個是本方案新增的變數，不是模板自帶欄位。
+
+2026-10-18 23:31（Asia/Taipei）空 DB 部署驗證結果如下；尚未執行 SQL 匯入或連線驗收，也未建立應用帳號：
+
+| 已套用項目 | 結果 |
+| --- | --- |
+| Image／啟動 | 固定 `mysql:8.0.46`；部署 `04a8b74e-474b-4860-8a95-e96f1c98b982` 為 `SUCCESS`，日誌確認 `8.0.46` 在 `3306` ready for connections |
+| Region／Volume | 一個 replica，`asia-southeast1-eqsg3a`；同 Region 的 `mysql-volume` 為 500 MB，掛載 `/var/lib/mysql`；匯入前仍需檢查實際剩餘空間 |
+| Schema／密碼 | 模板輸入 `MYSQL_DATABASE=tainanselect_prod`，其餘連線變數保留模板 Reference；新管理密碼由 Railway 自動產生，未讀出秘密值 |
+| 網路 | 私網端點名稱 `mysql`；查詢確認公開網域與 TCP Proxy 皆為空，尚未從另一服務測試私網連線 |
+| 資源上限／重啟 | 上限 1 vCPU、1 GB RAM；失敗重啟至多 3 次，不設定 cron；資源上限不等於費用上限 |
+| 還原前設定 | 沿用模板停用 native AIO、binlog 與 Performance Schema；buffer pool 改為 128 MB，明確設定 `event_scheduler=OFF`、停用 MySQL X 與 local infile |
+
+實際啟動命令如下。連接器無法修改尚未建立的服務設定，因此先以模板建立空 DB，再套用新加坡與此命令；最終服務及 Volume Region 已重新核對。
+
+```bash
+docker-entrypoint.sh mysqld --innodb-use-native-aio=0 --disable-log-bin --performance_schema=0 --innodb-buffer-pool-size=128M --event-scheduler=OFF --mysqlx=0 --local-infile=0
+```
 
 以下假設服務名為 `MySQL`，改名時 Reference 也須對應。模板的 `MYSQLUSER`／`MYSQLPASSWORD` 為管理帳號，保留供維護，不直接交給 API。
 
@@ -123,19 +140,19 @@ health 預期 `200 {"status":"ok"}`；學期與系所預期成功回傳還原資
 
 情境試算：兩服務合計平均 RAM 1 GB、CPU 0.1 vCPU、Volume 5 GB、快照增量 1 GB、對外輸出 1 GB，約為 US$12.95／月；在 Hobby 計價下已超過內含 US$5，不再重複加 US$5。此為假設值，未含平台外備份、其他 workspace 服務與稅費，實際需依 Metrics／Usage／預估帳單重算。[官方價格](https://docs.railway.com/pricing/plans)
 
-部署後記錄 API／MySQL 的 CPU、RAM、Volume、egress、重啟次數與取樣期間，至少涵蓋閒置及代表性隔離測試；目前只有舊失敗服務，**新環境實際用量、月費預測與預算告警均未驗收**，不能以零部署推論零費用。
+部署後記錄 API／MySQL 的 CPU、RAM、Volume、egress、重啟次數與取樣期間，至少涵蓋閒置及代表性隔離測試。空 MySQL 啟動後首次查詢，平台目前 RAM 約 0.3585 GB、CPU 為 0，`DISK_USAGE_GB` 約 0.1547 GB；此為短暫啟動取樣，不能當作 Volume 剩餘空間或穩態用量。**完整用量、月費預測與預算告警仍未驗收**，後續需涵蓋匯入與 API 測試期間。
 
 ## 6. 完成證據與停止條件
 
 | 驗收項目 | 本輪狀態／後續證據 |
 | --- | --- |
-| P0／隔離備份可用 | 未完成；待備份與還原報告代稱 |
-| API／MySQL／Volume | 專案與 `staging` 環境已建立；服務與 Volume 尚未建立，版本、私網與掛載待核對 |
+| P0／隔離備份可用 | 本機加密備份、18 張表隔離還原與逐表筆數核對已完成；來源結構獨立比對、金鑰另存與其他安全檢核仍待辦，P0 尚未完整驗收 |
+| API／MySQL／Volume | MySQL `8.0.46` 部署成功，500 MB Volume 與服務均在新加坡，無公網連線入口；私網連線與匯入待驗證，API 尚未建立 |
 | Health／API／重啟持久化 | 未測試；待部署 SHA、HTTP 結果與資料保留證據 |
 | Schema／資料／migration | 未匯入；待同備份基線核對報告 |
 | OAuth／靜態檔／副作用隔離 | 未驗收；待既有 client 加入測試 callback、同站子網域與完整流程 |
-| 平台及平台外備份／還原 | 未啟用；待排程、加密檔代稱、還原結果與耗時 |
-| 用量／月費／通知 | 未取得新環境實測；待帳務方案、取樣、預估與告警設定 |
+| 平台及平台外備份／還原 | Railway 備份未啟用、未演練；本機已有來源加密備份與隔離還原紀錄，尚未匯入 Railway |
+| 用量／月費／通知 | 已取得空 DB 啟動取樣；待帳務方案、代表性用量、預估與告警設定 |
 | Zeabur／正式 DNS／正式 DB | 本輪未變更，也未向正式 DB 執行測試 |
 
 若出現錯誤 DB／環境 Reference、版本不相容、資料核對失敗、Volume 未掛載、費用未確認或非預期對外副作用，停止 API／還原操作並保留受限證據；不得藉由改連 Zeabur DB、重跑全部 migration、重建正式 Volume 或切正式 DNS 繞過問題。
