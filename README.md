@@ -136,6 +136,7 @@ Backend variables:
 | Variable | Description |
 | --- | --- |
 | `PORT` | Backend server port |
+| `NODE_ENV` | 開發為 `development`；部署為 `production`，必須明確設定全部 DB 變數 |
 | `TRUST_PROXY_HOPS` | 後端前方可信任的反向代理層數；直接對外時設為 `0` |
 | `DB_USERNAME` | MySQL username |
 | `DB_PASSWORD` | MySQL password |
@@ -146,6 +147,7 @@ Backend variables:
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
 | `ALLOWED_EMAIL_DOMAIN` | Allowed login email domain |
 | `FRONTEND_BASE_URL` | Frontend origin used for CORS and OAuth redirect |
+| `BACKEND_BASE_URL` | 後端公開 API 網址，須包含 `/api`；OAuth callback 接在此網址之後 |
 | `JWT_SECRET` | JWT signing secret |
 
 Frontend variables:
@@ -170,7 +172,7 @@ Backend:
 
 ```bash
 cd backend
-npm run start
+npm run dev
 ```
 
 Frontend:
@@ -202,10 +204,13 @@ Default local endpoints:
 
 | Command | Description |
 | --- | --- |
-| `npm run start` | Start API server with `nodemon` + `tsx` |
+| `npm run start` | 使用 `tsx` 啟動 API，供 Zeabur／Railway 部署使用 |
+| `npm run dev` | 使用 `nodemon` + `tsx` 啟動開發監看模式 |
 | `npm run migrate` | Run Sequelize migrations |
 | `npm run scrape` | Crawl and sync course data from the school course site |
 | `npm run backfill:schedules` | Rebuild normalized course schedule records |
+
+部署設定、隔離驗收與已知限制見 [P1 部署相容性](docs/migration/p1-portable-deploy.md)。
 
 ## Current Highlights / 近期功能
 
