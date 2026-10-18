@@ -99,11 +99,11 @@ tainan-select/
 
 ## Requirements / 環境需求
 
-- Node.js 20+ recommended
+- Node.js 24
 - npm 10+ recommended
 - MySQL database
 - Google OAuth credentials
-- 建議使用 Node.js 20 以上版本
+- 使用 Node.js 24，與部署版本設定一致
 - 建議使用 npm 10 以上版本
 - 需要可用的 MySQL 資料庫
 - 需要 Google OAuth 憑證

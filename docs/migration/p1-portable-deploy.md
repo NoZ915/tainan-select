@@ -4,7 +4,7 @@
 
 ## 啟動與資料庫設定
 
-- 前後端以 `package.json` 的 `engines.node=22.x` 與各自的 `.node-version` 指定 Node.js 22；平台若有版本覆寫設定，需一致選擇 22，並檢查建置日誌。原本未限制版本時，本機 Node.js 26 載入現有 JWT 相依套件會因 `SlowBuffer` 缺失失敗；本次固定執行環境，不升級登入相依套件。[Node.js 官方移除說明](https://nodejs.org/en/blog/release/v25.0.0)
+- 前後端以 `package.json` 的 `engines.node=24.x` 與各自的 `.node-version` 指定 Node.js 24；平台若有版本覆寫設定，需一致選擇 24，並檢查建置日誌。原本未限制版本時，本機 Node.js 26 載入現有 JWT 相依套件會因 `SlowBuffer` 缺失失敗；Node.js 24 已通過下方測試，本次固定執行環境，不升級登入相依套件。[Node.js 官方移除說明](https://nodejs.org/en/blog/release/v25.0.0)
 - 後端根目錄為 `backend`；安裝 `npm ci`，部署啟動 `npm start`（`tsx server.ts`），開發監看 `npm run dev`。`tsx` 保留在正式相依套件，不需要事先編譯；ESM 與既有省略副檔名的 import 由 `tsx` 處理。不要以 `npm ci --omit=dev` 建置前端，前端建置需要 TypeScript／Vite。
 - `config/config.ts` 與 sequelize-cli 共用 `config/config.cjs`。`NODE_ENV=production` 時，`DB_USERNAME`、`DB_PASSWORD`、`DB_NAME`、`DB_HOST`、`DB_PORT` 全部必填，沒有開發預設值；`DB_PORT` 必須為 1–65535 整數。CLI 額外指定 `--env production` 時也會驗證，即使 shell 的 `NODE_ENV` 是 development。
 - `development` 保留既有本機預設帳號、空密碼、`TainanSelect(STG)`、localhost、3306 及連線池上限 3。production 的連線池同樣為 3；不修改 schema、不自動呼叫 `sync()`，啟動指令也不串接 migration。
@@ -73,7 +73,7 @@ VITE_API_BASE_URL=https://api-staging.example.com/api npm run build
 
 新增 `backend/tests/deployment/*.test.ts` 覆蓋 API／CLI DB 設定一致性、production 必填值、錯誤設定非零退出、HTTP health、靜態頭貼、CORS 預檢、OAuth callback／state／JWT Cookie、登出及 DB／連接埠啟動失敗。測試使用模擬 DB 驗證與 Google 身份，不連線真實 DB，不呼叫 Google。
 
-2026-10-18（Asia/Taipei）以 Node.js 22.23.3 執行結果：
+2026-10-18（Asia/Taipei）以 Node.js 24.22.0 執行結果：
 
 | 驗證 | 結果 |
 | --- | --- |
@@ -84,7 +84,7 @@ VITE_API_BASE_URL=https://api-staging.example.com/api npm run build
 | `dist` 產物檢查 | `index.html` 引用的 JS／CSS 齊全、無頂層 `404.html`，JS 包含指定隔離 API 且不含本機 API 網址 |
 | `git diff --check` | 通過 |
 
-後端型別檢查另於本機 Node.js 26 執行亦通過；Node.js 26 的完整 HTTP 測試因既有 JWT 相依套件載入失敗，部署及主要驗收均以已指定的 Node.js 22 為準。真實 MySQL、Google OAuth、Cloudflare Pages 與 Zeabur 平台驗收尚未執行。
+後端型別檢查另於本機 Node.js 26 執行亦通過；Node.js 26 的完整 HTTP 測試因既有 JWT 相依套件載入失敗，部署及主要驗收均以已指定的 Node.js 24 為準。真實 MySQL、Google OAuth、Cloudflare Pages 與 Zeabur 平台驗收尚未執行。
 
 後續部署驗收仍需：
 
