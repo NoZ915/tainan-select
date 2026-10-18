@@ -2,9 +2,9 @@
 
 對應 [#106](https://github.com/NoZ915/tainan-select/issues/106)，前置文件為 [P0 放行清單](p0-audit.md)、[備份／隔離還原](mysql-backup-restore.md)與 [P1 部署相容性](p1-portable-deploy.md)。
 
-**2026-10-18（Asia/Taipei）維護者確認 P0 尚未完成，本輪只準備部署設定與文件，不執行平台變更。** P1 已透過 [PR #112](https://github.com/NoZ915/tainan-select/pull/112) 合併，準備基準為 `a6d9f2f4a078ddad0d3dbaf0c295fa7b7f2c4093`。下列設定是待執行方案，不是已部署證據；尚未建立服務、設定變數、匯入 DB、建立測試 DNS 或啟用備份／告警。
+**2026-10-18（Asia/Taipei）P0 尚未完整驗收；維護者後續授權先建立 Railway 專案，已完成獨立專案與 `staging` 環境。** P1 已透過 [PR #112](https://github.com/NoZ915/tainan-select/pull/112) 合併，準備基準為 `a6d9f2f4a078ddad0d3dbaf0c295fa7b7f2c4093`。下列服務設定仍是待執行方案，不是已部署證據；尚未建立服務、設定變數、匯入 DB、建立測試 DNS 或啟用備份／告警。
 
-## 1. 唯讀現況與放行條件
+## 1. 平台現況與放行條件
 
 | 項目 | 本輪確認結果 |
 | --- | --- |
@@ -12,7 +12,9 @@
 | 既有服務設定 | 來源 `NoZ915/tainan-select@main`，RAILPACK，Region `iad`、一個 replica；未明確設定 backend Root Directory 或 health check |
 | 最新部署 | 2026-10-17 的部署為 `FAILED`，設定記錄的來源 SHA 為 `4679ca3`，不是已合併的 P1；不能當作本輪部署結果 |
 | 隔離資源 | 未見 MySQL、Volume、服務／共用變數、公開網域、TCP Proxy 或待套用變更 |
-| 本輪操作 | 僅讀取 GitHub／Railway 設定與官方文件，未讀取秘密值，未連線任何 DB |
+| 新測試專案 | 已建立私人專案 [tainan-select-staging](https://railway.com/project/a2c5fd3b-3a46-4408-ab14-a3289ce52cb1)，預設環境為 `staging`；未啟用 PR 自動部署 |
+| 新環境驗證 | 建立後重新查詢，確認服務、bucket 與待部署變更皆為空；未建立或啟動 API／MySQL |
+| 本輪操作 | 原先僅準備文件；後續依維護者授權建立上述空專案與環境，未變更既有專案、Zeabur 或正式 DNS |
 
 建立或啟動測試服務前，需補齊：
 
@@ -23,7 +25,7 @@
 
 ## 2. 資源與 API 設定
 
-採獨立 Project `tainan-select-staging`，目標環境命名為 `staging`，服務名為 `API`、`MySQL`。建立前重新核對清單，避免建立重複資源；環境需用實際 ID 指定，不依工具預設選取 production。既有失敗專案本輪不刪除或改造。
+已建立獨立 Project `tainan-select-staging` 與 `staging` 環境，後續服務預定命名為 `API`、`MySQL`。建立服務前重新核對清單，避免建立重複資源；環境需用實際 ID 指定，不依工具預設選取 production。既有失敗專案本輪不刪除或改造。
 
 本階段以平台設定及下表作為操作依據。官方已淘汰 `railway.json`／`railway.toml`，新服務無法採用；若日後需要程式化管理，再使用 `.railway/railway.ts` 的 IaC，先預覽 plan 並審查影響。本輪不新增 IaC 相依套件或自動 apply 流程。[官方設定方式](https://docs.railway.com/config-as-code)、[IaC 說明](https://docs.railway.com/infrastructure-as-code)
 
@@ -128,7 +130,7 @@ health 預期 `200 {"status":"ok"}`；學期與系所預期成功回傳還原資
 | 驗收項目 | 本輪狀態／後續證據 |
 | --- | --- |
 | P0／隔離備份可用 | 未完成；待備份與還原報告代稱 |
-| API／MySQL／Volume | 未建立；待環境、版本、私網與掛載核對 |
+| API／MySQL／Volume | 專案與 `staging` 環境已建立；服務與 Volume 尚未建立，版本、私網與掛載待核對 |
 | Health／API／重啟持久化 | 未測試；待部署 SHA、HTTP 結果與資料保留證據 |
 | Schema／資料／migration | 未匯入；待同備份基線核對報告 |
 | OAuth／靜態檔／副作用隔離 | 未驗收；待既有 client 加入測試 callback、同站子網域與完整流程 |
