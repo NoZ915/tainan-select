@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { createRequire } from "node:module";
 
 interface DbConfig {
   [key: string]: {
@@ -17,21 +18,7 @@ interface DbConfig {
   };
 }
 
-const config: DbConfig = {
-  development: {
-    username: process.env.DB_USERNAME || "root",
-    password: process.env.DB_PASSWORD || "",
-    database: process.env.DB_NAME || "TainanSelect(STG)",
-    host: process.env.DB_HOST || "localhost",
-    port: parseInt(process.env.DB_PORT || "3306"),
-    dialect: "mysql",
-    pool: {
-      max: 3,
-      min: 0,
-      idle: 10000,
-      acquire: 30000,
-    },
-  },
-};
+// API 與 sequelize-cli 共用設定，避免兩種啟動方式連到不同資料庫。
+const config = createRequire(import.meta.url)("./config.cjs") as DbConfig;
 
 export default config;
