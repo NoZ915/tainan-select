@@ -2,7 +2,7 @@
 
 對應 [#107](https://github.com/NoZ915/tainan-select/issues/107)，承接已合併的 [P1／PR #112](https://github.com/NoZ915/tainan-select/pull/112)，與 [P2／PR #113](https://github.com/NoZ915/tainan-select/pull/113) 的 Railway 隔離環境配對。
 
-**2026-10-19（Asia/Taipei）：Pages 的 Git 整合、主要分支首次部署、PR Preview 自動部署及基本 SPA 瀏覽器驗證已成功。** 專案為 `tainan-select-staging`，測試網址為 `https://tainan-select-staging.pages.dev`；已在 Pages 加入 `staging.nutnselect.com`，等待 Namecheap CNAME 與 TLS 驗證。完整瀏覽器登入及新的 main 合併自動部署驗收仍待完成，不得據此關閉 #107。
+**2026-10-19（Asia/Taipei）：Pages 的主要分支首次部署、PR Preview 自動部署、自訂測試網域與瀏覽器 API 整合驗證已成功。** 自訂測試入口為 `https://staging.nutnselect.com`，Pages 原生網址為 `https://tainan-select-staging.pages.dev`；Chrome 已通過跨子網域資料讀取、頁面重新整理、訪客登出及 Google 登入入口驗證。完整 Google 帳號登入與新的 main 合併自動部署仍待驗收，不得據此關閉 #107。
 
 ## 1. 專案範圍與前置條件
 
@@ -71,9 +71,24 @@ Google OAuth 在後端處理，前端不用填入 client secret、JWT、DB 或 G
 2. 再由維護者於 Namecheap 新增 CNAME：Host `staging`，Value 為實際 Pages 專案的 `<專案名稱>.pages.dev`，TTL Automatic。只新增測試子網域，不更動根網域、`www`、nameservers 或既有 `api-staging` 紀錄。
 3. 查核 DNS、Pages 網域狀態與 TLS 憑證，然後檢查首頁、深層路由、資產、索引標頭及 API 網址。
 4. 同一瀏覽器先開啟 `https://api-staging.nutnselect.com/health`，用 repository 外受限檔案中的入口帳密通過驗證，再開測試前端。不得將入口密碼放入 URL、前端建置變數或公開報告。
-5. 驗證首頁資料、訪客課表、Google 登入／返回、重新整理保持登入、登出，以及未授權狀態；同時觀察跨來源請求、Secure／SameSite cookie 與是否誤連正式 API。入口憑證跨來源傳遞仍須實際瀏覽器驗證，不能以 curl 成功代替。
+5. 驗證首頁資料、訪客課表、Google 登入／返回、重新整理保持登入、登出，以及未授權狀態；同時觀察跨來源請求、Secure／SameSite cookie 與是否誤連正式 API。完整帳號登入需維護者操作；不能以入口導向或 curl 成功代替。
 
 外部 DNS 管理的子網域可用 CNAME 連接 Pages，無需搬移整個網域的 DNS；必須先在 Pages 關聯網域再新增紀錄。[官方自訂網域步驟](https://developers.cloudflare.com/pages/configuration/custom-domains/)
+
+2026-10-19 23:50（Asia/Taipei）已核對兩台 Namecheap 權威 DNS 及公共 resolver，`staging.nutnselect.com` 的 CNAME 正確指向 `tainan-select-staging.pages.dev`；Cloudflare 的網域、所有權與憑證驗證均為 `active`。維護者確認第一次 Namecheap 儲存失敗是登入狀態過期，重新登入後已成功新增，沒有更動正式紀錄。
+
+2026-10-19 23:51（Asia/Taipei）瀏覽器整合驗證通過，證據代稱為 `pages-custom-domain-20261019`，不含秘密的完整結果存於 repository 外受限備份目錄：
+
+| 瀏覽器驗證 | 結果與範圍 |
+| --- | --- |
+| HTTPS／入口驗證 | 保留 TLS 憑證檢查，以獨立 Chrome 的原生 HTTP 驗證機制先讀取 API health，再進入測試前端；入口憑證由既有加密恢復副本在記憶體載入，未寫入前端或命令列 |
+| 跨子網域 API | 從真實前端 origin 以 credentials 請求學期、系所、課程及訪客登入狀態均回傳 200；學期 7 筆、系所 81 筆，課程取樣非空，所有 API 請求僅指向指定測試 API |
+| 深層路由／靜態檔 | 課表、願望清單、有效課程、404 與未知路徑直接開啟／重新整理通過，無未捕捉 JavaScript 例外；有效課程的 API 回應、頁面課名及 SEO title 均已核對，API 頭貼回傳 200 且為 image/png |
+| 訪客登出／CORS | 前端 origin 的 JSON POST 登出成功，包含瀏覽器預檢；這是訪客狀態驗證，不等於已驗證登入後登出 |
+| 登入按鈕／state cookie | 實際點擊前端登入與確認，經 API 導向 Google；callback 符合自訂 API 子網域，state cookie 具 Secure、HttpOnly、SameSite=Lax 與正確 callback path |
+| 驗證界線／清理 | Google 請求在送達 provider 前由測試工具攔截，不輸入帳號、不交換 token；測試登入嘗試已取消。維護者本輪選擇稍後再測完整 Google 登入、返回後保持登入及登出，保留待辦 |
+
+測試時本機仍有先前的 DNS 負快取，因此 Chrome 僅對該測試前端使用已核對的 Pages IP 覆寫解析，保留實際 hostname、Origin、SNI 與完整憑證驗證；未停用 TLS，也未修改系統 DNS。另以公共 DNS over HTTPS、不指定固定 IP 的 curl 驗證正常取得 HTTPS 200 與 noindex。這些檢查不能當成本機快取已過期的證據。
 
 `pages.dev` 的 PR 預覽可以驗證靜態內容與 SPA 路由，但與 API 為跨站來源，且目前後端僅允許 `https://staging.nutnselect.com`。預覽網址不當作完整登入驗收，不為它放寬 CORS 或 SameSite。完整跨服務驗收由 #108 接續。
 
@@ -97,8 +112,8 @@ CF_PAGES=1 VITE_API_BASE_URL=https://api-staging.nutnselect.com/api node scripts
 | Cloudflare GitHub 整合／Pages 專案 | 已建立並確認來源、建置命令與兩個環境的公開變數 |
 | 平台 `main` 建置、來源 SHA、Node／安裝日誌 | 首次部署成功，SHA `a6d9f2f4a078ddad0d3dbaf0c295fa7b7f2c4093`；日誌確認 Node 24.13.1、停用自動安裝、執行 npm ci 與產物限制腳本 |
 | PR preview 自動部署、來源 SHA 與網址 | 已以 GitHub push 自動觸發並部署成功，SHA／固定網址／分支別名及瀏覽器靜態檢查均通過 |
-| `staging.nutnselect.com` DNS／HTTPS | 已在 Pages 加入，等待維護者新增 Namecheap CNAME 與憑證驗證 |
-| SPA 深層重新整理、404、資產與快取 | 主要 pages.dev 的 HTTPS、JS／CSS、索引限制、五種路徑的渲染／重新整理與未知路徑導向通過；課程資料與頭貼仍待跨服務驗收 |
-| 瀏覽器 API／Cookie／OAuth／登出 | 待測試前端就緒後驗收，完整 E2E 接續 #108 |
+| `staging.nutnselect.com` DNS／HTTPS | 權威／公共 DNS 正確，Cloudflare 網域、所有權及憑證均 active，HTTPS 憑證驗證通過 |
+| SPA 深層重新整理、404、資產與快取 | Pages 原生／Preview 與自訂網域路由均通過；已補驗有效課程、API 資料與頭貼 |
+| 瀏覽器 API／Cookie／OAuth／登出 | 跨子網域 API、訪客狀態／登出、Google 登入入口與 state cookie 通過；完整登入／保持／登出等待維護者，完整 E2E 接續 #108 |
 
 完成平台操作後需回填部署 SHA、網址、驗證日期與不含敏感資料的結果，保留尚未驗收的項目，不能僅憑本機建置成功宣告 #107 完成。
