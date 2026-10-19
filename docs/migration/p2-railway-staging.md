@@ -2,7 +2,7 @@
 
 對應 [#106](https://github.com/NoZ915/tainan-select/issues/106)，前置文件為 [P0 放行清單](p0-audit.md)、[備份／隔離還原](mysql-backup-restore.md)與 [P1 部署相容性](p1-portable-deploy.md)。
 
-**2026-10-19（Asia/Taipei）API 與 MySQL 已在 Railway 隔離環境上線，來源備份還原、API 私網驗證、Railway 平台外加密備份還原及 MySQL 重啟持久化通過；P0 尚未完整驗收。** P1 已透過 [PR #112](https://github.com/NoZ915/tainan-select/pull/112) 合併，API 實際部署來源為 `main@a6d9f2f4a078ddad0d3dbaf0c295fa7b7f2c4093`。API 尚無公開入口，測試 DNS、瀏覽器 OAuth、備份排程／告警與完整費用驗收仍待完成；目前 Railway 方案不提供平台快照與排程。
+**2026-10-19（Asia/Taipei）API 與 MySQL 已在 Railway 隔離環境上線，備份還原、MySQL 重啟持久化及受密碼保護的測試 HTTPS 驗證通過；P0 尚未完整驗收。** P1 已透過 [PR #112](https://github.com/NoZ915/tainan-select/pull/112) 合併，API 實際部署來源為 `main@a6d9f2f4a078ddad0d3dbaf0c295fa7b7f2c4093`。公開入口由獨立 `StagingGateway` 提供，API／MySQL 本身仍只有私網；測試子網域的 DNS／憑證、瀏覽器 OAuth、備份排程／告警與完整費用驗收仍待完成。目前已確認為 Hobby，沒有平台快照、備份排程或 Edge Rules 額度。
 
 ## 1. 平台現況與放行條件
 
@@ -13,7 +13,7 @@
 | 最新部署 | 2026-10-17 的部署為 `FAILED`，設定記錄的來源 SHA 為 `4679ca3`，不是已合併的 P1；不能當作本輪部署結果 |
 | 既有專案隔離資源 | 原 `pleasing-victory` 專案未見 MySQL、Volume、服務／共用變數、公開網域、TCP Proxy 或待套用變更 |
 | 新測試專案 | 已建立私人專案 [tainan-select-staging](https://railway.com/project/a2c5fd3b-3a46-4408-ab14-a3289ce52cb1)，預設環境為 `staging`；未啟用 PR 自動部署 |
-| 新環境驗證 | MySQL `8.0.46`、500 MB Volume 與 API 均在新加坡；備份還原及 API 私網 DB／HTTP 驗證通過，兩服務 Online，無公開網域或 TCP Proxy |
+| 新環境驗證 | MySQL `8.0.46`、500 MB Volume 與 API 均在新加坡；另以同 Region 的 `StagingGateway` 提供受密碼保護的 Railway HTTPS，API／MySQL 未建立公開網域或 TCP Proxy |
 | 本輪操作 | 依維護者授權建立測試資源、匯入備份、設定專用帳號並部署 API；OAuth 變數由維護者填入，未變更既有專案、Zeabur 或正式 DNS |
 
 建立或啟動測試服務前，需補齊：
@@ -92,7 +92,7 @@ API 已設定下列執行變數及 `RAILPACK_NODE_NPM_INSTALL=npm ci`；Google �
 | `DB_USERNAME` | `${{MySQL.APP_DB_USERNAME}}` |
 | `DB_PASSWORD` | `${{MySQL.APP_DB_PASSWORD}}` |
 | `FRONTEND_BASE_URL` | `https://staging.nutnselect.com`；僅為待建立的測試來源，不使用正式前端 |
-| `BACKEND_BASE_URL` | 首次可用 `https://<Railway API 測試網域>/api`；同站 E2E 前改為 `https://api-staging.nutnselect.com/api` 並同步測試 OAuth callback |
+| `BACKEND_BASE_URL` | 已設 `https://api-staging.nutnselect.com/api`，供預定同站 E2E 使用；此子網域已掛至 Gateway，DNS／憑證與 Google client 的測試 callback 尚待完成 |
 | `GOOGLE_CLIENT_ID`／`GOOGLE_CLIENT_SECRET` | 已由維護者填入，暫沿用既有 client；後續必要更新已記入最後階段 [#110](https://github.com/NoZ915/tainan-select/issues/110)，尚未完成輪替或瀏覽器登入驗證 |
 | `JWT_SECRET` | 全新且獨立的隨機秘密，不沿用正式值 |
 | `ALLOWED_EMAIL_DOMAIN` | 測試允許網域；留空時仍可透過 DB 白名單登入，不能視為關閉登入 |
@@ -108,7 +108,7 @@ API 已設定下列執行變數及 `RAILPACK_NODE_NPM_INSTALL=npm ci`；Google �
 3. 依 [P0 還原步驟](mysql-backup-restore.md#4-隔離還原與核對)校驗 SHA-256、解密、解壓與匯入，保留 pipefail，不使用 `mysql --force`。client 目標必須是已確認的隔離私網 DB；本機不應直接連不到的 `.railway.internal`，也不以長期公開 DB 取代私網工作環境。
 4. 在 API 尚未啟動時，執行 [mysql-inventory.sql](mysql-inventory.sql)，核對全部 schema／物件定義、索引／外鍵、migration 集合、精確筆數、中文／emoji／JSON 與關聯；逐項沿用 P0 的同備份基線，不能拿持續寫入的正式站即時筆數直接比較。
 5. 建立應用帳號、確認 Reference 及測試憑證；驗證備份後再連接 API 的 GitHub source。連接來源可能立即建置，因此此步最後執行。觀察 build／deploy／restart／失敗日誌，僅將遮罩後的錯誤分類存入公開紀錄。
-6. 公開前先限制驗收者的存取權，避免還原資料任意對外開放，再生成 API 的 Railway 測試網域；只先對測試 API 執行下方查詢。正式 DNS、Zeabur 設定與正式 DB 均不變更。
+6. 公開前先限制驗收者的存取權，避免還原資料任意對外開放。本次以 `StagingGateway` 的 Basic Auth 提供測試網域，API 本身維持私網；先完成私網阻擋／通行驗證，再生成 Gateway 網域並執行下方 HTTPS 查詢。正式 DNS、Zeabur 設定與正式 DB 均不變更。
 7. 完成資料基線核對後，才在隔離 DB 測試登入、評論、收藏、課表等寫入；首次 OAuth、課程詳情、訪客快照均可能寫 DB。外部搜尋、爬蟲、信件與排程保持不執行。
 8. 在隔離 DB 建立可辨識的測試資料，記錄其存在與筆數，重啟 MySQL 後重新查核，確認同一 Volume 仍掛載、資料保留；記錄完成後的測試資料清理結果，不修改原備份核對報告。
 
@@ -147,12 +147,42 @@ API 已設定下列執行變數及 `RAILPACK_NODE_NPM_INSTALL=npm ci`；Google �
 | API 自動恢復 | 重啟前後應用程序 PID 與啟動識別相同；未重啟 API，容器內 `/health`、學期及系所 API 均回傳 200，學期集合符合 DB，專用帳號私網連線成功 |
 | 清理／範圍 | 驗證後刪除本輪獨立測試 schema，專用 SSH 公鑰、暫存私鑰與 agent 已清理；此次驗收不包含公開 HTTPS、瀏覽器登入或故障期間請求不中斷的保證 |
 
-在受限終端設定 `STAGING_API_ORIGIN` 為核對過的 Railway **測試** HTTPS origin，再執行：
+### 受限測試入口
+
+2026-10-19 已確認 workspace 為 Hobby，`networking.edgeRules=0`；唯讀驗證 IP 白名單時，平台回覆目前方案不可使用 Edge Rules。本輪未升級方案，改為獨立的 `StagingGateway` 服務，以 [Caddyfile](staging-gateway.Caddyfile) 保護入口，再經私網轉送既有 API；不將入口密碼放進前端或應用程式。
+
+| Gateway 設定 | 已套用結果 |
+| --- | --- |
+| Image／部署 | 官方 `caddy:2.11.7-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f`；部署 `30ba24d3-851b-4ff6-bae4-598bc8705ec0` 為 `SUCCESS`，不連接 repository 自動建置 |
+| Region／上限 | 新加坡、一個 replica；0.25 vCPU／256 MB 上限，不設定 Volume、cron 或自動休眠，失敗重啟至多 3 次；新增服務的實際費用仍需納入用量驗收 |
+| 啟動／健康檢查 | 使用下方命令產生暫存 Caddyfile 並啟動；`PORT=8080`，平台 health check 為 `/_gateway_health`，只回傳靜態 `ok`，不轉送資料查詢 |
+| 帳密／上游 | 獨立帳號與隨機密碼；平台僅存 `STAGING_GATE_USERNAME`、bcrypt cost 14 的 `STAGING_GATE_PASSWORD_HASH`，`STAGING_API_UPSTREAM=${{API.RAILWAY_PRIVATE_DOMAIN}}:8080`；不提供 DB、JWT 或 Google secret 給 Gateway |
+| 設定來源 | `STAGING_CADDYFILE` 內容與版本控管的 Caddyfile 相符；image 不會自動讀取 repository，此檔修改後須更新平台變數並重新部署 Gateway |
+| 網域／TLS | 只有 Gateway 建立 Railway 測試網域及 `api-staging.nutnselect.com`，target port 8080；TLS 由 Railway 處理，Caddy 不自行申請憑證，admin API 與 config 持久化關閉 |
+| 請求保護 | 除靜態 health 與 OPTIONS 外，請求先通過 Basic Auth；缺少或錯誤帳密回傳 401。OPTIONS 交由既有 API 最前方的 CORS 中介層回應，不執行業務處理；轉送前移除 `Authorization`，不將入口憑證交給 API |
+| 快取／索引 | 回應設定 `Cache-Control: no-store` 與 `X-Robots-Tag: noindex, nofollow`；索引標頭不取代密碼驗證 |
 
 ```bash
-curl --fail --silent --show-error "${STAGING_API_ORIGIN:?}/health"
-curl --fail --silent --show-error "${STAGING_API_ORIGIN:?}/api/semesters"
-curl --fail --silent --show-error "${STAGING_API_ORIGIN:?}/api/courses/getAllDepartments"
+/bin/sh -ec 'umask 077; test -n "$STAGING_GATE_USERNAME"; test -n "$STAGING_GATE_PASSWORD_HASH"; printf "%s\n" "$STAGING_CADDYFILE" > /tmp/Caddyfile; exec caddy run --config /tmp/Caddyfile --adapter caddyfile'
+```
+
+私網與公開 HTTPS 驗證均通過，證據代稱為 `railway-gateway-20261019`：
+
+- 未登入存取 health、學期、頭貼、OAuth 起點，以及未登入 POST 均回傳 401；錯誤密碼也回傳 401，回應不快取。
+- 正確入口帳密可取得 health、學期與系所的 200 回應；實際 CORS 請求允許指定測試 origin／credentials，無入口帳密的 OPTIONS 回傳 204 且沒有內容。
+- 帶有效 owner 啟動 Google OAuth 回傳 302，client 與預定 callback 符合 API 設定；未跟隨 Google 導向，測試中的記憶體登入嘗試已立即取消，不代表 Google console 註冊或瀏覽器登入完成。
+- 本機另核對 HTTPS 連線及未登入 401；版本控管設定與實際平台變數相符。入口帳密及恢復副本保存在 repository 外受限位置，專用 SSH 公鑰、暫存私鑰與 agent 已清理。
+
+`api-staging.nutnselect.com` 目前仍待 DNS 的 CNAME／所有權 TXT，憑證狀態為 `VALIDATING_OWNERSHIP`。維護者已確認可操作 Namecheap，需在該平台新增 Gateway 回傳的兩筆紀錄，核對有效 HTTPS 後，再於既有 Google client 額外加入 `https://api-staging.nutnselect.com/api/auth/google/callback`，保留正式 callback；本輪未變更 DNS 或 Google console。
+
+首次瀏覽器測試，先在同一瀏覽器開啟測試 API 的 `/health`，輸入受限入口帳密後再使用測試前端；此為入口驗證，Google 登入仍須另行完成。瀏覽器憑證傳遞、同站 Cookie 與完整 E2E 尚未驗收，`TRUST_PROXY_HOPS` 也未因新增 Gateway 直接改值。
+
+在受限終端設定 `STAGING_API_ORIGIN` 為核對過的 Gateway **測試** HTTPS origin，`STAGING_GATE_USERNAME` 為入口帳號。`--user` 只提供帳號，由 curl 互動提示輸入密碼，勿把密碼加在命令列；OPTIONS 不需入口帳密：
+
+```bash
+curl --user "${STAGING_GATE_USERNAME:?}" --fail --silent --show-error "${STAGING_API_ORIGIN:?}/health"
+curl --user "${STAGING_GATE_USERNAME:?}" --fail --silent --show-error "${STAGING_API_ORIGIN:?}/api/semesters"
+curl --user "${STAGING_GATE_USERNAME:?}" --fail --silent --show-error "${STAGING_API_ORIGIN:?}/api/courses/getAllDepartments"
 curl --fail --silent --show-error --request OPTIONS \
   --header 'Origin: https://staging.nutnselect.com' \
   --header 'Access-Control-Request-Method: POST' \
@@ -163,7 +193,7 @@ curl --fail --silent --show-error --request OPTIONS \
 
 health 預期 `200 {"status":"ok"}`；學期與系所預期成功回傳還原資料，不能僅靠 health 推論 schema／資料正確。OPTIONS 預期 204、指定測試 origin 與允許 credentials，不得出現 `Access-Control-Allow-Origin: *`。查詢內容若涉及私有資料，僅保存在受限紀錄。
 
-完整瀏覽器 E2E 需先備妥同站的測試 HTTPS 子網域，並在既有 Google OAuth client 額外加入測試 callback：`https://api-staging.nutnselect.com/api/auth/google/callback`；保留原正式 callback。Railway／Pages 預設網域為跨站組合，現有 SameSite=Lax Cookie 無法驗收背景 API 登入。測試 DNS 的建立與正式流量切換分開記錄，本輪兩者均未執行。
+完整瀏覽器 E2E 需先備妥同站的測試 HTTPS 子網域，並在既有 Google OAuth client 額外加入測試 callback：`https://api-staging.nutnselect.com/api/auth/google/callback`；保留原正式 callback。Railway／Pages 預設網域為跨站組合，現有 SameSite=Lax Cookie 無法驗收背景 API 登入。已在 Gateway 掛上測試子網域，測試 DNS 紀錄與正式流量切換均未執行。
 
 ## 5. 備份、還原演練與費用
 
@@ -191,7 +221,7 @@ health 預期 `200 {"status":"ok"}`；學期與系所預期成功回傳還原資
 | 網路輸出 | 每 GB 約 US$0.05；另計平台外備份儲存／傳輸 |
 | Hobby | 每月 US$5，含 US$5 用量；不能將 US$5 當 API＋MySQL 總費用上限 |
 
-情境試算：兩服務合計平均 RAM 1 GB、CPU 0.1 vCPU、Volume 5 GB、快照增量 1 GB、對外輸出 1 GB，約為 US$12.95／月；在 Hobby 計價下已超過內含 US$5，不再重複加 US$5。此為假設值，未含平台外備份、其他 workspace 服務與稅費，實際需依 Metrics／Usage／預估帳單重算。[官方價格](https://docs.railway.com/pricing/plans)
+情境試算：三服務合計平均 RAM 1 GB、CPU 0.1 vCPU、Volume 0.5 GB、對外輸出 1 GB，依上述基準約為 US$12.13／月；在 Hobby 計價下已超過內含 US$5，不再重複加 US$5。目前此 workspace 的 API 回報 Volume 上限為 500 MB，且沒有平台快照額度，本例不計快照費用。此為假設值，未含平台外備份、其他 workspace 服務與稅費，實際需依 Metrics／Usage／預估帳單重算。[官方價格](https://docs.railway.com/pricing/plans)
 
 部署後記錄 API／MySQL 的 CPU、RAM、Volume、egress、重啟次數與取樣期間，至少涵蓋閒置及代表性隔離測試。空 MySQL 啟動後首次查詢，當次 RAM 約 0.3585 GB、CPU 為 0，`DISK_USAGE_GB` 約 0.1547 GB；此為短暫啟動取樣，不能當作 Volume 剩餘空間或穩態用量。**完整用量、月費預測與預算告警仍未驗收**，後續需涵蓋匯入與 API 測試期間。
 
@@ -200,14 +230,14 @@ health 預期 `200 {"status":"ok"}`；學期與系所預期成功回傳還原資
 | 驗收項目 | 本輪狀態／後續證據 |
 | --- | --- |
 | P0／隔離備份可用 | 本機加密備份、18 張表隔離還原與逐表筆數核對已完成；來源結構獨立比對、金鑰另存與其他安全檢核仍待辦，P0 尚未完整驗收 |
-| API／MySQL／Volume | 兩服務已在新加坡上線，來源備份已還原；API 專用帳號與跨服務私網連線通過，尚無公網入口 |
-| Health／API／重啟持久化 | 容器內 health、學期、系所、CORS、頭貼通過；MySQL 重啟後同一 Volume、測試標記、業務筆數／校驗值及既有 API 程序恢復查詢通過；公開 HTTPS 尚未驗證 |
+| API／MySQL／Volume | 三服務已在新加坡上線，來源備份已還原；Gateway 提供受密碼保護的 HTTPS，API／MySQL 維持私網，API 專用帳號與跨服務連線通過 |
+| Health／API／重啟持久化 | 容器內 health、學期、系所、CORS、頭貼，以及 MySQL 重啟持久化／API 自動恢復通過；Gateway 公開 HTTPS 的授權阻擋、API 讀取與 CORS 亦通過，自訂子網域尚待 DNS／憑證 |
 | Schema／資料／migration | 已匯入並通過同備份的結構、逐表筆數、migration 及外鍵核對；證據代稱 `railway-restore-20261018` |
-| OAuth／靜態檔／副作用隔離 | 未驗收；待既有 client 加入測試 callback、同站子網域與完整流程 |
+| OAuth／靜態檔／副作用隔離 | 頭貼私網與入口授權阻擋已驗證，OAuth 起點的 client／callback 導向相符；Google console、同站子網域與瀏覽器完整流程仍待驗收 |
 | 平台及平台外備份／還原 | 來源備份已成功還原至 Railway；另從 Railway 匯出加密備份並通過本機隔離還原，證據代稱 `railway-backup-20261019`；目前方案不支援平台快照與排程，定期備份及失敗通知仍待落實 |
 | 用量／月費／通知 | 已取得空 DB 啟動取樣；待帳務方案、代表性用量、預估與告警設定 |
 | Zeabur／正式 DNS／正式 DB | 本輪未變更，也未向正式 DB 執行測試 |
 
 若出現錯誤 DB／環境 Reference、版本不相容、資料核對失敗、Volume 未掛載、費用未確認或非預期對外副作用，停止 API／還原操作並保留受限證據；不得藉由改連 Zeabur DB、重跑全部 migration、重建正式 Volume 或切正式 DNS 繞過問題。
 
-本文件已記錄部分實際部署與驗證，尚不足以關閉 #106；公開入口的存取限制、平台快照還原、定期備份／通知與費用等項目仍待完成。完整驗收後再更新 Issue，僅公開部署 SHA、設定摘要、結果與證據代稱；完整端點、憑證與私有資料留在受限紀錄。
+本文件已記錄部分實際部署與驗證，尚不足以關閉 #106；測試 DNS／憑證、Google 瀏覽器登入、平台快照還原、定期備份／通知與費用等項目仍待完成。完整驗收後再更新 Issue，僅公開部署 SHA、設定摘要、結果與證據代稱；完整端點、憑證與私有資料留在受限紀錄。
