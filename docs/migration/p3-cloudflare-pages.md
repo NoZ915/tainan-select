@@ -2,7 +2,7 @@
 
 對應 [#107](https://github.com/NoZ915/tainan-select/issues/107)，承接已合併的 [P1／PR #112](https://github.com/NoZ915/tainan-select/pull/112)，與 [P2／PR #113](https://github.com/NoZ915/tainan-select/pull/113) 的 Railway 隔離環境配對。
 
-**2026-10-19（Asia/Taipei）：Pages 的 Git 整合、主要分支首次部署及基本 SPA 瀏覽器驗證已成功。** 專案為 `tainan-select-staging`，測試網址為 `https://tainan-select-staging.pages.dev`；已在 Pages 加入 `staging.nutnselect.com`，等待 Namecheap CNAME 與 TLS 驗證。PR Preview 與完整瀏覽器登入驗收仍待完成，不得據此關閉 #107。
+**2026-10-19（Asia/Taipei）：Pages 的 Git 整合、主要分支首次部署、PR Preview 自動部署及基本 SPA 瀏覽器驗證已成功。** 專案為 `tainan-select-staging`，測試網址為 `https://tainan-select-staging.pages.dev`；已在 Pages 加入 `staging.nutnselect.com`，等待 Namecheap CNAME 與 TLS 驗證。完整瀏覽器登入及新的 main 合併自動部署驗收仍待完成，不得據此關閉 #107。
 
 ## 1. 專案範圍與前置條件
 
@@ -46,6 +46,8 @@ Pages V3 以 `NODE_VERSION` 或 `.node-version` 選擇版本，不能僅依賴 `
 Google OAuth 在後端處理，前端不用填入 client secret、JWT、DB 或 Gateway 帳密；本輪也不配置未使用的 `VITE_GOOGLE_CLIENT_ID`。`VITE_*` 一律視為公開資訊。
 
 2026-10-19 23:34（Asia/Taipei）主要分支首次部署 `8d33dd04-ae49-4be4-b98d-de494a0b63c6` 成功，來源 SHA 與 P1 合併結果一致，部署網址為 `https://8d33dd04.tainan-select-staging.pages.dev`，主要別名為 `https://tainan-select-staging.pages.dev`。此為 API 手動啟動的 Git 建置，日誌確認 clone GitHub、Node.js 24.13.1、明確執行 npm ci、產物處理及發布 18 個靜態檔；不代表已驗收新的 main push／合併自動部署。
+
+2026-10-19 23:37（Asia/Taipei）推送本 PR 分支後，自動產生 `github:push` Preview 部署 `6845993c-ad21-46fa-abb0-6de832fea638` 並成功，來源為 `dccf0ea4f917eaba2941e141c87a47b50ec9028c`。固定網址為 `https://6845993c.tainan-select-staging.pages.dev`，分支別名為 `https://chore-migrate-p3-cloudflare.tainan-select-staging.pages.dev`；別名會隨後續分支部署更新。固定網址的 HTTPS、產物限制與同樣五種 SPA 路徑瀏覽器檢查均通過。另已核對 production／preview 的 `PAGES_STAGING_POSTBUILD` 與腳本文字一致。
 
 ## 3. 測試產物、路由與快取
 
@@ -94,7 +96,7 @@ CF_PAGES=1 VITE_API_BASE_URL=https://api-staging.nutnselect.com/api node scripts
 | Node 24 本機建置、測試及產物檢查 | 通過 |
 | Cloudflare GitHub 整合／Pages 專案 | 已建立並確認來源、建置命令與兩個環境的公開變數 |
 | 平台 `main` 建置、來源 SHA、Node／安裝日誌 | 首次部署成功，SHA `a6d9f2f4a078ddad0d3dbaf0c295fa7b7f2c4093`；日誌確認 Node 24.13.1、停用自動安裝、執行 npm ci 與產物限制腳本 |
-| PR preview 自動部署、來源 SHA 與網址 | 待推送及平台驗證 |
+| PR preview 自動部署、來源 SHA 與網址 | 已以 GitHub push 自動觸發並部署成功，SHA／固定網址／分支別名及瀏覽器靜態檢查均通過 |
 | `staging.nutnselect.com` DNS／HTTPS | 已在 Pages 加入，等待維護者新增 Namecheap CNAME 與憑證驗證 |
 | SPA 深層重新整理、404、資產與快取 | 主要 pages.dev 的 HTTPS、JS／CSS、索引限制、五種路徑的渲染／重新整理與未知路徑導向通過；課程資料與頭貼仍待跨服務驗收 |
 | 瀏覽器 API／Cookie／OAuth／登出 | 待測試前端就緒後驗收，完整 E2E 接續 #108 |
