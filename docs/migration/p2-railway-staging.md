@@ -2,7 +2,7 @@
 
 對應 [#106](https://github.com/NoZ915/tainan-select/issues/106)，前置文件為 [P0 放行清單](p0-audit.md)、[備份／隔離還原](mysql-backup-restore.md)與 [P1 部署相容性](p1-portable-deploy.md)。
 
-**2026-10-19（Asia/Taipei）API 與 MySQL 已在 Railway 隔離環境上線，來源備份還原、API 私網驗證及 Railway 平台外加密備份還原通過；P0 尚未完整驗收。** P1 已透過 [PR #112](https://github.com/NoZ915/tainan-select/pull/112) 合併，API 實際部署來源為 `main@a6d9f2f4a078ddad0d3dbaf0c295fa7b7f2c4093`。API 尚無公開入口，測試 DNS、瀏覽器 OAuth、重啟持久化、備份排程／告警與完整費用驗收仍待完成；目前 Railway 方案不提供平台快照與排程。
+**2026-10-19（Asia/Taipei）API 與 MySQL 已在 Railway 隔離環境上線，來源備份還原、API 私網驗證、Railway 平台外加密備份還原及 MySQL 重啟持久化通過；P0 尚未完整驗收。** P1 已透過 [PR #112](https://github.com/NoZ915/tainan-select/pull/112) 合併，API 實際部署來源為 `main@a6d9f2f4a078ddad0d3dbaf0c295fa7b7f2c4093`。API 尚無公開入口，測試 DNS、瀏覽器 OAuth、備份排程／告警與完整費用驗收仍待完成；目前 Railway 方案不提供平台快照與排程。
 
 ## 1. 平台現況與放行條件
 
@@ -123,7 +123,7 @@ API 已設定下列執行變數及 `RAILPACK_NODE_NPM_INSTALL=npm ci`；Google �
 | 比對差異紀錄 | MySQL 查詢列排序不同，改以不依賴列順序的完整資料比較；`SequelizeMeta.name` 顯式宣告與繼承表預設 `utf8mb3` 的寫法等價，欄位編碼／排序另已核對，保留原字元集 |
 | 其他物件／完整性 | view、trigger、routine、event 均為 0；孤立外鍵為 0，18 張表的 `CHECK TABLE` 全部通過 |
 | 完成後狀態 | MySQL Online、一個 running replica、無失敗部署；專用 SSH 公鑰已撤銷、暫存私鑰已刪除、專用 agent 已停止 |
-| 尚待驗收 | 重啟持久化、資料抽樣、Railway 備份與還原演練、公開入口及瀏覽器 OAuth、費用／告警，以及其餘 P0 待辦；來源結構獨立比對仍未完成 |
+| 尚待驗收 | 資料抽樣、平台快照還原與定期備份、公開入口及瀏覽器 OAuth、費用／告警，以及其餘 P0 待辦；來源結構獨立比對仍未完成。重啟持久化與 Railway 平台外邏輯備份還原已另行通過下方驗證 |
 
 2026-10-19 API 私網驗證證據代稱為 `railway-api-20261019`，最終部署 `45dca658-7c1f-451e-a858-2f6fb388f63e` 為 `SUCCESS`，建置日誌確認使用 `npm ci`。透過 SSH 在 API 容器內執行唯讀驗證，沒有建立公開 API 網域或修改資料；完整結果存於受限報告，專用 SSH 公鑰、暫存私鑰與 agent 已清理。
 
@@ -136,6 +136,16 @@ API 已設定下列執行變數及 `RAILPACK_NODE_NPM_INSTALL=npm ci`；Google �
 | CORS | logout 的 OPTIONS 回傳 204，允許來源為 `https://staging.nutnselect.com`、credentials 為 true；未執行登出或其他寫入 |
 | 靜態檔 | `/avatars/1.png` 回傳 200、PNG 內容 SHA-256 與 repository 相符；不存在檔案回傳 404 |
 | 驗證範圍 | 僅私網及容器內 HTTP；公開 HTTPS、代理層數、Google 瀏覽器登入與跨子網域 Cookie 尚未驗證 |
+
+2026-10-19 09:21 至 09:22（Asia/Taipei）經維護者明確確認後，對 staging MySQL 執行一次原部署重啟，證據代稱為 `railway-persistence-20261019`。完整前後狀態、校驗值與 API 恢復結果存於受限報告，未重啟 API 或修改應用程式。
+
+| 重啟持久化／恢復項目 | 結果 |
+| --- | --- |
+| 重啟前 | 確認平台外備份可還原、業務逐表筆數相符且無未完成 InnoDB 交易；在獨立測試 schema 建立一筆隨機標記，不修改業務資料 |
+| MySQL／Volume | 原部署重啟後日誌重新出現 ready for connections，uptime 重新計算；server UUID 不變，同一個 500 MB Volume 仍掛載 `/var/lib/mysql`，Region 不變 |
+| 資料保留 | 測試標記完整保留；18 張業務表逐表精確筆數與 `CHECKSUM TABLE ... EXTENDED` 均與備份時的 Railway 基線相符 |
+| API 自動恢復 | 重啟前後應用程序 PID 與啟動識別相同；未重啟 API，容器內 `/health`、學期及系所 API 均回傳 200，學期集合符合 DB，專用帳號私網連線成功 |
+| 清理／範圍 | 驗證後刪除本輪獨立測試 schema，專用 SSH 公鑰、暫存私鑰與 agent 已清理；此次驗收不包含公開 HTTPS、瀏覽器登入或故障期間請求不中斷的保證 |
 
 在受限終端設定 `STAGING_API_ORIGIN` 為核對過的 Railway **測試** HTTPS origin，再執行：
 
@@ -191,7 +201,7 @@ health 預期 `200 {"status":"ok"}`；學期與系所預期成功回傳還原資
 | --- | --- |
 | P0／隔離備份可用 | 本機加密備份、18 張表隔離還原與逐表筆數核對已完成；來源結構獨立比對、金鑰另存與其他安全檢核仍待辦，P0 尚未完整驗收 |
 | API／MySQL／Volume | 兩服務已在新加坡上線，來源備份已還原；API 專用帳號與跨服務私網連線通過，尚無公網入口 |
-| Health／API／重啟持久化 | 容器內 health、學期、系所、CORS、頭貼通過；重啟持久化及公開 HTTPS 尚未驗證 |
+| Health／API／重啟持久化 | 容器內 health、學期、系所、CORS、頭貼通過；MySQL 重啟後同一 Volume、測試標記、業務筆數／校驗值及既有 API 程序恢復查詢通過；公開 HTTPS 尚未驗證 |
 | Schema／資料／migration | 已匯入並通過同備份的結構、逐表筆數、migration 及外鍵核對；證據代稱 `railway-restore-20261018` |
 | OAuth／靜態檔／副作用隔離 | 未驗收；待既有 client 加入測試 callback、同站子網域與完整流程 |
 | 平台及平台外備份／還原 | 來源備份已成功還原至 Railway；另從 Railway 匯出加密備份並通過本機隔離還原，證據代稱 `railway-backup-20261019`；目前方案不支援平台快照與排程，定期備份及失敗通知仍待落實 |
@@ -200,4 +210,4 @@ health 預期 `200 {"status":"ok"}`；學期與系所預期成功回傳還原資
 
 若出現錯誤 DB／環境 Reference、版本不相容、資料核對失敗、Volume 未掛載、費用未確認或非預期對外副作用，停止 API／還原操作並保留受限證據；不得藉由改連 Zeabur DB、重跑全部 migration、重建正式 Volume 或切正式 DNS 繞過問題。
 
-本文件已記錄部分實際部署與驗證，尚不足以關閉 #106；公開入口的存取限制、重啟持久化、備份／還原與費用等項目仍待完成。完整驗收後再更新 Issue，僅公開部署 SHA、設定摘要、結果與證據代稱；完整端點、憑證與私有資料留在受限紀錄。
+本文件已記錄部分實際部署與驗證，尚不足以關閉 #106；公開入口的存取限制、平台快照還原、定期備份／通知與費用等項目仍待完成。完整驗收後再更新 Issue，僅公開部署 SHA、設定摘要、結果與證據代稱；完整端點、憑證與私有資料留在受限紀錄。
