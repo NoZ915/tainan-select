@@ -2,7 +2,7 @@
 
 對應 [#106](https://github.com/NoZ915/tainan-select/issues/106)，前置文件為 [P0 放行清單](p0-audit.md)、[備份／隔離還原](mysql-backup-restore.md)與 [P1 部署相容性](p1-portable-deploy.md)。
 
-**2026-10-19（Asia/Taipei）API 與 MySQL 已在 Railway 隔離環境上線，備份還原、MySQL 重啟持久化及受密碼保護的 Railway 測試 HTTPS 驗證通過；P0 尚未完整驗收。** P1 已透過 [PR #112](https://github.com/NoZ915/tainan-select/pull/112) 合併，API 實際部署來源為 `main@a6d9f2f4a078ddad0d3dbaf0c295fa7b7f2c4093`。公開入口由獨立 `StagingGateway` 提供，API／MySQL 本身仍只有私網；測試子網域的 DNS 已由維護者新增並核對，Railway 所有權／憑證、瀏覽器 OAuth、備份排程／告警與完整費用驗收仍待完成。目前已確認為 Hobby，沒有平台快照、備份排程或 Edge Rules 額度。
+**2026-10-19（Asia/Taipei）API 與 MySQL 已在 Railway 隔離環境上線，備份還原、MySQL 重啟持久化及受密碼保護的測試 HTTPS（含自訂子網域）驗證通過；P0 尚未完整驗收。** P1 已透過 [PR #112](https://github.com/NoZ915/tainan-select/pull/112) 合併，API 實際部署來源為 `main@a6d9f2f4a078ddad0d3dbaf0c295fa7b7f2c4093`。公開入口由獨立 `StagingGateway` 提供，API／MySQL 本身仍只有私網；維護者已確認新增 Google 測試 callback，完整瀏覽器 OAuth、備份排程／告警與完整費用驗收仍待完成。目前已確認為 Hobby，沒有平台快照、備份排程或 Edge Rules 額度。
 
 ## 1. 平台現況與放行條件
 
@@ -92,7 +92,7 @@ API 已設定下列執行變數及 `RAILPACK_NODE_NPM_INSTALL=npm ci`；Google �
 | `DB_USERNAME` | `${{MySQL.APP_DB_USERNAME}}` |
 | `DB_PASSWORD` | `${{MySQL.APP_DB_PASSWORD}}` |
 | `FRONTEND_BASE_URL` | `https://staging.nutnselect.com`；僅為待建立的測試來源，不使用正式前端 |
-| `BACKEND_BASE_URL` | 已設 `https://api-staging.nutnselect.com/api`，供預定同站 E2E 使用；此子網域已掛至 Gateway，DNS 已核對，Railway 所有權／憑證與 Google client 的測試 callback 尚待完成 |
+| `BACKEND_BASE_URL` | 已設 `https://api-staging.nutnselect.com/api`；Gateway 的自訂子網域 DNS／憑證及 HTTPS 驗證通過，維護者已確認在既有 Google client 新增測試 callback，瀏覽器登入另行驗收 |
 | `GOOGLE_CLIENT_ID`／`GOOGLE_CLIENT_SECRET` | 已由維護者填入，暫沿用既有 client；後續必要更新已記入最後階段 [#110](https://github.com/NoZ915/tainan-select/issues/110)，尚未完成輪替或瀏覽器登入驗證 |
 | `JWT_SECRET` | 全新且獨立的隨機秘密，不沿用正式值 |
 | `ALLOWED_EMAIL_DOMAIN` | 測試允許網域；留空時仍可透過 DB 白名單登入，不能視為關閉登入 |
@@ -173,7 +173,15 @@ API 已設定下列執行變數及 `RAILPACK_NODE_NPM_INSTALL=npm ci`；Google �
 - 帶有效 owner 啟動 Google OAuth 回傳 302，client 與預定 callback 符合 API 設定；未跟隨 Google 導向，測試中的記憶體登入嘗試已立即取消，不代表 Google console 註冊或瀏覽器登入完成。
 - 本機另核對 HTTPS 連線及未登入 401；版本控管設定與實際平台變數相符。入口帳密及恢復副本保存在 repository 外受限位置，專用 SSH 公鑰、暫存私鑰與 agent 已清理。
 
-維護者已在 Namecheap 新增 `api-staging.nutnselect.com` 的 CNAME／所有權 TXT，並通過兩台權威 DNS 與公共 resolver 核對，證據代稱為 `railway-dns-20261019`。Railway 所有權／憑證仍為 `VALIDATING_OWNERSHIP`；自訂子網域尚未通過有效憑證的 HTTPS 驗收。Google client 需額外加入 `https://api-staging.nutnselect.com/api/auth/google/callback` 並保留正式 callback，目前已請維護者操作，尚待確認。正式 DNS 紀錄未變更。[Railway 網域與憑證說明](https://docs.railway.com/networking/domains/working-with-domains#ssl-certificates)
+維護者已在 Namecheap 新增 `api-staging.nutnselect.com` 的 CNAME／所有權 TXT，並通過兩台權威 DNS 與公共 resolver 核對，證據代稱為 `railway-dns-20261019`。2026-10-19 18:48（Asia/Taipei）Railway 所有權驗證通過、憑證為 `VALID`，並完成自訂子網域 HTTPS 驗證，證據代稱為 `railway-custom-domain-20261019`。正式 DNS 紀錄未變更。[Railway 網域與憑證說明](https://docs.railway.com/networking/domains/working-with-domains#ssl-certificates)
+
+| 自訂子網域／OAuth 設定項目 | 結果 |
+| --- | --- |
+| HTTPS／存取限制 | 本機通過 TLS 憑證驗證；缺少或錯誤入口帳密回傳 401，正確帳密讀取 health、學期與系所回傳 200 |
+| CORS | 無入口帳密的 OPTIONS 回傳 204 且無內容；帶帳密的實際請求回傳指定測試 origin 與允許 credentials |
+| Google client 設定 | 維護者確認已在既有 Web client 新增並儲存 `https://api-staging.nutnselect.com/api/auth/google/callback`，保留既有 URI；此項以維護者回覆記錄，尚未透過完整登入獨立驗收 |
+| OAuth 起點／cookie | 帶有效 owner 回傳 302，導向 Google 且 callback 符合自訂測試子網域；state cookie 具 Secure、HttpOnly、SameSite=Lax，path 為 `/api/auth/google/callback` |
+| 驗證範圍 | 未跟隨 Google 導向，測試中的記憶體登入嘗試已取消；不包含 Google token 交換、登入完成或前端跨子網域 Cookie 驗收 |
 
 首次瀏覽器測試，先在同一瀏覽器開啟測試 API 的 `/health`，輸入受限入口帳密後再使用測試前端；此為入口驗證，Google 登入仍須另行完成。瀏覽器憑證傳遞、同站 Cookie 與完整 E2E 尚未驗收，`TRUST_PROXY_HOPS` 也未因新增 Gateway 直接改值。
 
@@ -193,7 +201,7 @@ curl --fail --silent --show-error --request OPTIONS \
 
 health 預期 `200 {"status":"ok"}`；學期與系所預期成功回傳還原資料，不能僅靠 health 推論 schema／資料正確。OPTIONS 預期 204、指定測試 origin 與允許 credentials，不得出現 `Access-Control-Allow-Origin: *`。查詢內容若涉及私有資料，僅保存在受限紀錄。
 
-完整瀏覽器 E2E 需先備妥同站的測試 HTTPS 子網域，並在既有 Google OAuth client 額外加入測試 callback：`https://api-staging.nutnselect.com/api/auth/google/callback`；保留原正式 callback。Railway／Pages 預設網域為跨站組合，現有 SameSite=Lax Cookie 無法驗收背景 API 登入。已在 Gateway 掛上測試 API 子網域並核對 DNS，憑證仍待 Railway 完成，正式流量切換未執行。
+測試 API 的同站 HTTPS 子網域已可用，維護者已確認在既有 Google OAuth client 額外加入測試 callback；完整瀏覽器 E2E 仍需測試前端 `https://staging.nutnselect.com` 就緒。Railway／Pages 預設網域為跨站組合，現有 SameSite=Lax Cookie 無法驗收背景 API 登入。正式流量切換未執行。
 
 ## 5. 備份、還原演練與費用
 
@@ -231,13 +239,13 @@ health 預期 `200 {"status":"ok"}`；學期與系所預期成功回傳還原資
 | --- | --- |
 | P0／隔離備份可用 | 本機加密備份、18 張表隔離還原與逐表筆數核對已完成；來源結構獨立比對、金鑰另存與其他安全檢核仍待辦，P0 尚未完整驗收 |
 | API／MySQL／Volume | 三服務已在新加坡上線，來源備份已還原；Gateway 提供受密碼保護的 HTTPS，API／MySQL 維持私網，API 專用帳號與跨服務連線通過 |
-| Health／API／重啟持久化 | 容器內 health、學期、系所、CORS、頭貼，以及 MySQL 重啟持久化／API 自動恢復通過；Gateway 的 Railway HTTPS 授權阻擋、API 讀取與 CORS 亦通過，自訂子網域 DNS 已核對，尚待所有權／憑證及 HTTPS 驗收 |
+| Health／API／重啟持久化 | 容器內 HTTP、MySQL 重啟持久化／API 自動恢復，以及 Gateway 的 Railway／自訂子網域 HTTPS 授權阻擋、API 讀取與 CORS 均通過 |
 | Schema／資料／migration | 已匯入並通過同備份的結構、逐表筆數、migration 及外鍵核對；證據代稱 `railway-restore-20261018` |
-| OAuth／靜態檔／副作用隔離 | 頭貼私網與入口授權阻擋已驗證，OAuth 起點的 client／callback 導向相符；Google console、同站子網域與瀏覽器完整流程仍待驗收 |
+| OAuth／靜態檔／副作用隔離 | 頭貼私網與入口授權阻擋已驗證，OAuth 起點的 client／callback 與 state cookie 屬性相符；維護者確認已新增 Google callback，待測試前端與瀏覽器完整流程驗收 |
 | 平台及平台外備份／還原 | 來源備份已成功還原至 Railway；另從 Railway 匯出加密備份並通過本機隔離還原，證據代稱 `railway-backup-20261019`；目前方案不支援平台快照與排程，定期備份及失敗通知仍待落實 |
 | 用量／月費／通知 | 已取得空 DB 啟動取樣；待帳務方案、代表性用量、預估與告警設定 |
 | Zeabur／正式 DNS／正式 DB | 本輪未變更，也未向正式 DB 執行測試 |
 
 若出現錯誤 DB／環境 Reference、版本不相容、資料核對失敗、Volume 未掛載、費用未確認或非預期對外副作用，停止 API／還原操作並保留受限證據；不得藉由改連 Zeabur DB、重跑全部 migration、重建正式 Volume 或切正式 DNS 繞過問題。
 
-本文件已記錄部分實際部署與驗證，尚不足以關閉 #106；測試子網域憑證／HTTPS、Google 瀏覽器登入、平台快照還原、定期備份／通知與費用等項目仍待完成。完整驗收後再更新 Issue，僅公開部署 SHA、設定摘要、結果與證據代稱；完整端點、憑證與私有資料留在受限紀錄。
+本文件已記錄部分實際部署與驗證，尚不足以關閉 #106；Google 瀏覽器登入、平台快照還原、定期備份／通知與費用等項目仍待完成。完整驗收後再更新 Issue，僅公開部署 SHA、設定摘要、結果與證據代稱；完整端點、憑證與私有資料留在受限紀錄。
