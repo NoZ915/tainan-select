@@ -2,7 +2,7 @@
 
 對應 [#106](https://github.com/NoZ915/tainan-select/issues/106)，前置文件為 [P0 放行清單](p0-audit.md)、[備份／隔離還原](mysql-backup-restore.md)與 [P1 部署相容性](p1-portable-deploy.md)。
 
-**2026-10-19（Asia/Taipei）API 與 MySQL 已在 Railway 隔離環境上線，來源備份還原及 API 私網驗證通過；P0 尚未完整驗收。** P1 已透過 [PR #112](https://github.com/NoZ915/tainan-select/pull/112) 合併，API 實際部署來源為 `main@a6d9f2f4a078ddad0d3dbaf0c295fa7b7f2c4093`。API 尚無公開入口，測試 DNS、瀏覽器 OAuth、重啟持久化、Railway 備份／告警與完整費用驗收仍待完成。
+**2026-10-19（Asia/Taipei）API 與 MySQL 已在 Railway 隔離環境上線，來源備份還原、API 私網驗證及 Railway 平台外加密備份還原通過；P0 尚未完整驗收。** P1 已透過 [PR #112](https://github.com/NoZ915/tainan-select/pull/112) 合併，API 實際部署來源為 `main@a6d9f2f4a078ddad0d3dbaf0c295fa7b7f2c4093`。API 尚無公開入口，測試 DNS、瀏覽器 OAuth、重啟持久化、備份排程／告警與完整費用驗收仍待完成；目前 Railway 方案不提供平台快照與排程。
 
 ## 1. 平台現況與放行條件
 
@@ -79,7 +79,7 @@ docker-entrypoint.sh mysqld --innodb-use-native-aio=0 --disable-log-bin --perfor
 
 API 專用帳號 `tainan_api` 已建立並核對：僅對 `tainanselect_prod` 授予 `SELECT`、`INSERT`、`UPDATE`、`DELETE`，沒有 DDL、授權轉授或其他 schema 的權限。此實例 `partial_revokes=OFF`，資料庫層級授權以 `tainanselect\_prod` 處理底線，避免將它視為萬用字元。[MySQL 官方授權規則](https://dev.mysql.com/doc/refman/8.0/en/grant.html)
 
-已驗證此帳號從 MySQL 容器透過私網端點登入，且帳號設定前後業務資料逐表筆數不變；API 實際跨服務連線仍待啟動驗證。`APP_DB_USERNAME`／`APP_DB_PASSWORD` 已存入 MySQL 服務，API 的 DB Reference 已在記憶體內核對解析結果；獨立 `JWT_SECRET` 也已設定。新秘密透過 CLI stdin 傳入並另存受限加密恢復副本，未出現在命令列、聊天或公開文件。
+已驗證此帳號從 MySQL 容器透過私網端點登入，且帳號設定前後業務資料逐表筆數不變；API 實際跨服務連線亦已通過第 4 節驗證。`APP_DB_USERNAME`／`APP_DB_PASSWORD` 已存入 MySQL 服務，API 的 DB Reference 已在記憶體內核對解析結果；獨立 `JWT_SECRET` 也已設定。新秘密透過 CLI stdin 傳入並另存受限加密恢復副本，未出現在命令列、聊天或公開文件。
 
 API 已設定下列執行變數及 `RAILPACK_NODE_NPM_INSTALL=npm ci`；Google 兩個變數由維護者在 Variables 填入，啟動前已在記憶體內核對必填值、DB Reference 與新 JWT，未輸出秘密。`TRUST_PROXY_HOPS` 保留程式預設 0，待公開入口的實際代理路徑核對後決定。帳號及變數設定證據代稱為 `railway-api-prep-20261018`；專用 SSH 公鑰、暫存私鑰與 agent 於操作完成後清理。
 
@@ -157,9 +157,20 @@ health 預期 `200 {"status":"ok"}`；學期與系所預期成功回傳還原資
 
 ## 5. 備份、還原演練與費用
 
-- 在 MySQL 的 Volume Backups 啟用排程，先以每日備份作為驗收方案，記錄實際保留策略、容量與一次成功備份。Railway 同平台快照不能取代平台外的加密邏輯備份；後者沿用 P0 流程，只將來源改為已核對的 Railway 隔離 DB。
+- **方案限制：2026-10-19 實際建立平台備份時，Railway API 回覆手動備份與備份排程僅適用 Pro workspace。** 本輪未升級方案，平台快照與排程均未建立。若後續採用 Pro，再於 MySQL 的 Volume Backups 啟用每日排程，記錄實際保留策略、容量與一次成功備份；維持現有方案時，另行落實平台外備份排程、保留及失敗通知，不能將本輪單次備份視為定期備份完成。
+- Railway 同平台快照不能取代平台外的加密邏輯備份；後者沿用 P0 流程，只將來源改為已核對的 Railway 隔離 DB。
 - 另外在可丟棄的隔離環境演練邏輯備份還原；平台快照則依當時支援的同 Project／同環境還原流程，審查新 Volume 掛載與 staged changes 後執行。還原前停用測試 API，保留舊 Volume，記錄資料核對及耗時，不覆蓋原始 P0 備份。[備份官方說明](https://docs.railway.com/volumes/backups)
 - 由管理者在 Workspace Usage 設定 email 告警；hard limit 會停止該 workspace 的 workloads，需先核對其他服務與可接受中斷範圍。門檻、通知接收者與付款負責人目前待指定，本輪沒有更動帳務設定。[成本控制](https://docs.railway.com/pricing/cost-control)
+
+2026-10-19 已另從 Railway 測試 MySQL 匯出平台外邏輯備份，證據代稱為 `railway-backup-20261019`；加密備份、雜湊及完整核對報告存於 repository 外受限位置，未覆寫原 Zeabur 備份。
+
+| 平台外備份／還原項目 | 結果 |
+| --- | --- |
+| 來源／匯出 | 核對 staging 專案、環境、MySQL `8.0.46`、事件排程 OFF 與 InnoDB；透過 SSH／Unix socket 執行 `mysqldump --single-transaction --quick`，包含 routine、trigger、event，不匯出管理帳號或其他 schema |
+| 加密／傳輸 | SQL 經 SSH 串流至本機，直接 gzip／age 加密，未落地明文 SQL；記錄加密檔 SHA-256，加密時沿用既有受限金鑰，金鑰獨立保管仍待 P0 完成 |
+| 隔離還原 | 使用另一個本機 MySQL `8.0.46`、Unix socket、停用網路及事件排程；解密／解壓／匯入成功，完成後關閉程序並移除暫存明文資料目錄 |
+| 資料／結構 | 18 張表逐表精確筆數及 `CHECKSUM TABLE ... EXTENDED` 均與 Railway 來源相符；30 個 migration 與 repository 相符，欄位、索引及外鍵定義與原還原基線一致 |
+| 完整性／範圍 | 孤立外鍵為 0、18 張表 `CHECK TABLE` 全通過、其他物件計數均為 0；匯出前後業務筆數不變，僅驗證單次平台外邏輯備份，平台快照還原及定期排程未驗收 |
 
 2026-10-18 官方單價基準如下；不是帳號目前方案或已產生的帳單：
 
@@ -183,7 +194,7 @@ health 預期 `200 {"status":"ok"}`；學期與系所預期成功回傳還原資
 | Health／API／重啟持久化 | 容器內 health、學期、系所、CORS、頭貼通過；重啟持久化及公開 HTTPS 尚未驗證 |
 | Schema／資料／migration | 已匯入並通過同備份的結構、逐表筆數、migration 及外鍵核對；證據代稱 `railway-restore-20261018` |
 | OAuth／靜態檔／副作用隔離 | 未驗收；待既有 client 加入測試 callback、同站子網域與完整流程 |
-| 平台及平台外備份／還原 | 來源平台外加密備份已成功還原至 Railway；Railway 自身的定期備份、平台外備份與還原演練仍待辦 |
+| 平台及平台外備份／還原 | 來源備份已成功還原至 Railway；另從 Railway 匯出加密備份並通過本機隔離還原，證據代稱 `railway-backup-20261019`；目前方案不支援平台快照與排程，定期備份及失敗通知仍待落實 |
 | 用量／月費／通知 | 已取得空 DB 啟動取樣；待帳務方案、代表性用量、預估與告警設定 |
 | Zeabur／正式 DNS／正式 DB | 本輪未變更，也未向正式 DB 執行測試 |
 
