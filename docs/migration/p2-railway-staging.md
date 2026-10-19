@@ -2,7 +2,7 @@
 
 對應 [#106](https://github.com/NoZ915/tainan-select/issues/106)，前置文件為 [P0 放行清單](p0-audit.md)、[備份／隔離還原](mysql-backup-restore.md)與 [P1 部署相容性](p1-portable-deploy.md)。
 
-**2026-10-19（Asia/Taipei）API 與 MySQL 已在 Railway 隔離環境上線，備份還原、MySQL 重啟持久化及受密碼保護的測試 HTTPS（含自訂子網域）驗證通過；P0 尚未完整驗收。** P1 已透過 [PR #112](https://github.com/NoZ915/tainan-select/pull/112) 合併，API 實際部署來源為 `main@a6d9f2f4a078ddad0d3dbaf0c295fa7b7f2c4093`。公開入口由獨立 `StagingGateway` 提供，API／MySQL 本身仍只有私網；維護者已確認新增 Google 測試 callback，完整瀏覽器 OAuth、備份排程／告警與完整費用驗收仍待完成。目前已確認為 Hobby，沒有平台快照、備份排程或 Edge Rules 額度。
+**2026-10-19（Asia/Taipei）API 與 MySQL 已在 Railway 隔離環境上線，備份還原、MySQL 重啟持久化及受密碼保護的測試 HTTPS（含自訂子網域）驗證通過；P0 尚未完整驗收。** P1 已透過 [PR #112](https://github.com/NoZ915/tainan-select/pull/112) 合併，API 實際部署來源為 `main@a6d9f2f4a078ddad0d3dbaf0c295fa7b7f2c4093`。公開入口由獨立 `StagingGateway` 提供，API／MySQL 本身仍只有私網；維護者已確認新增 Google 測試 callback，完整瀏覽器 OAuth、備份排程／告警與完整費用驗收仍待完成。workspace 的方案欄位為 `HOBBY`，但帳務仍在試用、尚未啟用付費訂閱；目前沒有平台快照、備份排程或 Edge Rules 額度。
 
 ## 1. 平台現況與放行條件
 
@@ -149,7 +149,7 @@ API 已設定下列執行變數及 `RAILPACK_NODE_NPM_INSTALL=npm ci`；Google �
 
 ### 受限測試入口
 
-2026-10-19 已確認 workspace 為 Hobby，`networking.edgeRules=0`；唯讀驗證 IP 白名單時，平台回覆目前方案不可使用 Edge Rules。本輪未升級方案，改為獨立的 `StagingGateway` 服務，以 [Caddyfile](staging-gateway.Caddyfile) 保護入口，再經私網轉送既有 API；不將入口密碼放進前端或應用程式。
+2026-10-19 查詢 workspace 方案欄位為 `HOBBY`、`networking.edgeRules=0`；後續帳務查核確認仍在試用，詳見第 5 節。唯讀驗證 IP 白名單時，平台回覆目前方案不可使用 Edge Rules。本輪未升級方案，改為獨立的 `StagingGateway` 服務，以 [Caddyfile](staging-gateway.Caddyfile) 保護入口，再經私網轉送既有 API；不將入口密碼放進前端或應用程式。
 
 | Gateway 設定 | 已套用結果 |
 | --- | --- |
@@ -233,6 +233,18 @@ health 預期 `200 {"status":"ok"}`；學期與系所預期成功回傳還原資
 
 部署後記錄 API／MySQL 的 CPU、RAM、Volume、egress、重啟次數與取樣期間，至少涵蓋閒置及代表性隔離測試。空 MySQL 啟動後首次查詢，當次 RAM 約 0.3585 GB、CPU 為 0，`DISK_USAGE_GB` 約 0.1547 GB；此為短暫啟動取樣，不能當作 Volume 剩餘空間或穩態用量。**完整用量、月費預測與預算告警仍未驗收**，後續需涵蓋匯入與 API 測試期間。
 
+2026-10-19 18:47（Asia/Taipei）已補查帳務與部署後用量，證據代稱為 `railway-usage-20261019`。workspace 雖回傳 `plan=HOBBY`，customer 同時為 `isTrialing=true`、`isUsageSubscriber=false`、`state=INACTIVE`、`trialDaysRemaining=28`；本輪沒有啟用付費訂閱或變更帳務，不能僅以方案欄位判斷已付費。
+
+以下為最近一小時、每 60 秒取樣的結果，各指標 61 筆；CPU 欄位沿用平台 `CPU_USAGE`，網路欄位只列最新樣本，不當作期間總流量：
+
+| 服務 | RAM 最新值（GB） | CPU_USAGE 平均 | DISK_USAGE_GB 最新值 | NETWORK_TX_GB 最新值 |
+| --- | --- | --- | --- | --- |
+| API | 0.1862 | 0.00146 | 0 | 0 |
+| MySQL | 0.1830 | 0.00298 | 0.3723 | 0 |
+| StagingGateway | 0.0216 | 0.000416 | 0 | 0.000000485 |
+
+CLI 回傳的本次用量視窗為 2026-10-17 11:29 至 2026-10-20 07:59（Asia/Taipei），累計資源用量約 US$0.09914，該視窗估算約 US$0.12284。此為短期試用查詢結果，未作為完整月份或含訂閱費的帳單預測；Gateway 在取樣期間內才建立，一小時平均也包含啟動前的零值。`usageLimit` 目前為空，尚無 workspace 軟告警或硬上限，通知門檻與付款負責人仍待指定。
+
 ## 6. 完成證據與停止條件
 
 | 驗收項目 | 本輪狀態／後續證據 |
@@ -243,7 +255,7 @@ health 預期 `200 {"status":"ok"}`；學期與系所預期成功回傳還原資
 | Schema／資料／migration | 已匯入並通過同備份的結構、逐表筆數、migration 及外鍵核對；證據代稱 `railway-restore-20261018` |
 | OAuth／靜態檔／副作用隔離 | 頭貼私網與入口授權阻擋已驗證，OAuth 起點的 client／callback 與 state cookie 屬性相符；維護者確認已新增 Google callback，待測試前端與瀏覽器完整流程驗收 |
 | 平台及平台外備份／還原 | 來源備份已成功還原至 Railway；另從 Railway 匯出加密備份並通過本機隔離還原，證據代稱 `railway-backup-20261019`；目前方案不支援平台快照與排程，定期備份及失敗通知仍待落實 |
-| 用量／月費／通知 | 已取得空 DB 啟動取樣；待帳務方案、代表性用量、預估與告警設定 |
+| 用量／月費／通知 | 已記錄三服務一小時用量及短期試用查詢結果；帳務仍在試用、回報剩 28 天，未設定告警／硬上限，待代表性用量、完整月費預測及付款安排 |
 | Zeabur／正式 DNS／正式 DB | 本輪未變更，也未向正式 DB 執行測試 |
 
 若出現錯誤 DB／環境 Reference、版本不相容、資料核對失敗、Volume 未掛載、費用未確認或非預期對外副作用，停止 API／還原操作並保留受限證據；不得藉由改連 Zeabur DB、重跑全部 migration、重建正式 Volume 或切正式 DNS 繞過問題。
