@@ -2,7 +2,7 @@
 
 對應 [#107](https://github.com/NoZ915/tainan-select/issues/107)，承接已合併的 [P1／PR #112](https://github.com/NoZ915/tainan-select/pull/112)，與 [P2／PR #113](https://github.com/NoZ915/tainan-select/pull/113) 的 Railway 隔離環境配對。
 
-**2026-10-19（Asia/Taipei）：本機設定與驗證完成，Cloudflare GitHub 整合尚待授權修復。** 建立 Pages 專案時回報 `8000011`，重新查詢帳號後仍無 Pages 專案；尚未部署、設定前端 DNS 或驗收瀏覽器登入。不得據此關閉 #107。
+**2026-10-19（Asia/Taipei）：Pages 的 Git 整合、主要分支首次部署及基本 SPA 瀏覽器驗證已成功。** 專案為 `tainan-select-staging`，測試網址為 `https://tainan-select-staging.pages.dev`；已在 Pages 加入 `staging.nutnselect.com`，等待 Namecheap CNAME 與 TLS 驗證。PR Preview 與完整瀏覽器登入驗收仍待完成，不得據此關閉 #107。
 
 ## 1. 專案範圍與前置條件
 
@@ -13,18 +13,18 @@
 
 ## 2. Git 整合與建置設定
 
-先在 Cloudflare Workers & Pages 建立 **Pages** 專案，連接 GitHub App「Cloudflare Workers & Pages」，僅授權必要儲存庫。`8000011` 為平台回報的 Git 安裝問題，目前已請維護者由 Dashboard 補上授權；修復後先重新查詢專案，避免重複建立。若仍失敗，依官方文件檢查安裝，重新安裝前先確認同一 App 是否供其他 Workers／Pages 使用。[官方 GitHub 整合與排錯](https://developers.cloudflare.com/pages/configuration/git-integration/github-integration/)
+先在 Cloudflare Workers & Pages 建立 **Pages** 專案，連接 GitHub App「Cloudflare Workers & Pages」，僅授權必要儲存庫。初次建立回報 `8000011`，維護者確認 GitHub App 已安裝，返回 Cloudflare 後已能選到儲存庫；再次建立專案成功。本輪沒有解除安裝 App，也沒有變更其他儲存庫授權。若後續復發，先檢查帳號連結與儲存庫範圍，再依官方文件排錯，重新安裝前先確認同一 App 是否供其他 Workers／Pages 使用。[官方 GitHub 整合與排錯](https://developers.cloudflare.com/pages/configuration/git-integration/github-integration/)
 
-以下為預定設定，尚未套用成功：
+以下設定已套用並重新查詢核對：
 
 | 項目 | 設定 |
 | --- | --- |
-| 專案名稱 | `tainan-select-staging`，實際 `pages.dev` 網址以建立結果為準 |
+| 專案名稱 | `tainan-select-staging`／`tainan-select-staging.pages.dev` |
 | Repository／主要分支 | `NoZ915/tainan-select`／`main` |
 | Root Directory | `frontend` |
 | Build command | `npm ci && npm run build && node --input-type=module -e "$PAGES_STAGING_POSTBUILD"` |
 | Output Directory | `dist`，相對 Root Directory |
-| Build image／Node.js | V3／`NODE_VERSION=24`，需從平台建置日誌核對實際版本 |
+| Build image／Node.js | V3／`NODE_VERSION=24`；首次日誌實際安裝 Node.js `24.13.1` |
 | 相依套件安裝 | `SKIP_DEPENDENCY_INSTALL=1`，停用平台自動安裝，由命令明確執行 `npm ci` |
 | Preview | 啟用同儲存庫分支預覽；推送 PR 分支後核對 commit、部署狀態及預覽 URL |
 | 自動 PR 留言 | 關閉；保留平台部署檢查 |
@@ -45,6 +45,8 @@ Pages V3 以 `NODE_VERSION` 或 `.node-version` 選擇版本，不能僅依賴 `
 
 Google OAuth 在後端處理，前端不用填入 client secret、JWT、DB 或 Gateway 帳密；本輪也不配置未使用的 `VITE_GOOGLE_CLIENT_ID`。`VITE_*` 一律視為公開資訊。
 
+2026-10-19 23:34（Asia/Taipei）主要分支首次部署 `8d33dd04-ae49-4be4-b98d-de494a0b63c6` 成功，來源 SHA 與 P1 合併結果一致，部署網址為 `https://8d33dd04.tainan-select-staging.pages.dev`，主要別名為 `https://tainan-select-staging.pages.dev`。此為 API 手動啟動的 Git 建置，日誌確認 clone GitHub、Node.js 24.13.1、明確執行 npm ci、產物處理及發布 18 個靜態檔；不代表已驗收新的 main push／合併自動部署。
+
 ## 3. 測試產物、路由與快取
 
 `frontend/scripts/prepare-pages-staging.mjs` 只處理 `dist`：
@@ -58,6 +60,8 @@ Google OAuth 在後端處理，前端不用填入 client secret、JWT、DB 或 G
 沒有頂層 `404.html` 時，Pages 預設將未知路徑交回 SPA 入口，因此不額外新增全站 rewrite。部署後需實測 `/timetable`、`/wishlist`、`/course/測試課程代號` 與未知路徑的直接開啟／重新整理，以及 JS、CSS、頭貼等資產路徑；不存在的資產不可只看 HTTP 200，還須檢查內容類型。[SPA 與預設快取說明](https://developers.cloudflare.com/pages/configuration/serving-pages/)
 
 先沿用 Pages 預設快取，不對 HTML 加長效快取；以實際回應核對 `Cache-Control`、ETag 與新部署後的內容。索引標頭不等於存取管制：前端靜態介面可公開，學生資料的 API 仍須通過既有 Gateway 入口驗證及應用程式權限，驗收報告不得公開個資。
+
+2026-10-19 的主要 Pages 網址驗證通過：HTTPS 首頁與 JS／CSS 均回傳 200，內容類型正確，回應含 noindex；robots.txt 禁止爬取，sitemap 路徑不再提供正式 XML。首頁與資產的 `Cache-Control` 為 `public, max-age=0, must-revalidate`，JS／CSS 有 ETag。以獨立、未登入的 Chrome 開啟並重新整理 `/`、`/timetable`、`/wishlist`、`/404` 及未知路徑，均取得 SPA HTML 並完成 React 渲染；未知路徑導向 `/404`，沒有未捕捉的 JavaScript 例外。瀏覽器只嘗試指定的測試 API，但此階段沒有登入 Gateway，且 pages.dev 不在 API 的允許來源中，因此不宣告 API 資料／登入通過。
 
 ## 4. 測試子網域與瀏覽器流程
 
@@ -88,11 +92,11 @@ CF_PAGES=1 VITE_API_BASE_URL=https://api-staging.nutnselect.com/api node scripts
 | 驗收項目 | 狀態 |
 | --- | --- |
 | Node 24 本機建置、測試及產物檢查 | 通過 |
-| Cloudflare GitHub 授權／Pages 專案 | 等待修復 `8000011`，尚未建立 |
-| 平台 `main` 建置、來源 SHA、Node／安裝日誌 | 待部署後核對 |
+| Cloudflare GitHub 整合／Pages 專案 | 已建立並確認來源、建置命令與兩個環境的公開變數 |
+| 平台 `main` 建置、來源 SHA、Node／安裝日誌 | 首次部署成功，SHA `a6d9f2f4a078ddad0d3dbaf0c295fa7b7f2c4093`；日誌確認 Node 24.13.1、停用自動安裝、執行 npm ci 與產物限制腳本 |
 | PR preview 自動部署、來源 SHA 與網址 | 待推送及平台驗證 |
-| `staging.nutnselect.com` DNS／HTTPS | 尚未設定 |
-| SPA 深層重新整理、404、資產與快取 | 本機產物條件通過；線上驗收待完成 |
+| `staging.nutnselect.com` DNS／HTTPS | 已在 Pages 加入，等待維護者新增 Namecheap CNAME 與憑證驗證 |
+| SPA 深層重新整理、404、資產與快取 | 主要 pages.dev 的 HTTPS、JS／CSS、索引限制、五種路徑的渲染／重新整理與未知路徑導向通過；課程資料與頭貼仍待跨服務驗收 |
 | 瀏覽器 API／Cookie／OAuth／登出 | 待測試前端就緒後驗收，完整 E2E 接續 #108 |
 
 完成平台操作後需回填部署 SHA、網址、驗證日期與不含敏感資料的結果，保留尚未驗收的項目，不能僅憑本機建置成功宣告 #107 完成。
