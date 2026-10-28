@@ -1,0 +1,36 @@
+{
+	admin off
+	auto_https off
+	persist_config off
+}
+
+:{$PORT} {
+	header {
+		Cache-Control "no-store"
+		X-Robots-Tag "noindex, nofollow"
+	}
+
+	@gateway_health {
+		method GET HEAD
+		path /_gateway_health
+	}
+	handle @gateway_health {
+		respond "ok" 200
+	}
+
+	@preflight method OPTIONS
+	handle @preflight {
+		reverse_proxy {env.STAGING_API_UPSTREAM} {
+			header_up -Authorization
+		}
+	}
+
+	handle {
+		basic_auth bcrypt tainan-select-staging {
+			{env.STAGING_GATE_USERNAME} {env.STAGING_GATE_PASSWORD_HASH}
+		}
+		reverse_proxy {env.STAGING_API_UPSTREAM} {
+			header_up -Authorization
+		}
+	}
+}
