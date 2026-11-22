@@ -199,6 +199,9 @@ Default local endpoints:
 | `npm run build` | Type-check and build production bundle |
 | `npm run lint` | Run ESLint |
 | `npm run preview` | Preview production build locally |
+| `npm run test:e2e` | 執行測試站的核心流程 E2E |
+
+執行方式與登入後的最小手動清單見 [核心流程 E2E 驗收](docs/testing/core-e2e.md)。
 
 ### Backend / 後端
 
