@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url'
 
 config({ path: fileURLToPath(new URL('../.env.e2e.local', import.meta.url)) })
 
-const frontendUrl = new URL(process.env.E2E_BASE_URL || 'https://staging.nutnselect.com')
-const backendUrl = new URL(process.env.E2E_API_BASE_URL || 'https://api-staging.nutnselect.com/api')
+const frontendUrl = new URL(process.env.E2E_BASE_URL || 'http://localhost:5173')
+const backendUrl = new URL(process.env.E2E_API_BASE_URL || 'http://localhost:3000/api')
 const localHosts = ['localhost', '127.0.0.1', '[::1]']
 
 for (const [url, stagingHost] of [[frontendUrl, 'staging.nutnselect.com'], [backendUrl, 'api-staging.nutnselect.com']] as const) {

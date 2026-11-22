@@ -10,9 +10,9 @@ npx playwright install chromium
 cp .env.e2e.example .env.e2e.local
 ```
 
-在 `.env.e2e.local` 填入既有測試 Gateway 的入口帳號與密碼。這些是測試工具的設定，不使用 `VITE_*`，也不需要 Google 密碼、JWT 或資料庫帳密。`*.local` 已在 Git 忽略清單內。
+預設測試本機，入口帳號與密碼可留空。若在遷移期間測試 staging，才需要在 `.env.e2e.local` 填入既有測試 Gateway 的入口帳號與密碼。這些是測試工具的設定，不使用 `VITE_*`，也不需要 Google 密碼、JWT 或資料庫帳密。`*.local` 已在 Git 忽略清單內。
 
-每次部署後執行：
+啟動本機前後端後執行：
 
 ```bash
 npm run test:e2e
@@ -20,7 +20,9 @@ npm run test:e2e
 
 需要看到操作畫面時執行 `npm run test:e2e -- --headed`。已安裝 Google Chrome 者，可將 `E2E_BROWSER_CHANNEL=chrome` 填入本機設定，使用既有瀏覽器而略過 Chromium 安裝。
 
-預設連線 `staging.nutnselect.com` 與 `api-staging.nutnselect.com/api`，亦可設定為本機網址。設定會拒絕正式站；測試期間若前端嘗試呼叫正式站，也會攔截並報錯。測試不會啟動、部署或修改平台服務。
+預設連線 `http://localhost:5173` 與 `http://localhost:3000/api`。遷移期間可將 `E2E_BASE_URL` 設為 `https://staging.nutnselect.com`，並將 `E2E_API_BASE_URL` 設為 `https://api-staging.nutnselect.com/api`。設定會拒絕正式站；測試期間若前端嘗試呼叫正式站，也會攔截並報錯。測試不會啟動、部署或修改平台服務。
+
+長期僅保留本機開發／測試與 Railway 正式站；staging 為遷移期間的暫時環境，待正式切換及必要驗證完成後移除，不另保留一套常駐測試服務。
 
 測試本機時，請先啟動前後端，並讓後端的 `FRONTEND_BASE_URL`／`BACKEND_BASE_URL` 與 E2E 設定一致；本機 HTTP 開發環境不要求 Secure cookie，測試站 HTTPS 則會檢查。
 
@@ -38,7 +40,7 @@ npm run test:e2e
 
 ## 登入後的最小手動清單
 
-在同一瀏覽器先開啟 [測試 API health](https://api-staging.nutnselect.com/health)，輸入入口帳密，再開啟 [測試前端](https://staging.nutnselect.com)。所有操作僅使用測試站。
+平常使用本機前端驗收。遷移期間若驗收 staging，在同一瀏覽器先開啟 [測試 API health](https://api-staging.nutnselect.com/health)，輸入入口帳密，再開啟 [測試前端](https://staging.nutnselect.com)。所有操作僅使用本機或測試站。
 
 - [ ] **登入與保持登入**：用可登入台南選的 Google 帳號登入，確認返回測試站並顯示帳號；重新整理後仍保持登入。
 - [ ] **收藏**：選一門尚未收藏的課程，加入後確認個人頁看得到；重新整理後仍存在，最後移除本次新增的收藏。
