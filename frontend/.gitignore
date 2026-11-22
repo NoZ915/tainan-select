@@ -25,3 +25,7 @@ dist-ssr
 
 .env.development
 .env.production
+
+# E2E 測試產物
+/playwright-report/
+/test-results/
