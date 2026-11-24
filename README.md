@@ -211,6 +211,7 @@ Default local endpoints:
 | `npm run backfill:schedules` | Rebuild normalized course schedule records |
 
 部署設定、隔離驗收與已知限制見 [P1 部署相容性](docs/migration/p1-portable-deploy.md)。
+停機搬遷時的前端維修頁與 API 開關見 [維修模式操作說明](docs/migration/maintenance-mode.md)。
 
 ## Current Highlights / 近期功能
 
