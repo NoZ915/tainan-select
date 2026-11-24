@@ -5,6 +5,9 @@ export const readRuntimeConfig = (environment: NodeJS.ProcessEnv = process.env) 
     throw new ConfigurationError("不支援的 NODE_ENV；請使用 development 或 production");
   }
   const isProduction = environment.NODE_ENV === "production";
+  if (environment.MAINTENANCE_MODE && !["true", "false"].includes(environment.MAINTENANCE_MODE)) {
+    throw new ConfigurationError("MAINTENANCE_MODE 必須為 true 或 false");
+  }
   const readUrl = (name: string, apiPath = false): string => {
     const value = environment[name];
     try {
@@ -38,6 +41,7 @@ export const readRuntimeConfig = (environment: NodeJS.ProcessEnv = process.env) 
   return {
     port,
     trustProxyHops,
+    maintenanceMode: environment.MAINTENANCE_MODE === "true",
     frontendBaseUrl: readUrl("FRONTEND_BASE_URL"),
     backendBaseUrl: readUrl("BACKEND_BASE_URL", true),
   };

@@ -29,18 +29,24 @@ export const createApp = (config: RuntimeConfig): Express => {
   const corsOptions = {
     origin: config.frontendBaseUrl, // 僅允許指定前端來源
     credentials: true, // 允許帶有憑證的請求
+    preflightContinue: config.maintenanceMode,
   };
 
   // 中介層
   app.use(cors(corsOptions));
+  app.get("/health", (_req, res) => {
+    res.set("Cache-Control", "no-store").status(200).json({ status: "ok" });
+  });
+  if (config.maintenanceMode) {
+    app.use((_req, res) => {
+      res.set({ "Cache-Control": "no-store", "Retry-After": "3600" })
+        .status(503).json({ code: "MAINTENANCE", message: "網站維護中，請稍後再試。" });
+    });
+  }
   app.use(cookieParser());
   app.use(express.json());
   app.use(passport.initialize());
   app.use("/reactions", express.static(path.join(__dirname, "public", "reactions")));
-
-  app.get("/health", (_req, res) => {
-    res.set("Cache-Control", "no-store").status(200).json({ status: "ok" });
-  });
 
   // 頭貼
   const avatarDir = path.resolve(__dirname, "public", "avatars");

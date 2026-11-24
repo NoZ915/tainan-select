@@ -17,6 +17,7 @@ const { OAuthStateStore } = await import("../../utils/oauthStateStore");
 const { getAuthCookieOptions } = await import("../../utils/authCookie");
 const config = {
   port: 3000, trustProxyHops: 1,
+  maintenanceMode: false,
   frontendBaseUrl: process.env.FRONTEND_BASE_URL!, backendBaseUrl: process.env.BACKEND_BASE_URL!,
 };
 
@@ -89,6 +90,41 @@ test("production HTTP：健康檢查、靜態頭貼、CORS、OAuth 與登出", a
   assert.match(logoutCookie, /SameSite=Lax/);
   assert.match(logoutCookie, /Expires=Thu, 01 Jan 1970/);
   assert.deepEqual(getAuthCookieOptions(), { httpOnly: true, secure: true, sameSite: "lax", path: "/" });
+});
+
+test("維修模式阻擋所有登入、讀寫及靜態路徑，只保留健康檢查", async (t) => {
+  const app = createApp({ ...config, maintenanceMode: true });
+  const server = await startHttpServer(app, { authenticate: async () => {} }, 0);
+  t.after(() => new Promise<void>((resolve) => server.close(() => resolve())));
+  const baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  const authentication = t.mock.method(passport, "authenticate", () => {
+    throw new Error("維修期間不應啟動登入");
+  });
+  for (const [method, pathname] of [
+    ["GET", "/api/auth/google?owner=maintenance-test-owner"],
+    ["GET", "/api/auth/google/callback?code=test&state=test"],
+    ["GET", "/api/auth/status"], ["GET", "/api/courses"],
+    ["POST", "/api/reviews/upsertReview"], ["POST", "/api/interests/toggleInterest"],
+    ["POST", "/api/timetables/1/items"], ["DELETE", "/api/timetables/1/items/1"],
+    ["PUT", "/api/users/1"], ["PATCH", "/api/admin/status"],
+    ["OPTIONS", "/api/reviews/upsertReview"], ["GET", "/avatars/1.png"],
+    ["GET", "/unknown"],
+  ]) {
+    const response = await fetch(baseUrl + pathname, {
+      method, redirect: "manual",
+      headers: { Origin: config.frontendBaseUrl, Cookie: "token=existing-session", "Content-Type": "application/json" },
+      ...(method === "POST" ? { body: "無效 JSON 也不能繞過維修模式" } : {}),
+    });
+    assert.equal(response.status, 503, `${method} ${pathname}`);
+    assert.equal(response.headers.get("cache-control"), "no-store");
+    assert.equal(response.headers.get("retry-after"), "3600");
+    assert.equal(response.headers.get("access-control-allow-origin"), config.frontendBaseUrl);
+    assert.equal(response.headers.get("location"), null);
+    assert.equal(response.headers.get("set-cookie"), null);
+    assert.equal((await response.json()).code, "MAINTENANCE");
+  }
+  assert.equal(authentication.mock.callCount(), 0);
+  assert.equal((await fetch(`${baseUrl}/health`)).status, 200);
 });
 
 test("資料庫驗證失敗不開放 HTTP；連接埠佔用時啟動失敗", async (t) => {

@@ -27,9 +27,16 @@ test("production 網址正規化並保留 API callback 路徑", () => {
   assert.deepEqual(readRuntimeConfig(environment), {
     port: 3000,
     trustProxyHops: 1,
+    maintenanceMode: false,
     frontendBaseUrl: "https://staging.example.com",
     backendBaseUrl: "https://api-staging.example.com/api",
   });
+});
+
+test("維修模式預設關閉，僅接受明確布林字串", () => {
+  assert.equal(readRuntimeConfig({ ...environment, MAINTENANCE_MODE: "true" }).maintenanceMode, true);
+  assert.equal(readRuntimeConfig({ ...environment, MAINTENANCE_MODE: "false" }).maintenanceMode, false);
+  assert.throws(() => readRuntimeConfig({ ...environment, MAINTENANCE_MODE: "yes" }), /MAINTENANCE_MODE/);
 });
 
 test("拒絕萬用來源、不完整 callback、非 HTTPS、無效端口與代理設定", () => {
