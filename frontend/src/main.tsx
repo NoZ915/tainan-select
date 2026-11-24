@@ -27,11 +27,14 @@ import ProtectedRoute from './pages/ProtectedRoute.tsx'
 import AdminRoute from './pages/AdminRoute.tsx'
 import AdminRelatedPostsPage from './pages/AdminRelatedPostsPage.tsx'
 import NotFoundPage from './pages/NotFoundPage.tsx'
+import MaintenancePage from './pages/MaintenancePage.tsx'
 
 const head = createHead()
 const queryClient = new QueryClient()
 
-const router = createBrowserRouter([
+const router = createBrowserRouter(import.meta.env.VITE_MAINTENANCE_MODE === 'true' ? [
+  { path: '*', element: <MaintenancePage /> },
+] : [
   {
     path: '/',
     element: <App />,

@@ -1,0 +1,283 @@
+.container {
+  display: grid;
+  place-items: center;
+  min-height: calc(100dvh - 120px);
+  box-sizing: border-box;
+  padding: 24px 12px;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  overflow: hidden;
+  background: #fffdf7;
+  border: 2px solid black;
+  border-radius: 16px;
+  box-shadow: 8px 8px 0 black;
+  text-align: center;
+  animation: cardEnter 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+/* 施工封鎖膠帶 */
+.tape {
+  height: 18px;
+  border-bottom: 2px solid black;
+  background: linear-gradient(
+    -45deg,
+    #111827 25%,
+    #f4dea9 25% 50%,
+    #111827 50% 75%,
+    #f4dea9 75%
+  );
+  background-size: 40px 40px;
+  animation: tapeSlide 1.6s linear infinite;
+}
+
+.body {
+  padding: 28px 28px 24px;
+}
+
+.logo {
+  display: block;
+  height: 36px;
+  width: auto;
+  margin: 0 auto 20px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin: 0 auto 16px;
+  padding: 4px 14px;
+  background: var(--mantine-color-brick-red-0);
+  border: 2px solid black;
+  border-radius: 999px;
+  box-shadow: 2px 2px 0 black;
+  color: var(--mantine-color-brick-red-8);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  transform: rotate(-2deg);
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mantine-color-brick-red-6);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.title {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 16px;
+  color: #111827;
+  font-size: clamp(28px, 7vw, 40px);
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.titleIcon {
+  font-size: 0.7em;
+  color: var(--mantine-color-brick-red-6);
+  animation: wiggle 2.4s ease-in-out infinite;
+  transform-origin: 70% 70%;
+}
+
+.description {
+  margin: 0;
+  color: #4b5563;
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+/* 裝飾用迷你課表 */
+.timetable {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  max-width: 280px;
+  margin: 24px auto 0;
+  padding: 12px;
+  background: #f9f3e3;
+  border: 2px solid black;
+  border-radius: 10px;
+}
+
+.weekday {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cell {
+  height: 20px;
+  border: 1.5px dashed #d6ccb4;
+  border-radius: 5px;
+}
+
+.red,
+.cream,
+.dark {
+  border: 1.5px solid black;
+  animation: cellBlink 2.8s ease-in-out infinite;
+}
+
+.red {
+  background: var(--mantine-color-brick-red-5);
+}
+
+.cream {
+  background: #f4dea9;
+}
+
+.dark {
+  background: #374151;
+}
+
+.footnote {
+  margin: 16px 0 0;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.contact {
+  padding: 18px 28px 22px;
+  background: #f9f3e3;
+  border-top: 2px dashed #d6ccb4;
+}
+
+.contactText {
+  margin: 0 0 12px;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.instagramLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: var(--mantine-color-brick-red-6);
+  border: 2px solid black;
+  border-radius: 8px;
+  box-shadow: 3px 3px 0 black;
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.instagramLink:hover {
+  transform: translateY(-2px);
+  box-shadow: 5px 5px 0 black;
+}
+
+.instagramLink:focus-visible {
+  outline: 3px solid #111827;
+  outline-offset: 3px;
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tapeSlide {
+  to {
+    background-position: 40px 0;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+
+@keyframes wiggle {
+  0%,
+  60%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  70% {
+    transform: rotate(-18deg);
+  }
+
+  80% {
+    transform: rotate(12deg);
+  }
+
+  90% {
+    transform: rotate(-6deg);
+  }
+}
+
+@keyframes cellBlink {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+}
+
+@media (max-width: 480px) {
+  .body {
+    padding: 28px 20px 24px;
+  }
+
+  .logo {
+    height: 30px;
+  }
+
+  .description {
+    font-size: 15px;
+  }
+
+  .contact {
+    padding: 18px 20px 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .instagramLink {
+    transition: none;
+  }
+
+  .card,
+  .tape,
+  .statusDot,
+  .titleIcon,
+  .red,
+  .cream,
+  .dark {
+    animation: none;
+  }
+}
